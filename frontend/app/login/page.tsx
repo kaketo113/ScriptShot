@@ -91,5 +91,17 @@ export default function LoginPage() {
                     <ArrowRight className="w-4 h-4" />
                 </motion.button>
 
-            </form>  
-            </motion.div>
+            </form>
+
+            {/* 新規会員登録 */}
+            <div className='mt-8 text-center text-sm text-gray-500'>
+                アカウントをお持ちでないですか？{' '}
+                <Link href="/signup" className='text-white hover:underline decoration-blue-500 underline-offset4'>
+                    新規登録を作成
+                </Link>
+            </div>
+
+        </motion.div>
+    </div>
+);
+}
