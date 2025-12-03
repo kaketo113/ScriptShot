@@ -40,5 +40,19 @@ export default function LoginPage() {
                     <p className='text-gray-400 text-sm'>コードが「作品」になる場所へようこそ。</p>
                 </div>
 
-                
+                {/* ログインフォーム */}
+                <form onSubmit={handleSubmit} className='space-y-6'>
+
+                    {/* メールアドレス */}
+                    <div className='space-y-2'>
+                        <label className='text-xs font-medium text-gray-400 uppercase tracking-wider'>Email</label>
+                        <div className='relative group'>
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+                            <input
+                                type="email"
+                                placeholder='hello@example.com'
+                                className='w-full bg-[#0f0f0f] border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all'
+                            />
+                        </div>
+                    </div>
             </motion.div>
