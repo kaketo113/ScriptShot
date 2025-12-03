@@ -12,7 +12,7 @@ export default function LoginPage() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         console.log("ログインボタン押（バックエンド未実装）")
-        // 将来的にAPI呼び出し等をここに実装
+        // TODO:将来的にAPIたたく処理をここに実装
     };
 
     return (
