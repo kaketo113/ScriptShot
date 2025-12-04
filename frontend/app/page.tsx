@@ -151,6 +151,19 @@ const PostCard = ({ post, index }: { post: any, index: number }) => {
             </button>
           </div>
 
+          {/* キャプション＆タグ */}
+          <div>
+            <p className='text-sm text-gray-300 leading-relaxed'>
+              <span className='font-bold text-white mr-2'>{post.user.name}</span>
+              {post.content}
+            </p>
+            <div className='flex gap-2 mt-2'>
+              {post.tags.map((tag: string) => (
+                <span key={tag} className='text-xs text-blue-400 hover:text-blue-300 cursor-pointer'>#{tag}</span>
+              ))}
+            </div>
+          </div>
+
           
         </div>
     </motion.article>
