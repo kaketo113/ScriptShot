@@ -81,6 +81,9 @@ const Sidebar = () => (
     </nav>
 
     {/* フッター */}
-    
+    <button className='flex items-center gap-4 px-4 py-3 text-gray-500 hover:text-red-400 transition-colors mt-auto'>
+      <LogOut className='w-5 h-5' />
+      <span className='text-sm'>Log Out</span>
+    </button>
   </aside>
-)
+);
