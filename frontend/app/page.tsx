@@ -113,6 +113,14 @@ const PostCard = ({ post, index }: { post: any, index: number }) => {
           </button>
         </div>
 
-        
+        {/* メイン */}
+        <div className='relative w-full aspect-video bg-black group cursor-pointer overflow-hidden'>
+          {/* 画像 */}
+          <img
+            src={post.image}
+            alt='Code Reslt'
+            className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105'
+          />
+        </div>
     </motion.article>
   )
