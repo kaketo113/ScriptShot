@@ -187,6 +187,12 @@ export default function HomePage() {
 
       <div className='max-w-2xl mx-auto pt-10 pb-20 px-4 relative z-10'>
 
+        {/* ヘッダー */}
+        <div className='flex items-center justify-between mb-8 md:hidden'>
+          <h1 className='text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent'>ScriptShot</h1>
+          <Bell className='w-6 h-6 text-gray-400' />
+        </div>
+
         
       </div>
     </div>
