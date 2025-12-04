@@ -87,3 +87,32 @@ const Sidebar = () => (
     </button>
   </aside>
 );
+
+// 投稿カード
+const PostCard = ({ post, index }: { post: any, index: number }) => {
+  const [isLiked, setIsLiked] = useState(false);
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 }}
+      className='bg-[#161616] border border-white/5 rounded-2xl overflow-hidden mb-8 shadow-lg hover:border-white/10 transition-colors'
+    >
+      {/* ヘッダー */}
+      <div className='p-4 flex items-center justify-between'>
+        <div className='flex items-center justify-between'>
+          <img src={post.user.avatar} alt={post.user.name} className='w-10 h-10 rounded-full bg-gray-800' />
+            <div>
+              <h3 className='font-bold text-sm text-white'>{post.user.name}</h3>
+              <p className='text-xs text-gray-500'>{post.time}</p>
+            </div>
+          </div>
+          <button className='text-gray-500 hover:text-white'>
+            <MoreHorizontal className='w-5 h-5' />
+          </button>
+        </div>
+
+        
+    </motion.article>
+  )
