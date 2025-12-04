@@ -182,26 +182,33 @@ export default function HomePage() {
       {/* 1. 左サイドバー (Navigation) */}
       <Sidebar />
 
-      {/* 背景 */}
-      <div className='fixed top-0 left-0 w-full h-[500px] bg-blue-900/10 blur-[120px] pointer-events-none' />
+      <main className='flex-1 md:ml-64 min-h-screen relative'>
+        {/* 背景 */}
+        <div className='fixed top-0 left-0 w-full h-[500px] bg-blue-900/10 blur-[120px] pointer-events-none' />
 
-      <div className='max-w-2xl mx-auto pt-10 pb-20 px-4 relative z-10'>
+        <div className='max-w-2xl mx-auto pt-10 pb-20 px-4 relative z-10'>
 
-        {/* ヘッダー */}
-        <div className='flex items-center justify-between mb-8 md:hidden'>
-          <h1 className='text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent'>ScriptShot</h1>
-          <Bell className='w-6 h-6 text-gray-400' />
+          {/* ヘッダー */}
+          <div className='flex items-center justify-between mb-8 md:hidden'>
+            <h1 className='text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent'>ScriptShot</h1>
+            <Bell className='w-6 h-6 text-gray-400' />
+          </div>
+
+          {/* タイムラインフィード */}
+          <div className='space-y-6'>
+            {MOCK_POSTS.map((post, index) => (
+              <PostCard key={post.id} post={post} index={index} />
+            ))}
+          </div>
+
+          {/* 読み込み完了メッセージ */}
+          <div className='text-center py-8 text-gray-600 text-sm'>
+            <p>You're all caught up!</p>
+          </div>
+
         </div>
-
-        {/* タイムラインフィード */}
-        <div className='space-y-6'>
-          {MOCK_POSTS.map((post, index) => (
-            <PostCard key={post.id} post={post} index={index} />
-          ))}
-        </div>
-
-        
-      </div>
+      </main>
+    
     </div>
-  )
+  );
 }
