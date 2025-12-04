@@ -164,7 +164,12 @@ const PostCard = ({ post, index }: { post: any, index: number }) => {
             </div>
           </div>
 
-          
+          {/* コードスニペット */}
+          <div className='bg-[#0a0a0a] rounded-lg p-3 border border-white/5 font-mono text-xs text-gray-400 overflow-hidden relative'>
+            <pre>{post.codeSnippet}</pre>
+            <div className='absolute inset-0 bg-gradient-to-b from-transparent to-[#0a0a0a]/90 pointer-events-none' />
+          </div>
         </div>
     </motion.article>
-  )
+  );
+};
