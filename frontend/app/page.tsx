@@ -131,6 +131,27 @@ const PostCard = ({ post, index }: { post: any, index: number }) => {
           </div>
         </div>
 
-        
+        {/* フッター */}
+        <div className='p-4 space-y-3'>
+          {/* アクションボタン */}
+          <div className='flex items-center gap-4'>
+            <button
+              onClick={() => setIsLiked(!isLiked)}
+              className={`flex items-center gap-1.5 transition-colors ${isLiked ? 'text-pink-500' : 'text-gray-400 hover:text-white'}`}
+            >
+              <Heart className={`w-6 h-6 ${isLiked ? 'fill-current' : ''}`} />
+              <span className='text-sm font-medium'>{post.likes + (isLiked ? 1 : 0)}</span>
+            </button>
+            <button className='flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors'>
+              <MessageCircle className='w-6 h-6' />
+              <span className='text-sm font-medium'>{post.comments}</span>
+            </button>
+            <button className='flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors ml-auto'>
+              <Share2 className='w-5 h-5' />
+            </button>
+          </div>
+
+          
+        </div>
     </motion.article>
   )
