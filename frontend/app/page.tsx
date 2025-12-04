@@ -33,7 +33,7 @@ const MOCK_POSTS = [
       name: 'tanaka_dev',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
     },
-    content: 'PythonのPandasでデータ分析。グラフ描画の結果です。 #Python #DataScience',
+    content: 'ダミーデータ #Python #DataScience',
     tags: ['Python', 'Pandas', 'Matplotlib'],
     image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop',
     likes: 85,
