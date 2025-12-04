@@ -173,3 +173,16 @@ const PostCard = ({ post, index }: { post: any, index: number }) => {
     </motion.article>
   );
 };
+
+// タイムライン
+export default function HomePage() {
+  return (
+    <div className='min-h-screen bg-black text-white flex'>
+
+      {/* 1. 左サイドバー (Navigation) */}
+      <Sidebar />
+
+      
+    </div>
+  )
+}
