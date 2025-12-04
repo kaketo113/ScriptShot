@@ -182,7 +182,13 @@ export default function HomePage() {
       {/* 1. 左サイドバー (Navigation) */}
       <Sidebar />
 
-      
+      {/* 背景 */}
+      <div className='fixed top-0 left-0 w-full h-[500px] bg-blue-900/10 blur-[120px] pointer-events-none' />
+
+      <div className='max-w-2xl mx-auto pt-10 pb-20 px-4 relative z-10'>
+
+        
+      </div>
     </div>
   )
 }
