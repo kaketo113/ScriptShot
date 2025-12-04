@@ -193,6 +193,13 @@ export default function HomePage() {
           <Bell className='w-6 h-6 text-gray-400' />
         </div>
 
+        {/* タイムラインフィード */}
+        <div className='space-y-6'>
+          {MOCK_POSTS.map((post, index) => (
+            <PostCard key={post.id} post={post} index={index} />
+          ))}
+        </div>
+
         
       </div>
     </div>
