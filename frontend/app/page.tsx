@@ -169,7 +169,7 @@ export default function HomePage() {
       <aside className='hidden lg:block w-80 fixed right-0 top-0 h-screen border-l border-white/5 p-6 bg-[#0a0a0a]'>
         <h3 className='text-gray-400 font-bold text-sm mb-4 uppercase tracking-wider'>Trending Tags</h3>
         <div className='space-y-3'>
-          {['#Python', '#React', '#MachineLearning', 'ThreeJS'].map(tag => (
+          {['#Python', '#React', '#login', '#Hono'].map(tag => (
             <div key={tag} className='flex justify-between items-center group cursor-pointer'>
               <span className='text-sm text-gray-300 group-hover:text-blue-400 transition-colors'>{tag}</span>
               <span className='text-xs text-gray-600'>1.2k posts</span>
