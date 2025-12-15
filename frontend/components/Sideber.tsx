@@ -46,7 +46,12 @@ export const Sidebar = () => {
                 );
             })}
         </nav>
-        
+
+        {/* フッター */}
+        <button className='flex items-center gap-4 px-4 py-3 text-gray-500 hover:text-red-400 transition-colors mt-auto w-full text-left'>
+            <LogOut className='w-5 h-5' />
+            <span className='text-sm'>Log out</span>
+        </button>
     </aside>
-  )
-}
+  );
+};
