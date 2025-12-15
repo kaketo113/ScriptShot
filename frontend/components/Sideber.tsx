@@ -24,6 +24,29 @@ export const Sidebar = () => {
                 ScriptShot
             </h1>
         </div>
+
+        {/* メニュー */}
+        <nav className='flex-1 space-y-2'>
+            {menuItems.map((item) => {
+                const isActive= pathname === item.href;
+
+                return (
+                    <Link 
+                        key={item.label} 
+                        href={item.href} 
+                        className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 group ${
+                            isActive 
+                                ? 'bg-blue-600/10 text-blue-400 font-medium' 
+                                : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                        }`}
+                    >
+                        <item.icon className={`w-6 h-6 transition-colors ${isActive ? 'text-blue-400' : 'text-gray-400 group-hover:text-white'}`} />
+                        <span className='text-base'>{item.label}</span>
+                    </Link>
+                );
+            })}
+        </nav>
+        
     </aside>
   )
 }
