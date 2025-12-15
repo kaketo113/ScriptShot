@@ -15,4 +15,15 @@ export const Sidebar = () => {
     { icon: Bell, label: 'Notifications', href: '/notifications' },
     { icon: User, label: 'Profile', href: '/profile' },
   ];
+
+  return (
+    <aside className='fixed left-0 top-0 h-screen w-64 bg-[#0a0a0a] border-r border-white/5 flex flex-col p-6 hidden md:flex z-50'>
+        {/* ロゴ */}
+        <div className='mb-10 pl-2'>
+            <h1 className='text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent'>
+                ScriptShot
+            </h1>
+        </div>
+    </aside>
+  )
 }
