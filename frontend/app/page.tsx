@@ -6,6 +6,7 @@ import {
   Bell, Heart, MessageCircle, Share2, MoreHorizontal, Code2, Home, Search, PlusSquare, User, LogOut
 } from 'lucide-react'
 import Link from 'next/link';
+import { Sidebar } from '@/components/Sidebar';
 
 // Dummy Data
 const MOCK_POSTS = [
@@ -43,48 +44,6 @@ df.plot()`
   },
 ];
 
-// 左側のナビゲーション
-
-const Sidebar = () => (
-  <aside className='fixed left-0 top-0 h-screen w-64 bg-[#0a0a0a] border-r border-white/5 flex flex-col p-6 hidden md:flex z-50'>
-    {/* ロゴ */}
-    <div className='mb-10 pl-2'>
-      <h1 className='text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent'>
-        ScriptShot
-      </h1>
-    </div>
-
-    {/* メニュー */}
-    <nav className='flex-1 space-y-2'>
-      {[
-        { icon: Home, label: 'Home', active: true },
-        { icon: Search, label: 'Search', active: false },
-        { icon: PlusSquare, label: 'Create', active: false },
-        { icon: Bell, label: 'Notifications', active: false },
-        { icon: User, label: 'Profile', active: false },
-      ].map((item) => (
-        <Link
-          key={item.label}
-          href='#'
-          className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 group ${
-            item.active 
-              ? 'bg-blue-600/10 text-blue-400 font-medium' 
-              : 'text-gray-400 hover:bg-white/5 hover:text-white'
-          }`}
-        >
-          <item.icon className={`w-6 h-6 ${item.active ? 'text-blue-400' : 'text-gray-400 group-hover:text-white'}`} />
-          <span className='text-base'>{item.label}</span>
-        </Link>
-      ))}
-    </nav>
-
-    {/* フッター */}
-    <button className='flex items-center gap-4 px-4 py-3 text-gray-500 hover:text-red-400 transition-colors mt-auto'>
-      <LogOut className='w-5 h-5' />
-      <span className='text-sm'>Log Out</span>
-    </button>
-  </aside>
-);
 
 // 投稿カード
 const PostCard = ({ post, index }: { post: any, index: number }) => {
@@ -99,7 +58,7 @@ const PostCard = ({ post, index }: { post: any, index: number }) => {
     >
       {/* ヘッダー */}
       <div className='p-4 flex items-center justify-between'>
-        <div className='flex items-center justify-between'>
+        <div className='flex items-center gap-3'>
           <img src={post.user.avatar} alt={post.user.name} className='w-10 h-10 rounded-full bg-gray-800' />
             <div>
               <h3 className='font-bold text-sm text-white'>{post.user.name}</h3>
@@ -111,9 +70,8 @@ const PostCard = ({ post, index }: { post: any, index: number }) => {
           </button>
         </div>
 
-        {/* メイン */}
+        {/* メイン画像 */}
         <div className='relative w-full aspect-video bg-black group cursor-pointer overflow-hidden'>
-          {/* 画像 */}
           <img
             src={post.image}
             alt='Code Reslt'
@@ -134,7 +92,7 @@ const PostCard = ({ post, index }: { post: any, index: number }) => {
           {/* アクションボタン */}
           <div className='flex items-center gap-4'>
             <button
-              onClick={() => setIsLiked(!isLiked)}
+              onClick={() => setIsLiked(!isLiked)}  
               className={`flex items-center gap-1.5 transition-colors ${isLiked ? 'text-pink-500' : 'text-gray-400 hover:text-white'}`}
             >
               <Heart className={`w-6 h-6 ${isLiked ? 'fill-current' : ''}`} />
@@ -186,7 +144,7 @@ export default function HomePage() {
 
         <div className='max-w-2xl mx-auto pt-10 pb-20 px-4 relative z-10'>
 
-          {/* ヘッダー */}
+          {/* ヘッダー（スマホ用） */}
           <div className='flex items-center justify-between mb-8 md:hidden'>
             <h1 className='text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent'>ScriptShot</h1>
             <Bell className='w-6 h-6 text-gray-400' />
@@ -206,7 +164,20 @@ export default function HomePage() {
 
         </div>
       </main>
-    
+          
+    {/* 右サイドバー */}
+      <aside className='hidden lg:block w-80 fixed right-0 top-0 h-screen border-l border-white/5 p-6 bg-[#0a0a0a]'>
+        <h3 className='text-gray-400 font-bold text-sm mb-4 uppercase tracking-wider'>Trending Tags</h3>
+        <div className='space-y-3'>
+          {['#Python', '#React', '#MachineLearning', 'ThreeJS'].map(tag => (
+            <div key={tag} className='flex justify-between items-center group cursor-pointer'>
+              <span className='text-sm text-gray-300 group-hover:text-blue-400 transition-colors'>{tag}</span>
+              <span className='text-xs text-gray-600'>1.2k posts</span>
+            </div>
+          ))}
+        </div>
+      </aside>
+      
     </div>
   );
 }
