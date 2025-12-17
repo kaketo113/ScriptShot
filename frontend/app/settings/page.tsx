@@ -26,4 +26,36 @@ export default function SettingsPage() {
         </button>
     );
 
+    return (
+        <div className="min-h-screen bg-black text-white flex">
+            <Sidebar />
+
+            <main className="flex-1 md:ml-64 min-h-screen">
+                <div className="max-w-2xl mx-auto p-6 pb-20">
+
+                    <h1 className="text-2xl font-bold mb-8">Settings</h1>
+
+                    <div className="space-y-8">
+
+                        {/* アカウント設定 */}
+                        <section>
+                            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 px-2">Account</h2>
+                            <div className="bg-[#161616] border border-white/5 rounded-xl overflow-hidden">
+
+                                <Link href="/settings/profile" className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors border-b border-white/5 group">
+                                    <div className="flex items-center gap-4">
+                                        <div className='p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:text-blue-300'>
+                                            <User className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className='font-medium'>Edit Profile</div>
+                                            <div className='text-xs text-gray-500'>Change your avatar, bio, and links</div>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className='w-5 h-5 text-gray-600' />
+                                </Link>
+
+                                
+    )
+
 }
