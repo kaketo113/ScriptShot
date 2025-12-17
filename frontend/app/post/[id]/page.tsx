@@ -101,7 +101,13 @@ export default function PostDetailPage() {
                                 <span key={tag} className='text-sm text-blue-400 bg-blue-900/10 px-2 py-1 rounded hover:bg-blue-900/20 cursor-pointer'>#{tag}</span>
                             ))}
                         </div>
-                        
+
+                        {/* アクションボタン */}
+                        <div className='flex gap-6'>
+                            <button className='flex items-center gap-2 text-pink-500'><Heart className='w-6 h-6 fill-current' /> {POST_DATA.likes}</button>
+                            <button className='flex items-center gap-2 text-gray-400 hover:text-white'><MessageCircle className='w-6 h-6' /> {POST_DATA.comments}</button>
+                            <button className='flex items-center gap-2 text-gray-400 hover:text-white ml-auto'><Share2 className='w-6 h-6' /></button>
+                        </div>
                     </div>
                         </div>
                     </div>
