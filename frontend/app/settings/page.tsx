@@ -83,6 +83,42 @@ export default function SettingsPage() {
 
                             </div>
                         </section>
-    )
 
+                        {/* 表示設定セクション */}
+                        <section>
+                            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 px-2">Appearance</h2>
+                            <div className="bg-[#161616] border border-white/5 rounded-xl overflow-hidden">
+                
+                                <div className="flex items-center justify-between p-4 border-b border-white/5">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-2 bg-yellow-500/10 rounded-lg text-yellow-400">
+                                            <Moon className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <div className="font-medium">Dark Mode</div>
+                                        <div className="text-xs text-gray-500">Always on for pro developers</div>
+                                    </div>
+                                </div>
+                            <span className="text-xs font-bold bg-[#333] text-gray-300 px-2 py-1 rounded">ON</span>
+                        </div>
+
+                        {/* Zen Mode */}
+                        <div className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+                            <div className="flex items-center gap-4">
+                                <div className="p-2 bg-cyan-500/10 rounded-lg text-cyan-400">
+                                    <EyeOff className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <div className="font-medium">Zen Mode</div>
+                                    <div className="text-xs text-gray-500">Hide like counts and followers to focus on code</div>
+                                </div>
+                            </div>
+                            <Toggle checked={zenMode} onChange={() => setZenMode(!zenMode)} />
+                        </div>
+
+                    </div>
+                </section>
+
+                {/* その他セクション */}
+    )
 }
