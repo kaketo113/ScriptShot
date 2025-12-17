@@ -26,3 +26,21 @@ const POPULAR_POSTS = Array.from({ length: 9 }).map((_, i) => ({
   image: `https://picsum.photos/seed/search_${i}/400/400`, // ダミー画像
   likes: Math.floor(Math.random() * 500),
 }));
+
+// コンポーネント
+export default function SearchPage() {
+  const [query, setQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'top' | 'accounts' | 'tags'>('top');
+
+  return (
+    <div className="min-h-screen bg-black text-white flex">
+        <Sidebar />
+
+        <main className='flex-1 md:ml-64 min-h-screen'>
+            <div className='max-w-4xl mx-auto p-6'>
+
+                {/* 検索バー */}
+            </div>
+        </main>
+    </div>    
+}
