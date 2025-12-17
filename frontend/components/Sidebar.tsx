@@ -13,7 +13,7 @@ export const Sidebar = () => {
     { icon: Search, label: 'Search', href: '/search' },
     { icon: PlusSquare, label: 'Create', href: '/create' },
     { icon: Bell, label: 'Notifications', href: '/notifications' },
-    { icon: User, label: 'Profile', href: '/profile' },
+    { icon: User, label: 'Profile', href: '/plofile' },
   ];
 
   return (
