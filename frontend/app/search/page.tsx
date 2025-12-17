@@ -104,10 +104,31 @@ export default function SearchPage() {
                       ))}
                     </div>
                   </section>
-                  
-                  </div>
-                )}
+                </div>
+                ) : (
+                  // 検索結果表示
+                  <div>
+                    <div className='flex gap-6 border-b border-white/10 mb-6'>
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`pb-3 text-sm font-bold capitalize relative ${activeTab === tab ? 'text-white' : 'text-gray-500'}`}
+                    >
+                      {tab}
+                      {activeTab === tab && (
+                        <motion.div
+                          layoutId='activeTab'
+                          className='absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500'
+                        />
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 検索結果ダミー */}
+                
               </div>
+            </div>
         </main>
     </div> 
   );   
