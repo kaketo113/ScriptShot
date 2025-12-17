@@ -19,3 +19,24 @@ const SKILL_DATA = [
   { subject: 'CSS/Tailwind', A: 65, fullMark: 150 },
 ];
 
+export default function ProfilePage() {
+    const [activeHighlightTab, setActiveHighlightTab] = useState<'recent' | 'favorite'>('recent');
+
+    return (
+        <div className="min-h-screen bg-black text-white flex">
+            <Sidebar />
+
+            <main className="flex-1 md:ml-64 min-h-screen">
+
+                {/* 背景 */}
+                <div className="h-48 bg-gradient-to-r from-blue-900/40 to-purple-900/40 w-full relative">
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns.png')] opacity-20"></div>
+                </div>
+
+                <div className="max-w-6xl mx-auto px-6 pb-20 -mt-20 relative z-10">
+                    
+                </div>
+            </main>
+        </div>
+    )
+}
