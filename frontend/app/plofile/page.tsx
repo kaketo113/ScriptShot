@@ -67,7 +67,42 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    
+                    {/* caption,Skill,Highlights */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+                        
+                        {/* caption & stats */}
+                        <div className="space-y-6">
+                            <div className="space-y-4">
+                                <p className="text-gray-300 leading-relaxed text-sm">
+                                    HAL名古屋IT学科1年生<br />
+                                    よろしくお願いします。
+                                </p>
+                                <div className="flex flex-col gap-2 text-sm text-gray-500">
+                                    <span className="flex items-center gap-2"><MapPin className="w-4 h-4" />Mie, Japan</span>
+                                    <span className="flex items-center gap-2"><LinkIcon className="w-4 h-4" />githun.com/kaketo</span>
+                                    <span className="flex items-center gap-2"><Calendar className="w-4 h-4" />Joind January 2025</span>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-between p-4 bg-[#111] rounded-xl border border-white/5">
+                                <div className="text-center">
+                                    <div className="text-xl font-bold text-white">128</div>
+                                    <div className="text-xs text-gray-500">Posts</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-xl font-bold text-white">50</div>
+                                    <div className="text-xs text-gray-500">Followers</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-xl font-bold text-white">50</div>
+                                    <div className="text-xs text-gray-500">Following</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        
+                    </div>
+
                 </div>
             </main>
         </div>
