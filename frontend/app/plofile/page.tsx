@@ -1,22 +1,59 @@
 'use client'
 
 import React, { useState } from "react";
-import { Sidebar } from "@/components/Sidebar";
+import { Sidebar } from "../../components/Sidebar";
 import { motion, AnimatePresence } from 'framer-motion'
 import { Settings, Share2, MapPin, Link as LinkIcon, Calendar, Heart, Star, Clock } from 'lucide-react';
 import { 
   Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer 
 } from 'recharts';
 
+// スキルマップのデータの型
+interface SkillData {
+  subject: string;
+  A: number;
+  fullMark: number;
+}
+
+// 最近の投稿データの型
+interface RecentPost {
+  id: number;
+  title: string;
+  lang: string;
+  image: string;
+}
+
+// お気に入り投稿データの型
+interface FavoritePost {
+  id: number;
+  title: string;
+  user: string;
+  image: string;
+}
+
+
 // ダミー
 
-const SKILL_DATA = [
+const SKILL_DATA: SkillData[] = [
   { subject: 'Next.js', A: 120, fullMark: 150 },
   { subject: 'React', A: 98, fullMark: 150 },
   { subject: 'TypeScript', A: 86, fullMark: 150 },
   { subject: 'Python', A: 99, fullMark: 150 },
   { subject: 'Flask', A: 85, fullMark: 150 },
   { subject: 'CSS/Tailwind', A: 65, fullMark: 150 },
+];
+
+// ★追加: 最近の投稿データ
+const RECENT_POSTS: RecentPost[] = [
+  { id: 1, title: 'AIチャットボットUI', lang: 'React', image: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?q=80&w=1000&auto=format&fit=crop' },
+  { id: 2, title: 'データ分析グラフ', lang: 'Python', image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop' },
+  { id: 3, title: '3Dアニメーション', lang: 'Three.js', image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=1000&auto=format&fit=crop' },
+];
+
+// ★追加: お気に入りデータ
+const FAVORITE_POSTS: FavoritePost[] = [
+  { id: 4, title: '神CSSテクニック集', user: 'tanaka_dev', image: 'https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?q=80&w=1000&auto=format&fit=crop' },
+  { id: 5, title: 'Rust入門コード', user: 'suzuki_rust', image: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=1000&auto=format&fit=crop' },
 ];
 
 export default function ProfilePage() {
@@ -209,7 +246,7 @@ export default function ProfilePage() {
                                             className="aspect-video bg-[#161616] rounded-xl border border-white/5 overflow-hidden relative group cursor-pointer"
                                         >
                                             <img 
-                                                src={`https://source.unsplash.com/random/500x300?coding,tech&sig=${item}`} 
+                                                src={`https://picsum.photos/seed/${item}/500/300`} 
                                                 alt="Post" 
                                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-70 group-hover:opacity-100" 
                                             />
