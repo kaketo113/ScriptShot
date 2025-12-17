@@ -44,7 +44,30 @@ export default function ProfilePage() {
                         >
                             <img src="https://zukan.pokemon.co.jp/zukan-api/up/images/index/48cd90ca9aef38ad6384fc5e148696ef.png" alt="user" className="w-full h-full object-cover" />
                         </motion.div>
+
+                        {/* 名前 */}
+                        <div className="flex-1 mb-2">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h1 className="text-3xl font-bold">User_tama</h1>
+                                    <p className="text-gray-400">@tama_dev</p>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button className="px-4 py-2 border border-white/20 rounded-lg font-medium hover:bg-white/10 transition-colors text-sm">
+                                        編集
+                                    </button>
+                                    <button className="p-2 border border-white/20 rounded-lg hover:bg-white/10 transition-colors">
+                                        <Share2 className="w-5 h-5" />
+                                    </button>
+                                    <button className="p-2 border border-white/20 rounded-lg hover:bg-white/10 transition-colors">
+                                        <Settings className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    
                 </div>
             </main>
         </div>
