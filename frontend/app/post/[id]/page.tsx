@@ -8,3 +8,28 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const POST_DATA = {
+  id: 1,
+  user: {
+    name: 'mizoguchi_kanto',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kanto',
+  },
+  image: 'https://images.unsplash.com/photo-1550439062-609e1531270e?q=80&w=1000&auto=format&fit=crop',
+  caption: 'Next.jsとFramer Motionでログイン画面のアニメーションを作ってみた！発光表現がいい感じ。',
+  tags: ['Nextjs', 'TailwindCSS', 'FramerMotion'],
+  likes: 128,
+  comments: 5,
+  time: '2h ago',
+  //ダミーコード   
+  code: `<span class="text-pink-400">export default</span> <span class="text-blue-400">function</span> <span class="text-yellow-300">LoginPage</span>() {
+  <span class="text-pink-400">return</span> (
+    &lt;<span class="text-green-400">motion.div</span>
+      <span class="text-purple-400">initial</span>={{ <span class="text-orange-300">opacity</span>: 0 }}
+      <span class="text-purple-400">animate</span>={{ <span class="text-orange-300">opacity</span>: 1 }}
+    &gt;
+      &lt;<span class="text-green-400">h1</span>&gt;Welcome&lt;/<span class="text-green-400">h1</span>&gt;
+    &lt;/<span class="text-green-400">motion.div</span>&gt;
+  );
+}`
+};
