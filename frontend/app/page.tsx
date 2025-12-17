@@ -22,7 +22,7 @@ const MOCK_POSTS = [
     likes: 120,
     comments: 15,
     time: '2h ago',
-    codeSnippet: `ああああああああああああああ`
+    codeSnippet: `print("Hello World")`
   },
   {
     id: 2,
@@ -36,7 +36,7 @@ const MOCK_POSTS = [
     likes: 85,
     comments: 4,
     time: '5h ago',
-    codeSnippet: `いいいいいいいいいいいいいいいいいい)`
+    codeSnippet: `print("Hello World")`
   },
 ];
 
