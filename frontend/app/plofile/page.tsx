@@ -34,7 +34,17 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="max-w-6xl mx-auto px-6 pb-20 -mt-20 relative z-10">
-                    
+
+
+                    <div className="flex flex-col md:flex-row items-end md:items-center gap-6 mb-8">
+                        {/* アイコン */}
+                        <motion.div
+                            initial={{ scale: 0 }} animate={{ scale: 1 }}
+                            className="w-32 h-32 rounded-full border-4 border-black bg-gray-800 overflow-hidden relative shadow-2xl"
+                        >
+                            <img src="https://zukan.pokemon.co.jp/zukan-api/up/images/index/48cd90ca9aef38ad6384fc5e148696ef.png" alt="user" className="w-full h-full object-cover" />
+                        </motion.div>
+                    </div>
                 </div>
             </main>
         </div>
