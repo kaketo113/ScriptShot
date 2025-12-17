@@ -70,6 +70,42 @@ export default function PostDetailPage() {
 
             <div className='flex flex-col lg:flex-row h-[calc(100vh-64px)]'>
 
+                {/* コンテンツ */}
+                <div className='flex-1 overflow-y-auto custom-scrollbar border-r border-white/10'>
+
+                    {/* 実行結果 */}
+                    <div className='w-full aspect-video bg-[#111] relative group'>
+                        <img src={POST_DATA.image} alt="Post Image" className='w-full h-full object-cover' />
+                        <div className='absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-momo text-blue-400 border border-blue-500/30'>
+                            Executed via ScriptShot
+                        </div>
+                    </div>
+
+                    {/* 投稿情報 */}
+                    <div className='p-4 border-b border-white/10'>
+                        <div className='flex items-center justify-between mb-4'>
+                            <div className='flex items-center gap-3'>
+                                <img src={POST_DATA.user.avatar} className='w-10 h-10 rounded-full bg-gray-700' />
+                                <div>
+                                    <h3 className='font-bold text-sm'>{POST_DATA.user.name}</h3>
+                                    <p className='text-xs text-gray-500'>{POST_DATA.time}</p>
+                                </div>
+                            </div>
+                            <button className='text-gray-500 hover:text-white'>
+                                <MoreHorizontal className='w-5 h-5' />
+                            </button>
+                        </div>
+                        <p className='text-gray-200 mb-4 leading-relaxed'>{POST_DATA.caption}</p>
+                        <div className='flex gap-2 mb-6'>
+                            {POST_DATA.tags.map((tag) => (
+                                <span key={tag} className='text-sm text-blue-400 bg-blue-900/10 px-2 py-1 rounded hover:bg-blue-900/20 cursor-pointer'>#{tag}</span>
+                            ))}
+                        </div>
+                        
+                    </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
