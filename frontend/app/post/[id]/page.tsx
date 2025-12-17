@@ -133,11 +133,107 @@ export default function PostDetailPage() {
                 </div>
                 
                 {/* AIレビュー ＆ コメント */}
-                        </div>
+                <div className="w-full lg:w-[400px] bg-[#0c0c0c] flex flex-col">
+            
+                    {/* タブ */}
+                    <div className="flex border-b border-white/10">
+                    <button 
+                        onClick={() => setActiveTab('ai')}
+                        className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'ai' ? 'text-blue-400 border-b-2 border-blue-400 bg-blue-900/5' : 'text-gray-500 hover:text-gray-300'}`}
+                    >
+                        <Bot className="w-4 h-4" /> AI Review
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('comments')}
+                        className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'comments' ? 'text-white border-b-2 border-white' : 'text-gray-500 hover:text-gray-300'}`}
+                    >
+                        Comments <span className="bg-[#222] text-xs px-1.5 rounded-full">{POST_DATA.comments}</span>
+                    </button>
                     </div>
+
+                    {/* タブコンテンツ */}
+                    <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                    <AnimatePresence mode="wait">
+                        {activeTab === 'ai' ? (
+                        <motion.div 
+                            key="ai"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-4"
+                        >
+                            {/* AIレビューカード */}
+                            <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-500/30 rounded-xl p-4">
+                            <div className="flex items-center gap-2 mb-3 text-blue-400 font-bold text-sm">
+                                <Sparkles className="w-4 h-4" />
+                                ScriptShot AI Analysis
+                            </div>
+                            <p className="text-sm text-gray-300 mb-4">
+                                全体的に素晴らしいコードです！以下のポイントを改善すると、さらにパフォーマンスが向上します。
+                            </p>
+                            
+                            {AI_REVIEWS.map((review, i) => (
+                                <div key={i} className="bg-[#0a0a0a]/50 rounded-lg p-3 mb-2 border border-white/5">
+                                <h4 className="text-xs font-bold text-cyan-200 mb-1 flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                                    {review.title}
+                                </h4>
+                                <p className="text-xs text-gray-400 leading-relaxed">{review.content}</p>
+                                {review.codeSuggestion && (
+                                    <div className="mt-2 bg-black rounded p-2 text-[10px] font-mono text-green-300 border border-white/5">
+                                    {review.codeSuggestion}
+                                    </div>
+                                )}
+                                </div>
+                            ))}
+                            </div>
+                        </motion.div>
+                        ) : (
+                        <motion.div 
+                            key="comments"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-4"
+                        >
+                            {USER_COMMENTS.map(comment => (
+                            <div key={comment.id} className="flex gap-3">
+                                <img src={comment.avatar} className="w-8 h-8 rounded-full bg-gray-700" />
+                                <div className="flex-1">
+                                <div className="bg-[#1a1a1a] rounded-lg p-3 rounded-tl-none">
+                                    <span className="text-xs font-bold text-gray-400 block mb-1">{comment.user}</span>
+                                    <p className="text-sm text-gray-200">{comment.text}</p>
+                                </div>
+                                <div className="flex gap-3 mt-1 ml-1">
+                                    <button className="text-xs text-gray-500 hover:text-white">Reply</button>
+                                    <button className="text-xs text-gray-500 hover:text-white">Like</button>
+                                </div>
+                                </div>
+                            </div>
+                            ))}
+                        </motion.div>
+                        )}
+                    </AnimatePresence>
+                    </div>
+
+                    {/* コメント入力欄 */}
+                    <div className="p-4 border-t border-white/10 bg-[#0a0a0a]">
+                    <div className="relative">
+                        <input 
+                        type="text" 
+                        placeholder="Add a comment..." 
+                        className="w-full bg-[#161616] border border-white/10 rounded-full py-3 pl-4 pr-12 text-sm text-white focus:outline-none focus:border-blue-500/50"
+                        />
+                        <button className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors">
+                        <Send className="w-4 h-4" />
+                        </button>
+                    </div>
+                    </div>
+
                 </div>
             </div>
+
         </main>
     </div>
-  )
+    );
 }
