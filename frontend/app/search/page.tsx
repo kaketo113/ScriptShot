@@ -84,7 +84,27 @@ export default function SearchPage() {
                       </div>
                     </section>
 
-
+                  {/* おすすめユーザー */}
+                  <section>
+                    <h3 className='text-lg font-bold mb-4 flex items-center gap-2'>
+                      <User className='w-5 h-5 text-blue-400' />Suggested for you
+                    </h3>
+                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                      {SUGGESTED_USERS.map((user) => (
+                        <div key={user.id} className='bg-[#161616] border border-white/5 p-4 rounded-xl flex items-center gap-3 hover:border-white/20 transition-colors cursor-pointer'>
+                          <img src={user.avatar} className='w-12 h-12 rounded-full bg-gray-700' />
+                          <div className='flex-1 min-w-0'>
+                            <h4 className='font-bold text-gray-500 truncate'>{user.name}</h4>
+                            <p className='text-xs text-gray-500 truncate'>{user.bio}</p>
+                          </div>
+                          <button className='px-3 py-1.5 bg-blue-600/10 text-blue-400 text-xs font-bold rounded-md hover:bg-blue-600 hover:text-white transition-colors'>
+                            Follow
+                          </button> 
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                  
                   </div>
                 )}
               </div>
