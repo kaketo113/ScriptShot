@@ -109,6 +109,30 @@ export default function PostDetailPage() {
                             <button className='flex items-center gap-2 text-gray-400 hover:text-white ml-auto'><Share2 className='w-6 h-6' /></button>
                         </div>
                     </div>
+
+                    {/* ソースコード表示エリア */}
+                    <div className='p-6'>
+                        <button
+                            onClick={() => setIsCodeOpen(!isCodeOpen)}
+                            className='flex items-center justify-between w-full mb-4 text-sm font-bold text-gray-400 hover:text-white transition-colors'
+                        >
+                            <span>SOURCE CODE</span>
+                            <span className='text-xs bg-[#222] px-2 py-1 rounded'>TypeScript</span>
+                        </button>
+
+                        {isCodeOpen && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                className='bg-[#111] rounded-xl border border-white/5 p-4 font-mono text-sm overflow-x-auto'
+                            >
+                                <pre className='text-gray-300' dangerouslySetInnerHTML={{ __html: POST_DATA.code }} />
+                            </motion.div>
+                        )}
+                    </div>
+                </div>
+                
+                {/* AIレビュー ＆ コメント */}
                         </div>
                     </div>
                 </div>
