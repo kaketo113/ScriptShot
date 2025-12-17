@@ -6,7 +6,7 @@ import { Search, Hash, User, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
-// ダミーデータ
+// Dummy Data
 const TRENDING_TAGS = [
   { name: 'Python', count: '12.5k' },
   { name: 'React', count: '8.2k' },
@@ -27,88 +27,108 @@ const POPULAR_POSTS = Array.from({ length: 9 }).map((_, i) => ({
   likes: Math.floor(Math.random() * 500),
 }));
 
-// コンポーネント
+// Component
 export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'top' | 'accounts' | 'tags'>('top');
 
+  // 検索バーのクリア
   const clearSearch = () => setQuery('');
 
   return (
     <div className="min-h-screen bg-black text-white flex">
-        <Sidebar />
+      <Sidebar />
 
-        <main className='flex-1 md:ml-64 min-h-screen'>
-            <div className='max-w-4xl mx-auto p-6'>
+      <main className="flex-1 md:ml-64 min-h-screen">
+        <div className="max-w-4xl mx-auto p-6">
+          
+          {/* 検索バーエリア */}
+          <div className="sticky top-0 bg-black/80 backdrop-blur-md z-20 py-4 -mx-6 px-6 border-b border-white/5">
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+              <input 
+                type="text" 
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search code, tags, or people..." 
+                className="w-full bg-[#161616] border border-white/10 rounded-full py-3.5 pl-12 pr-12 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+              />
+              {query && (
+                <button onClick={clearSearch} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
 
-                {/* 検索バー */}
-                <div className='sticky top-0 bg-black/80 backdrop-blur-md z-20 py-4 -mx-6 px-6 border-b border-white/5'>
-                  <div className='relative group'>
-                    <Search className='absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-blue-400 transition-colors' />
-                    <input
-                      type='text'
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder='Search Code, tags, or people'
-                      className='w-full bg-[#161616] border border-white/10 rounded-full py-3.5 pl-12 pr-12 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all'
-                    />
-                    {query && (
-                      <button onClick={clearSearch} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                </div>
-              </div>
+          {/* コンテンツエリア */}
+          <div className="mt-6">
+            
+            {/* 検索キーワードがない時（デフォルト表示） */}
+            {!query ? (
+              <div className="space-y-10">
+                
+                {/* トレンドタグ */}
+                <section>
+                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                    <Hash className="w-5 h-5 text-blue-400" /> Trending Tags
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    {TRENDING_TAGS.map(tag => (
+                      <Link key={tag.name} href={`/search?q=${tag.name}`} className="bg-[#161616] border border-white/5 px-4 py-2 rounded-lg hover:bg-white/10 transition-colors group">
+                        <span className="font-bold text-gray-200 group-hover:text-blue-400">#{tag.name}</span>
+                        <span className="ml-2 text-xs text-gray-500">{tag.count} posts</span>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
 
-              {/* コンテンツメニュー */}
-              <div className='mt-6'>
-
-                {/* 検索ワードがないとき */}
-                {!query ? (
-                  <div className='space-y-10'>
-
-                    {/* トレンドタグ */}
-                    <section>
-                      <h3 className='flex flex-wrap gap-3'>
-                        <Hash className='w-5 h-5 textblue-400' />Trending Tags
-                      </h3>
-                      <div className='flex flex-wrap gap-3'>
-                        {TRENDING_TAGS.map((tag) => (
-                          <Link
-                            key={tag.name}
-                            href={`/search?q=${tag.name}`} className='bg-[#161616] border border-white/5 px-4 py-2 rounded-lg hover:bg-white/10 transition-colors group'>
-                              <span className='font-bold text-gray-200 group-hover:text-blue-400'>#{tag.name}</span>
-                              <span className='ml-2 text-xs text-gray-500'>{tag.count} posts</span>
-                            </Link>
-                        ))}
-                      </div>
-                    </section>
-
-                  {/* おすすめユーザー */}
-                  <section>
-                    <h3 className='text-lg font-bold mb-4 flex items-center gap-2'>
-                      <User className='w-5 h-5 text-blue-400' />Suggested for you
-                    </h3>
-                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-                      {SUGGESTED_USERS.map((user) => (
-                        <div key={user.id} className='bg-[#161616] border border-white/5 p-4 rounded-xl flex items-center gap-3 hover:border-white/20 transition-colors cursor-pointer'>
-                          <img src={user.avatar} className='w-12 h-12 rounded-full bg-gray-700' />
-                          <div className='flex-1 min-w-0'>
-                            <h4 className='font-bold text-gray-500 truncate'>{user.name}</h4>
-                            <p className='text-xs text-gray-500 truncate'>{user.bio}</p>
-                          </div>
-                          <button className='px-3 py-1.5 bg-blue-600/10 text-blue-400 text-xs font-bold rounded-md hover:bg-blue-600 hover:text-white transition-colors'>
-                            Follow
-                          </button> 
+                {/* おすすめユーザー */}
+                <section>
+                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                    <User className="w-5 h-5 text-purple-400" /> Suggested for you
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {SUGGESTED_USERS.map(user => (
+                      <div key={user.id} className="bg-[#161616] border border-white/5 p-4 rounded-xl flex items-center gap-3 hover:border-white/20 transition-colors cursor-pointer">
+                        <img src={user.avatar} className="w-12 h-12 rounded-full bg-gray-700" />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-sm truncate">{user.name}</h4>
+                          <p className="text-xs text-gray-500 truncate">{user.bio}</p>
                         </div>
-                      ))}
-                    </div>
-                  </section>
-                </div>
-                ) : (
-                  // 検索結果表示
-                  <div>
-                    <div className='flex gap-6 border-b border-white/10 mb-6'>
+                        <button className="px-3 py-1.5 bg-blue-600/10 text-blue-400 text-xs font-bold rounded-md hover:bg-blue-600 hover:text-white transition-colors">
+                          Follow
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* 人気の投稿 (Explore Grid) */}
+                <section>
+                  <h3 className="text-lg font-bold mb-4">Explore</h3>
+                  <div className="grid grid-cols-3 gap-1 md:gap-4">
+                    {POPULAR_POSTS.map((post) => (
+                      <motion.div 
+                        key={post.id}
+                        layoutId={`post-${post.id}`}
+                        className="aspect-square bg-[#161616] relative group cursor-pointer overflow-hidden rounded-md"
+                      >
+                        <img src={post.image} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                          <span className="font-bold flex items-center gap-1">❤️ {post.likes}</span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </section>
+
+              </div>
+            ) : (
+              // 検索結果表示 (タブ切り替え)
+              <div>
+                <div className="flex gap-6 border-b border-white/10 mb-6">
+                  {(['top', 'accounts', 'tags'] as const).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -116,20 +136,25 @@ export default function SearchPage() {
                     >
                       {tab}
                       {activeTab === tab && (
-                        <motion.div
-                          layoutId='activeTab'
-                          className='absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500'
+                        <motion.div 
+                          layoutId="activeTab"
+                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
                         />
                       )}
                     </button>
                   ))}
                 </div>
-
-                {/* 検索結果ダミー */}
                 
+                {/* 検索結果の中身 (ダミー) */}
+                <div className="text-center py-20 text-gray-600">
+                  <p>Searching for &quot;{query}&quot; in {activeTab}...</p>
+                </div>
               </div>
-            </div>
-        </main>
-    </div> 
-  );   
+            )}
+
+          </div>
+        </div>
+      </main>
+    </div>
+  );
 }
