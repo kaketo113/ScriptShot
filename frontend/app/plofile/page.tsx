@@ -86,7 +86,7 @@ export default function ProfilePage() {
 
                             <div className="flex justify-between p-4 bg-[#111] rounded-xl border border-white/5">
                                 <div className="text-center">
-                                    <div className="text-xl font-bold text-white">128</div>
+                                    <div className="text-xl font-bold text-white">15</div>
                                     <div className="text-xs text-gray-500">Posts</div>
                                 </div>
                                 <div className="text-center">
@@ -123,10 +123,107 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
+                        {/* ハイライト */}
+                        <div className="bg-[#111] border border-white/10 rounded-2xl p-4 h-[320px] flex flex-col">
+                            <div className="flex gap-4 mb-4 border-b border-white/5 pb-2">
+                                <button
+                                    onClick={() => setActiveHighlightTab('recent')}
+                                    className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors ${activeHighlightTab === 'recent' ? 'text-blue-400' : 'text-gray-600 hover:text-gray-400'}`}
+                                >
+                                    <Clock className="w-3 h-3" />Recent
+                                </button>
+                                <button
+                                    onClick={() => setActiveHighlightTab('favorite')}
+                                    className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors ${activeHighlightTab === 'favorite' ? 'text-pink-400' : 'text-gray-600 hover:text-gray-400'}`}
+                                >
+                                    <Heart className="w-3 h-3" />Favorites
+                                </button>
+                            </div>
+
+                            {/* リスト表示エリア */}
+                            <div>
+                                <AnimatePresence mode="wait">
+                                    {activeHighlightTab === 'recent' ? (
+                                        <motion.div
+                                            key="recent"
+                                            initial={{ opacity:0, x: 20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: -20 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="space-y-3"
+                                        >
+                                            {RECENT_POSTS.map(post => (
+                                                <div key={post.id} className="flex gap-3 items-center group cursor-pointer p-2 rounded-lg hover:bg-white/5 transition-colors">
+                                                    <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-800 flex-shrink-0 border border-white/10">
+                                                        <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="text-sm font-medium text-gray-200 truncate group-hover:text-blue-400 transition-colors">{post.title}</h4>
+                                                        <span className="text-xs text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">{post.lang}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div 
+                                            key="favorite"
+                                            initial={{ opacity: 0, x: 20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: -20 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="space-y-3"
+                                        >
+                                            {FAVORITE_POSTS.map(post => (
+                                                <div key={post.id} className="flex gap-3 items-center group cursor-pointer p-2 rounded-lg hover:bg-white/5 transition-colors">
+                                                    <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-800 flex-shrink-0 border border-pink-500/20">
+                                                        <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="text-sm font-medium text-gray-200 truncate group-hover:text-pink-400 transition-colors">{post.title}</h4>
+                                                        <p className="text-xs text-gray-500">by {post.user}</p>
+                                                    </div>
+                                                     <Heart className="w-4 h-4 text-pink-500 fill-current" />
+                                                </div>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </div>
 
                     </div>
+
+
+                    <div className="border-t border-white/10 pt-6">
+                        <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+                            <span className="w-1 h-6 bg-blue-500 rounded-full"></span>
+                                All Posts
+                            </h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {[1, 2, 3, 4, 5, 6].map((item) => (
+                                    <motion.div 
+                                        key={item}
+                                        initial={{ opacity: 0 }}
+                                        whileInView={{ opacity: 1 }}
+                                        viewport={{ once: true }}
+                                            className="aspect-video bg-[#161616] rounded-xl border border-white/5 overflow-hidden relative group cursor-pointer"
+                                        >
+                                            <img 
+                                                src={`https://source.unsplash.com/random/500x300?coding,tech&sig=${item}`} 
+                                                alt="Post" 
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-70 group-hover:opacity-100" 
+                                            />
+                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 text-white font-bold">
+                                                <span>❤️ 42</span>
+                                                <span>💬 5</span>
+                                            </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                    </div>
+
                 </div>
             </main>
         </div>
-    )
+    );
 }
