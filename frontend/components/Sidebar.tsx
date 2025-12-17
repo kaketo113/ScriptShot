@@ -12,8 +12,7 @@ export const Sidebar = () => {
     { icon: Home, label: 'Home', href: '/' },
     { icon: Search, label: 'Search', href: '/search' },
     { icon: PlusSquare, label: 'Create', href: '/create' },
-    { icon: Bell, label: 'Notifications', href: '/notifications' },
-    { icon: User, label: 'Profile', href: '/plofile' },
+    { icon: User, label: 'Profile', href: '/profile' },
   ];
 
   return (
