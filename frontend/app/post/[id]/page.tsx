@@ -33,3 +33,22 @@ const POST_DATA = {
   );
 }`
 };
+
+const AI_REVIEWS = [
+  {
+    type: 'suggestion',
+    title: 'アクセシビリティの改善提案',
+    content: '`motion.div` に `role="main"` を追加すると、スクリーンリーダー利用者にとってより親切な構造になります。',
+    codeSuggestion: '<motion.div role="main" ...>'
+  },
+  {
+    type: 'performance',
+    title: 'レンダリング最適化',
+    content: 'アニメーション要素が多いため、`layout` プロパティの使用を検討してください。GPU負荷を軽減できる可能性があります。',
+  }
+];
+
+const USER_COMMENTS = [
+  { id: 1, user: 'tanaka_dev', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix', text: '発光のブラー具合が絶妙ですね！参考にします。' },
+  { id: 2, user: 'suzuki_ui', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka', text: 'コードも見やすくて助かります。' },
+];
