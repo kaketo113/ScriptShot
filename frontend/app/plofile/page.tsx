@@ -100,9 +100,31 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        
-                    </div>
+                        {/* スキルマップ */}
+                        <div className="bg[#111] border border-white/10 rounded-2xl p-4 flex flex-col items-center relative overflow-hidden h-[320px]">
+                            <h3 className="absolute top-4 left-4 text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                <Star className="w-3 h-3" /> Skill Map
+                            </h3>
+                            <div className="w-full h-full mt-4">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={SKILL_DATA}>
+                                        <PolarGrid stroke="#333" />
+                                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#888', fontSize: 10 }} />
+                                        <Radar
+                                            name='My Skills'
+                                            dataKey="A"
+                                            stroke="#3b82f6"
+                                            strokeWidth={2}
+                                            fill="#3b82f6"
+                                            fillOpacity={0.3}
+                                        />
+                                    </RadarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
 
+
+                    </div>
                 </div>
             </main>
         </div>
