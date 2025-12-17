@@ -55,7 +55,34 @@ export default function SettingsPage() {
                                     <ChevronRight className='w-5 h-5 text-gray-600' />
                                 </Link>
 
-                                
+                                <button className='w-full flwx items-center justify-between p-4 hover:bg-white/5 transition-colors border-b border-white/5 group text-left'>
+                                    <div className="flex items-center gap-4">
+                                        <div className='p-2 bg-purple-500/10 rounded-lg text-purple-400 group-hover:text-purple-300'>
+                                            <Lock className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className='font-medium'>Password & Security</div>
+                                            <div className='text-xs text-gray-500'>Update password and 2FA</div>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className='w-5 h-5 text-gray-600' />
+                                </button>
+
+                                <button className='w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors group text-left'>
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-2 bg-green-500/10 rounded-lg text-green-400 group-hover:text-green-300">
+                                            <Bell className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className="font-medium">Notifications</div>
+                                            <div className="text-xs text-gray-500">Manage email and push notifications</div>
+                                        </div>
+                                    </div>
+                                    <Toggle checked={emailNotif} onChange={() => setEmailNotif(!emailNotif)} />
+                                </button>
+
+                            </div>
+                        </section>
     )
 
 }
