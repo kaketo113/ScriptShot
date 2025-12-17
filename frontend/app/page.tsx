@@ -22,14 +22,12 @@ const MOCK_POSTS = [
     likes: 120,
     comments: 15,
     time: '2h ago',
-    codeSnippet: `motion.div 
-  initial={{ opacity: 0 }} 
-  animate={{ opacity: 1 }}`
+    codeSnippet: `ああああああああああああああ`
   },
   {
     id: 2,
     user: {
-      name: 'tanaka_dev',
+      name: 'taro',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
     },
     content: 'ダミーデータ #Python #DataScience',
@@ -38,9 +36,7 @@ const MOCK_POSTS = [
     likes: 85,
     comments: 4,
     time: '5h ago',
-    codeSnippet: `import pandas as pd
-df = pd.read_csv('data.csv')
-df.plot()`
+    codeSnippet: `いいいいいいいいいいいいいいいいいい)`
   },
 ];
 
