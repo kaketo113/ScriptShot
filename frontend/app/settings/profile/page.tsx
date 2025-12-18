@@ -30,17 +30,31 @@ export default function EditProfilePage() {
     };
 
     return (
-        <div>
+        <div className='min-h-screen bg-black text-white flex'>
             <Sidebar />
 
-            <main>
-                <div>
-                    <header>
-                        <Link href="/settings">
-                            <ArrowLeft />
+            <main className='flex-1 md:ml-64 min-h-screen'>
+                <div className='max-w-2xl mx-auto p-6 pb-20'>
+
+                    {/* ヘッダー */}
+                    <header className='flex items-center gap-4 mb-8'>
+                        <Link href="/settings" className='p-2 hover:bg-white/10 rounded-full transition-colors'>
+                            <ArrowLeft className='w-5 h-5' />
                         </Link>
-                        <h1>Edit Profile</h1>
+                        <h1 className='text-2xl font-bold'>Edit Profile</h1>
                     </header>
+
+                    <form onSubmit={handleSave} className='space-y-8'>
+                        <div>
+                            <div>
+                                <div>
+                                    <img />
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </main>
         </div>
