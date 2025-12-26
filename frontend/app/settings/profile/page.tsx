@@ -45,6 +45,8 @@ export default function EditProfilePage() {
                     </header>
 
                     <form onSubmit={handleSave} className='space-y-8'>
+
+                    {/* アイコン変更エリア */}
                         <div>
                             <div>
                                 <div>
