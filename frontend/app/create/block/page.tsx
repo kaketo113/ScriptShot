@@ -22,3 +22,33 @@ export default function CreateBlockPage() {
             },
         ],
     };
+
+    return (
+        <div className='mini-h-screen bg-black text-white flex'>
+            <Sidebar />
+
+            <main className='flex-1 md:ml-64 min-h-screen p-4 flex flex-col h-screen'>
+                <h1 className='text-xl font-bold mb-4 mt-2'>Block Coding (Step 1: 表示テスト)</h1>
+
+                <div className='flex-1 border border-gray-700 rounded-lg overflow-hidden bg-white relative min-h-[500px]'>
+                    <BlocklyWorkspace
+                        className='w-full h-full absolute inset-0'
+                        toolboxConfiguration={initalbox}
+                        workspaceConfiguration={{
+                            grid: {
+                                spacing: 20,
+                                length: 3,
+                                colour: '#ccc',
+                                snap: true,
+                            },
+                        }}
+                        onWorkspaceChange={(worksoace) => {
+                            console.log('ブロックが動きました');
+                        }}
+                    />
+                </div>
+
+            </main>
+        </div>
+    );
+}
