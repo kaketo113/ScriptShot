@@ -15,4 +15,18 @@ export default function CreatePage() {
             h1 { color: blue; }
         </style>`);
         
-        ``);
+        const [isRunning, setIsRunning] = useState(false);
+        const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+        const [mode, setMode] = useState<'text' | 'block'>('text');
+
+        // ダミー実行処理
+        const runCode = () => {
+            setIsRunning(true);
+            setTimeout(() => {
+                setIsRunning(false);
+            }, 2000);
+        };
+
+        const switchToBlockMode = () => {
+            router.push('/create/block');
+        };
