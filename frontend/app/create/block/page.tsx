@@ -47,6 +47,7 @@ export default function CreateBlockPage() {
         setGeneratedCode(code);
     };
 
+    //生成されたコードを実行する関数
     const runCode = () => {
         if (!generatedCode) {
             alert('コードが生成されていません。');
@@ -54,9 +55,9 @@ export default function CreateBlockPage() {
         }
 
         try {
-            const runUserCode = new Function(generatedCode);
+            const runUserCode = new Function(generatedCode);    //function:新しい関数オブジェクトを作成
             runUserCode();
-        } catch (error) {
+        } catch (error) {   //catch:エラーが発生した場合の処理
             alert('コードの実行中にエラーが発生しました: ' + error);
         }
     };
@@ -66,7 +67,15 @@ export default function CreateBlockPage() {
             <Sidebar />
 
             <main className='flex-1 md:ml-64 min-h-screen p-4 flex flex-col h-screen'>
-                <h1 className='text-xl font-bold mb-4 mt-2'>Block Coding (Step 1: 表示テスト)</h1>
+
+                {/* header */}
+                <header className='h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#0a0a0a]'>
+                    <div className='flex items-center gap-4'>
+                        <Link href='/create' className='text-gray-400 hover:text-white'>
+                            <ArrowLeft className='w-5 h-5' />
+                        </Link>
+                    </div>
+                </header>
 
                 {/* Blocklyエディタ */}
                 <div className='flex-1 border border-gray-700 rounded-lg overflow-hidden bg-white relative min-h-[500px]'>
