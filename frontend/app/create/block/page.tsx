@@ -64,7 +64,7 @@ export default function CreateBlockPage() {
 
     return (
         <div className='mini-h-screen bg-black text-white flex'>
-            <Sidebar />
+            {/* <Sidebar /> */}
 
             <main className='flex-1 md:ml-64 min-h-screen p-4 flex flex-col h-screen'>
 
@@ -85,32 +85,42 @@ export default function CreateBlockPage() {
                     <Play className='w-5 h-5' />
                     コードを実行
                 </button>
-                
-                {/* Blocklyエディタ */}
-                <div className='flex-1 border border-gray-700 rounded-lg overflow-hidden bg-white relative min-h-[500px]'>
-                    <BlocklyWorkspace
-                        className='w-full h-full absolute inset-0'
-                        toolboxConfiguration={initalbox}//定義したオブジェクトを渡す
-                        workspaceConfiguration={{
-                            grid: {
-                                spacing: 20,
-                                length: 3,
-                                colour: '#ccc',
-                                snap: true,
-                            },
-                            //表示崩れ防止
-                            move: {
-                                scrollbars: true,
-                                drag: true,
-                                wheel: true,
-                            },
-                        }}
-                        onWorkspaceChange={(worksoace) => {
-                            console.log('ブロックが動きました');
-                        }}
-                    />
-                </div>
 
+                <div className='flex-1 flex overflow-hidden p-4 gap-4'>
+                
+                    {/* Blocklyエディタ */}
+                    <div className='flex-1 border border-gray-700 rounded-lg overflow-hidden bg-white relative min-h-[500px]'>
+                        <BlocklyWorkspace
+                            className='w-full h-full absolute inset-0'
+                            toolboxConfiguration={initalbox}//定義したオブジェクトを渡す
+                            initialXml='<xml xmlns="https://developers.google.com/blockly/xml"></xml>'
+                            workspaceConfiguration={{
+                                grid: {
+                                    spacing: 20,
+                                    length: 3,
+                                    colour: '#ccc',
+                                    snap: true,
+                                },
+                                //表示崩れ防止
+                                move: {
+                                    scrollbars: true,
+                                    drag: true,
+                                    wheel: true,
+                                },
+                                renderer: 'geras',
+                            }}
+                            onWorkspaceChange={onWorkspaceChange}
+                        />
+                    </div>
+
+                    <div className='w-80 bg-[#111] border border-white/10 p-4 flex flex-col rounded-lg'>
+                        <h3 className='text-sm font-bold text-gray-500 mb-2 uppercase'>Real-time Code</h3>
+                        <pre className='flex-1 bg-[#0a0a0a] p-4 rounded-lg text-green-400 font-mono text-xs overflow-auto border border-white/5'>
+                            {generatedCode}
+                        </pre>
+                    </div>
+                    
+                </div>
             </main>
         </div>
     );
