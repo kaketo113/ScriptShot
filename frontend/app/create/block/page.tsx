@@ -20,6 +20,15 @@ export default function CreateBlockPage() {
                     {kind: 'block', type: 'text_print'},//表示
                 ],
             },
+            {
+                kind:'category',
+                name: 'ループ',
+                colour: '#5CA65C',
+                contents: [
+                    {kind: 'block', type: 'controls_repeat_ext'},//繰り返し
+                    {kind: 'block', type: 'controls_whileUntil'},//～の間
+                ],
+            },
         ],
     };
 
