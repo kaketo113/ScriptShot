@@ -1,8 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { BlocklyWorkspace } from 'react-blockly'; 
 import { Sidebar } from '@/components/Sidebar';
+import { Play, ArrowLeft, ImportIcon } from 'lucide-react';
+import Link from 'next/link';
+
+import Blockly from 'blockly';
+import {  javascriptGenerator } from 'blockly/javascript';
+import 'blockly/msg/ja';//日本語化
 
 export default function CreateBlockPage() {
     const initalbox = {
