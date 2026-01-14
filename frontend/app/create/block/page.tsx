@@ -42,13 +42,19 @@ export default function CreateBlockPage() {
                 <div className='flex-1 border border-gray-700 rounded-lg overflow-hidden bg-white relative min-h-[500px]'>
                     <BlocklyWorkspace
                         className='w-full h-full absolute inset-0'
-                        toolboxConfiguration={initalbox}
+                        toolboxConfiguration={initalbox}//定義したオブジェクトを渡す
                         workspaceConfiguration={{
                             grid: {
                                 spacing: 20,
                                 length: 3,
                                 colour: '#ccc',
                                 snap: true,
+                            },
+                            //表示崩れ防止
+                            move: {
+                                scrollbars: true,
+                                drag: true,
+                                wheel: true,
                             },
                         }}
                         onWorkspaceChange={(worksoace) => {
