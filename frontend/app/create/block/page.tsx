@@ -47,6 +47,20 @@ export default function CreateBlockPage() {
         setGeneratedCode(code);
     };
 
+    const runCode = () => {
+        if (!generatedCode) {
+            alert('コードが生成されていません。');
+            return;
+        }
+
+        try {
+            const runUserCode = new Function(generatedCode);
+            runUserCode();
+        } catch (error) {
+            alert('コードの実行中にエラーが発生しました: ' + error);
+        }
+    };
+
     return (
         <div className='mini-h-screen bg-black text-white flex'>
             <Sidebar />
@@ -54,6 +68,7 @@ export default function CreateBlockPage() {
             <main className='flex-1 md:ml-64 min-h-screen p-4 flex flex-col h-screen'>
                 <h1 className='text-xl font-bold mb-4 mt-2'>Block Coding (Step 1: 表示テスト)</h1>
 
+                {/* Blocklyエディタ */}
                 <div className='flex-1 border border-gray-700 rounded-lg overflow-hidden bg-white relative min-h-[500px]'>
                     <BlocklyWorkspace
                         className='w-full h-full absolute inset-0'
