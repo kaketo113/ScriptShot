@@ -77,6 +77,15 @@ export default function CreateBlockPage() {
                     </div>
                 </header>
 
+                {/* 実行ボタン */}
+                <button
+                    onClick={runCode}
+                    className='flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold transition-colors'
+                >
+                    <Play className='w-5 h-5' />
+                    コードを実行
+                </button>
+                
                 {/* Blocklyエディタ */}
                 <div className='flex-1 border border-gray-700 rounded-lg overflow-hidden bg-white relative min-h-[500px]'>
                     <BlocklyWorkspace
