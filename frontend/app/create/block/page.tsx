@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { BlocklyWorkspace } from 'react-blockly'; 
-import { Sidebar } from '@/components/Sidebar';
 import { Play, ArrowLeft, ImportIcon } from 'lucide-react';
 import Link from 'next/link';
 
@@ -63,10 +62,9 @@ export default function CreateBlockPage() {
     };
 
     return (
-        <div className='mini-h-screen bg-black text-white flex'>
-            {/* <Sidebar /> */}
+        <div className='mini-h-screen bg-black text-white flex flex-col'>
 
-            <main className='flex-1 md:ml-64 min-h-screen p-4 flex flex-col h-screen'>
+            <main className='flex-1 min-h-screen flex flex-col h-screen'>
 
                 {/* header */}
                 <header className='h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#0a0a0a]'>
@@ -119,7 +117,7 @@ export default function CreateBlockPage() {
                             {generatedCode}
                         </pre>
                     </div>
-                    
+
                 </div>
             </main>
         </div>
