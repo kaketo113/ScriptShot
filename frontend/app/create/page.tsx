@@ -66,7 +66,39 @@ export default function CreatePage() {
                         </div>
                     </header>
 
-                    
+                    <div className='flex-1 flex overflow-hidden'>
+
+                        {/* エディタ部分 */}
+                        <div className='w-1/2 border-r border-white/10 flex flex-col bg-[#111]'>
+                            <div className='flex-1 relative group'>
+                                <div className='absolute top-0 right-0 bg-[#222] text-xs text-gray-400 px-3 py-1 rounded-bl-lg border-b border-l border-white/5 z-10'>
+                                    HTML / CSS
+                                </div>
+                                <textarea
+                                    className='w-full h-full bg-transparent text-gray-300 font-mono text-sm p-6 resize-none focus:outline-none leading-relaxed'
+                                    value={code}
+                                    onChange={(e) => setCode(e.target.value)}
+                                    spellCheck={false}
+                                    placeholder='Write your code here...'
+                                />
+                                <div className='absolute top-6 left-0 w-8 text-right text-gray-700 font-mono text-sm select-none pointer-events-none opacity-50'>
+                                    1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20
+                                </div>
+                            </div>
+
+                            {/* キャプション */}
+                            <div className='h-40 border-t border-white/10 p-4 bg-[#161616]'>
+                                <textarea
+                                    className='w-full h-full bg-transparent text-sm text-white placeholder-gray-500 resize-none focus:outline-none'
+                                    placeholder='キャプションを追加...'
+                                />
+                            </div>
+                        </div>
+
+                        
+                            </div>
+                        </div>
+                    </div>
                 </main>
             </div>
         )
