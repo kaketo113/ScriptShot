@@ -95,10 +95,59 @@ export default function CreatePage() {
                             </div>
                         </div>
 
-                        
+                        {/* プレビュー部分 */}
+                        <div className='w-1/2 bg-[#050505] flex flex-col'>
+                            <div className='flex-1 flex items-center justify-center relative overflow-hidden p-8'>
+
+                                {/* プレビュー内容 */}
+                                {previewUrl ? (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className='relative w-full aspect-video rounded-lg overflow-hidden border border-white/10 shadow-2xl bg-white'
+                                    >
+                                        <div className='h-8 bg-[#f0f0f0] flex items-center px-3 gap-1.5 border-b border-gray-300'>
+                                            <div className='w-2.5 h-2.5 rounded-full bg-red-400'></div>
+                                            <div className='w-2.5 h-2.5 rounded-full bg-yellow-400'></div>
+                                            <div className='w-2.5 h-2.5 rounded-full bg-green-400'></div>
+                                            <div className='ml-2 h-5 w-2/3 bg-white border border-gray-200 rounded text-[10px] flex items-center px-2 text-gray-400 font-sans'>localhost:3000</div>
+                                        </div>
+                                        {/* 実行結果 */}
+                                        <img src={previewUrl} alt="Preview" className='w-full h-full object-cover' />
+                                    </motion.div>
+                                ) : (
+                                    <div className='text-center text-gray-600'>
+                                        <div className='w-20 h-20 bg-[#111] rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5 shadow-inner'>
+                                            <ImageIcon className='w-8 h-8 opacity-40' />
+                                        </div>
+                                        <p className='text-sm font-medium'>コードを実行してプレビューを表示</p>
+                                        <p className='text-xs text-gray-700 mt-2'>Code Snap Technology</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* アクションバー */}
+                            <div className='h-20 border-t border-white/10 flex items-center justify-between px-8 bg-[#111]'>
+                                <button
+                                    onClick={runCode}
+                                    disabled={isRunning}
+                                    className='flex items-center gap-2 px-6 py-3 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 shadow-[0_0_15px_rgba(255,255,255,0.1)]'
+                                >
+                                    {isRunning ? <Loader2 className='w-5 h-5 animate-spin' /> : <Play className='w-5 h-5 fill-current' />}
+                                    Run Code
+                                </button>
+
+                                <button
+                                    disabled={!previewUrl}
+                                    className='px-10 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20'
+                                >
+                                    Post
+                                </button>
                             </div>
                         </div>
+
                     </div>
                 </main>
             </div>
-        )
+        );
+}
