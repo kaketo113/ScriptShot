@@ -11,6 +11,9 @@ import {  javascriptGenerator } from 'blockly/javascript';
 import 'blockly/msg/ja';//日本語化
 
 export default function CreateBlockPage() {
+    const [generatedCode, setGeneratedCode] = useState('');//生成されたコードを保存するステート
+
+    //Blocklyのツールボックス定義
     const initalbox = {
         kind: 'categoryToolbox',
         contents: [
@@ -36,6 +39,12 @@ export default function CreateBlockPage() {
                 ],
             },
         ],
+    };
+
+    //ブロックが動かされたら「コードを生成」してStateに保存
+    const onWorkspaceChange = (workspace: any) => {
+        const code = javascriptGenerator.workspaceToCode(workspace);
+        setGeneratedCode(code);
     };
 
     return (
