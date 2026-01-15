@@ -66,7 +66,7 @@ export default function ProfilePage() {
             <main className="flex-1 md:ml-64 min-h-screen">
 
                 {/* 背景 */}
-                <div className="h-48 bg-gradient-to-r from-blue-900/40 to-purple-900/40 w-full relative">
+                <div className="h-48 bg-linear-to-r from-blue-900/40 to-purple-900/40 w-full relative">
                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns.png')] opacity-20"></div>
                 </div>
 
