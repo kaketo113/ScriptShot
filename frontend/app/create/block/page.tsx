@@ -2,15 +2,21 @@
 
 import React, { useState } from 'react';
 import { BlocklyWorkspace } from 'react-blockly'; 
-import { Play, ArrowLeft, ImportIcon } from 'lucide-react';
+import { Play, Image as ImageIcon, Loader2, Code2, Box, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-
+import { useRouter } from 'next/navigation';
 import Blockly from 'blockly';
 import {  javascriptGenerator } from 'blockly/javascript';
 import 'blockly/msg/ja';//日本語化
 
 export default function CreateBlockPage() {
     const [generatedCode, setGeneratedCode] = useState('');//生成されたコードを保存するステート
+    const router = useRouter();
+    const [mode, setMode] = useState<'text' | 'block'>('block');
+
+    const handleSwitchToBlock = () => {
+        router.push('/create');
+    };
 
     //Blocklyのツールボックス定義
     const initalbox = {
@@ -67,11 +73,32 @@ export default function CreateBlockPage() {
             <main className='flex-1 min-h-screen flex flex-col h-screen'>
 
                 {/* header */}
-                <header className='h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#0a0a0a]'>
-                    <div className='flex items-center gap-4'>
-                        <Link href='/create' className='text-gray-400 hover:text-white'>
-                            <ArrowLeft className='w-5 h-5' />
+                <header className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#0a0a0a]">
+
+                    <div className="flex items-center gap-4">
+                        <Link href="/" className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
+                            <ArrowLeft className="w-5 h-5" />
                         </Link>
+                        <h2 className="font-bold text-lg">Create New Post</h2>
+                    </div>
+
+
+                    <div className="flex bg-[#161616] p-1 rounded-lg">
+                        <button 
+                            onClick={handleSwitchToBlock}
+                            className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5`}
+                        >
+                        <Code2 className="w-4 h-4" /> Text
+                        </button>
+                        <button 
+                            className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all bg-blue-600 text-white shadow-lg`}
+                        >
+                        <Box className="w-4 h-4" /> Block
+                        </button>
+                    </div>
+
+                    <div className="w-40 flex justify-end">
+                        {/* TODO:下書き */}
                     </div>
                 </header>
 
