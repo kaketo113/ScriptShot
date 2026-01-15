@@ -48,7 +48,6 @@ const initalbox = {
 export default function CreateBlockPage() {
     const [generatedCode, setGeneratedCode] = useState('');//生成されたコードを保存するステート
     const router = useRouter();
-    const [mode, setMode] = useState<'text' | 'block'>('block');
 
     const handleSwitchToText = () => {
         router.push('/create');
