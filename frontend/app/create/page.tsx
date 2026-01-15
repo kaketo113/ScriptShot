@@ -5,7 +5,6 @@ import { Play, Image as ImageIcon, Loader2, Code2, Box, ArrowLeft } from 'lucide
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { h1 } from 'framer-motion/client';
 
 export default function CreatePage() {
     const router = useRouter();
@@ -17,7 +16,6 @@ export default function CreatePage() {
         
         const [isRunning, setIsRunning] = useState(false);
         const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-        const [mode, setMode] = useState<'text' | 'block'>('text');
 
         // ダミー実行処理
         const runCode = () => {
