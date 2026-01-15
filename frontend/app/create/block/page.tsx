@@ -115,7 +115,7 @@ export default function CreateBlockPage() {
                     className='flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold transition-colors'
                 >
                     <Play className='w-5 h-5' />
-                    コードを実行
+                    Run Code
                 </button>
 
                 <div className='flex-1 flex overflow-hidden p-4 gap-4'>
