@@ -119,7 +119,7 @@ const PostCard = ({ post, index }: { post: any, index: number }) => {
           {/* コードスニペット */}
           <div className='bg-[#0a0a0a] rounded-lg p-3 border border-white/5 font-mono text-xs text-gray-400 overflow-hidden relative'>
             <pre>{post.codeSnippet}</pre>
-            <div className='absolute inset-0 bg-gradient-to-b from-transparent to-[#0a0a0a]/90 pointer-events-none' />
+            <div className='absolute inset-0 bg-linear-to-b from-transparent to-[#0a0a0a]/90 pointer-events-none' />
           </div>
         </div>
     </motion.article>
@@ -142,7 +142,7 @@ export default function HomePage() {
 
           {/* ヘッダー（スマホ用） */}
           <div className='flex items-center justify-between mb-8 md:hidden'>
-            <h1 className='text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent'>ScriptShot</h1>
+            <h1 className='text-xl font-bold bg-linear-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent'>ScriptShot</h1>
             <Bell className='w-6 h-6 text-gray-400' />
           </div>
 
