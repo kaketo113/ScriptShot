@@ -35,17 +35,31 @@ export default function CreatePage() {
         const [isRunning, setIsRunning] = useState(false);
         const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-        // ダミー実行処理
-        const runCode = () => {
-            setIsRunning(true);
-            setTimeout(() => {
-                setIsRunning(false);
-            }, 2000);
-        };
+        // コード実行処理
+        const runCode = useCallback(() => {
+            if (!code) return;
 
-        const switchToBlockMode = () => {
-            router.push('/create/block');
-        };
+            setIsRunning(true);
+
+            setTimeout(() => {
+                try {
+                    if (previewUrl) {
+                        URL.revokeObjectURL(previewUrl);
+                    }
+
+                    const blob = new Blob([code], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+
+                    setPreviewUrl(url);
+                } catch (error) {
+                    console.error('Preview generation failed:', error);
+                } finally {
+                    setIsRunning(false);
+                }
+            }, 600);
+        }, [code, previewUrl]);
+
+        const lineNumbers = code.split('\n').map((_, i) => i + 1);// 行番号生成
 
         return (
             <div className='min-h-screen bg-black text-white flex flex-col'>
