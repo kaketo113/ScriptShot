@@ -92,28 +92,35 @@ export default function CreatePage() {
                             </button>
                         </div>
 
-                        <div className='w-40 flex justify-end'>
-                            {/* TODO:下書き保存 */}
+                        <div className='w-40 flex justify-end items-center gap-3'>
+                            <div className='text-xs text-gray-500'>Autosaved</div>
                         </div>
                     </header>
 
                     <div className='flex-1 flex overflow-hidden'>
 
                         {/* エディタ部分 */}
-                        <div className='w-1/2 border-r border-white/10 flex flex-col bg-[#111]'>
-                            <div className='flex-1 relative group'>
-                                <div className='absolute top-0 right-0 bg-[#222] text-xs text-gray-400 px-3 py-1 rounded-bl-lg border-b border-l border-white/5 z-10'>
-                                    HTML / CSS
+                        <div className='w-1/2 border-r border-white/10 flex flex-col bg-[#1e1e1e]'>
+                            <div className='flex-1 relative overflow-hidden flex'>
+                                <div className='w-12 bg-[#1e1e1e] border-r border-white/5 flex flex-col items-end pt-4 pr-3 text-gray-600 font-mono text-sm select-none leading-relaxed overflow-hidden'>
+                                    {lineNumbers.map(num => (
+                                    <div key={num} className='h-6'>{num}</div>
+                                    ))}
                                 </div>
-                                <textarea
-                                    className='w-full h-full bg-transparent text-gray-300 font-mono text-sm p-6 resize-none focus:outline-none leading-relaxed'
-                                    value={code}
-                                    onChange={(e) => setCode(e.target.value)}
-                                    spellCheck={false}
-                                    placeholder='Write your code here...'
-                                />
-                                <div className='absolute top-6 left-0 w-8 text-right text-gray-700 font-mono text-sm select-none pointer-events-none opacity-50'>
-                                    1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9<br />10<br />11<br />12<br />13<br />14<br />15<br />16<br />17<br />18<br />19<br />20
+
+                                {/* エディタ */}
+                                <div className='flex-1 relative'>
+                                    {/* 言語選択 */}
+                                    <div className='absolute top-0 right-4 bg-[#2d2d2d] text-[10px] text-gray-400 px-3 py-1 rounded-b-md z-10 font-mono border-x border-b border-white/5 pointer-events-none'>
+                                        HTML/CSS
+                                    </div>
+                                    <textarea
+                                        className='w-full h-full bg-[#1e1e1e] text-gray-300 font-mono text-sm p-4 pt-4 resize-none focus:outline-none leading-relaxed'
+                                        value={code}
+                                        onChange={(e) => setCode(e.target.value)}
+                                        spellCheck={false}
+                                        style={{ lineHeight:'1.5rem' }}
+                                    />
                                 </div>
                             </div>
 
