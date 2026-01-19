@@ -125,33 +125,42 @@ export default function CreatePage() {
                             </div>
 
                             {/* キャプション */}
-                            <div className='h-40 border-t border-white/10 p-4 bg-[#161616]'>
+                            <div className='h-32 border-t border-white/10 p-4 bg-[#161616]'>
                                 <textarea
-                                    className='w-full h-full bg-transparent text-sm text-white placeholder-gray-500 resize-none focus:outline-none'
-                                    placeholder='キャプションを追加...'
+                                    className='w-full h-full bg-transparent text-sm text-gray-300 placeholder-gray-600 resize-none focus:outline-none leading-relaxed'
+                                    placeholder='キャプションを入力してください...'
                                 />
                             </div>
                         </div>
 
                         {/* プレビュー部分 */}
                         <div className='w-1/2 bg-[#050505] flex flex-col'>
-                            <div className='flex-1 flex items-center justify-center relative overflow-hidden p-8'>
+                            <div className='flex-1 flex items-center justify-center relative overflow-hidden bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:16px_16px] p-8'>
 
                                 {/* プレビュー内容 */}
                                 {previewUrl ? (
                                     <motion.div
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
+                                        initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        transition={{ duration: 0.3 }}
                                         className='relative w-full aspect-video rounded-lg overflow-hidden border border-white/10 shadow-2xl bg-white'
                                     >
-                                        <div className='h-8 bg-[#f0f0f0] flex items-center px-3 gap-1.5 border-b border-gray-300'>
-                                            <div className='w-2.5 h-2.5 rounded-full bg-red-400'></div>
-                                            <div className='w-2.5 h-2.5 rounded-full bg-yellow-400'></div>
-                                            <div className='w-2.5 h-2.5 rounded-full bg-green-400'></div>
-                                            <div className='ml-2 h-5 w-2/3 bg-white border border-gray-200 rounded text-[10px] flex items-center px-2 text-gray-400 font-sans'>localhost:3000</div>
+                                        <div className='h-8 bg-[#f1f1f1] flex items-center px-3 gap-1.5 border-b border-gray-300'>
+                                            <div className='w-2.5 h-2.5 rounded-full bg-[#ff5f57] border border-[#e0443e]'></div>
+                                            <div className='w-2.5 h-2.5 rounded-full bg-[#febc2e] border border-[#d89e24]'></div>
+                                            <div className='w-2.5 h-2.5 rounded-full bg-[#28c840] border border-[#1aab29]'></div>
+                                            <div className='ml-2 h-5 flex-1 bg-white border border-gray-200 rounded text-[10px] flex items-center px-2 text-gray-400 font-sans truncate'>
+                                                localhost:3000/preview
+                                            </div>
                                         </div>
+
                                         {/* 実行結果 */}
-                                        <img src={previewUrl} alt="Preview" className='w-full h-full object-cover' />
+                                        <iframe
+                                            src={previewUrl}
+                                            className='w-full h-[calc(100%-2rem)] bg-white'
+                                            sandbox='allow-scripts'
+                                            title='Preview'
+                                        />
                                     </motion.div>
                                 ) : (
                                     <div className='text-center text-gray-600'>
