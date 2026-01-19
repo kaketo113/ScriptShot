@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { Play, Image as ImageIcon, Loader2, Code2, Box, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 export default function CreatePage() {
     const [code, setCode] = useState(`<!-- HTML/CSSを入力 -->
@@ -34,7 +35,12 @@ export default function CreatePage() {
         
         const [isRunning, setIsRunning] = useState(false);
         const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+        const router = useRouter();
 
+        //モード切替処理(Blockモードは実装済み)
+        const switchToBlockMode = () => {
+            router.push('/create/block');
+        };
         // コード実行処理
         const runCode = useCallback(() => {
             if (!code) return;
@@ -84,7 +90,7 @@ export default function CreatePage() {
                                 <span>Text</span>
                             </button>
                             <button
-                                onClick={() => console.log('Switch to block mode')}
+                                onClick={switchToBlockMode}
                                 className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium`}
                             >
                                 <Box className='w-4 h-4' />
