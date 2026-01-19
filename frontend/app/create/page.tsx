@@ -62,17 +62,17 @@ export default function CreatePage() {
         const lineNumbers = code.split('\n').map((_, i) => i + 1);// 行番号生成
 
         return (
-            <div className='min-h-screen bg-black text-white flex flex-col'>
-
+            <div className='min-h-screen bg-black text-white flex flex-col font-sans'>
+            
                 <main className='flex-1 min-h-screen flex flex-col'>
 
                     {/* header */} 
-                    <header className='h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#0a0a0a]'>
+                    <header className='h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#0a0a0a] sticky top-0 z-50'>
                         <div className='flex items-center gap-4'>
-                            <Link href='/' className='text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full'>
+                            <a href='/' className='text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full'>
                                 <ArrowLeft className='w-5 h-5' />
-                            </Link>
-                            <h2 className='font-bold text-lg'>Create New Post</h2>
+                            </a>
+                            <h2 className='font-bold text-lg tracking-tight'>Create New Post</h2>
                         </div>
 
                         {/* モード切替 */}
