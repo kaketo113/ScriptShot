@@ -1,18 +1,36 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Play, Image as ImageIcon, Loader2, Code2, Box, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 export default function CreatePage() {
-    const router = useRouter();
-    const [code, setCode] = useState(`<!-- ここにコードを入力 -->
-        <h1>Hello, ScriptShot!</h1>
-        <style>
-            h1 { color: blue; }
-        </style>`);
+    const [code, setCode] = useState(`<!-- HTML/CSSを入力 -->
+<div class="container">
+    <h1>Hello, World!</h1>
+    <p>Code generated preview</p>
+</div>
+
+<style>
+    body {
+        font-family: sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #fff;
+    }
+    .container {
+        text-align: center;
+        padding: 2rem;
+        border: 2px dashed #3b82f6;
+        border-radius: 1rem;
+    }
+    h1 {
+        color: #3b82f6;
+    }
+</style>`);
         
         const [isRunning, setIsRunning] = useState(false);
         const [previewUrl, setPreviewUrl] = useState<string | null>(null);
