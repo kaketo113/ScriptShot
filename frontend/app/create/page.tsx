@@ -163,32 +163,32 @@ export default function CreatePage() {
                                         />
                                     </motion.div>
                                 ) : (
-                                    <div className='text-center text-gray-600'>
-                                        <div className='w-20 h-20 bg-[#111] rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5 shadow-inner'>
-                                            <ImageIcon className='w-8 h-8 opacity-40' />
+                                    <div className='text-center text-gray-600 select-none'>
+                                        <div className='w-24 h-24 bg-[#111] rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/5 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]'>
+                                            <ImageIcon className='w-10 h-10 opacity-30' />
                                         </div>
-                                        <p className='text-sm font-medium'>コードを実行してプレビューを表示</p>
-                                        <p className='text-xs text-gray-700 mt-2'>Code Snap Technology</p>
+                                        <p className='text-sm font-medium text-gray-500'>Run code to generate preview</p>
+                                        <p className='text-[10px] text-gray-700 mt-2 font-mono'>Powered by ScriptShot Engine</p>
                                     </div>
                                 )}
                             </div>
 
                             {/* アクションバー */}
-                            <div className='h-20 border-t border-white/10 flex items-center justify-between px-8 bg-[#111]'>
+                            <div className='h-20 border-t border-white/10 flex items-center justify-between px-8 bg-[#111] z-20'>
                                 <button
                                     onClick={runCode}
                                     disabled={isRunning}
-                                    className='flex items-center gap-2 px-6 py-3 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 shadow-[0_0_15px_rgba(255,255,255,0.1)]'
+                                    className='flex items-center gap-2 px-6 py-2.5 bg-white text-black text-sm font-bold rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.15)] active:scale-95 transform duration-100'
                                 >
-                                    {isRunning ? <Loader2 className='w-5 h-5 animate-spin' /> : <Play className='w-5 h-5 fill-current' />}
+                                    {isRunning ? <Loader2 className='w-4 h-4 animate-spin' /> : <Play className='w-4 h-4 fill-current' />}
                                     Run Code
                                 </button>
 
                                 <button
                                     disabled={!previewUrl}
-                                    className='px-10 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20'
+                                    className='px-8 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-md hover:bg-blue-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20 active:scale-95 transform duration-100'
                                 >
-                                    Post
+                                    Post Creation
                                 </button>
                             </div>
                         </div>
