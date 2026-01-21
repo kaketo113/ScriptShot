@@ -81,5 +81,33 @@ const SortableBlock =({ id, type, content, onDelete, onChange }: { id: string, t
         opacity: isDragging ? 0.5 : 1,
     };
 
-    
+    return(
+        <div 
+            ref={setNodeRef} 
+            style={style} 
+            className={`relative group bg-[#1a1a1a] rounded-lg border border-white/5 hover:border-blue-500/50 transition-colors mb-3 ${isDragging ? 'shadow-xl ring-2 ring-blue-500' : ''}`}
+        >
+            {/* Drag Handle (つまみ) */}
+            <div 
+                {...attributes} 
+                {...listeners}
+                className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-300 hover:bg-white/5 rounded-l-lg touch-none"
+            >
+                <GripVertical size={14} />
+            </div>
+
+            {/* Content Area (入力エリア) */}
+            <div className="pl-10 pr-12 py-4">
+                {type === 'heading' && (
+                    <input 
+                        type="text" 
+                        value={content}
+                        onChange={(e) => onChange(id, e.target.value)}
+                        className="w-full bg-transparent text-xl font-bold text-white placeholder-gray-600 focus:outline-none"
+                        placeholder="Heading Title"
+                    />
+                )}
+            </div>
+        </div>
+    )
 }
