@@ -148,3 +148,85 @@ const SortableBlock =({ id, type, content, onDelete, onChange }: { id: string, t
     );
 };
 
+export default function BlockCreatePage() {
+    const [blocks, setBlocks] = useState<BlockItem[]>([
+        { id: '1', type: 'heading', content: 'Welcome to ScriptShot' },
+        { id: '2', type: 'text', content: 'This is a block-based editor. Drag items from the left or reorder blocks here.' },
+    ]);
+    const [isRunning, setIsRunning] = useState(false);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+    // DnD Sensors (ドラッグ操作の検知設定)
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), // 5px動かしたらドラッグ開始
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
+
+    // Handlers
+    const addBlock = (type: BlockType) => {
+        const newBlock: BlockItem = {
+            id: crypto.randomUUID(),
+            type,
+            content: type === 'heading' ? 'New Heading' : type === 'button' ? 'Click Me' : ''
+        };
+        setBlocks([...blocks, newBlock]);
+    };
+
+    const deleteBlock = (id: string) => {
+        setBlocks(blocks.filter(b => b.id !== id));
+    };
+
+    const updateBlockContent = (id: string, content: string) => {
+        setBlocks(blocks.map(b => b.id === id ? { ...b, content } : b));
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (active.id !== over?.id && over) {
+            setBlocks((items) => {
+                const oldIndex = items.findIndex((item) => item.id === active.id);
+                const newIndex = items.findIndex((item) => item.id === over.id);
+                return arrayMove(items, oldIndex, newIndex);
+            });
+        }
+    };
+
+    //プレビュー用画面
+    const generateHTML = () => {
+        const bodyContent = blocks.map(block => {
+            switch(block.type) {
+                case 'heading': return `<h2 class="text-2xl font-bold mb-4 text-gray-800">${block.content}</h2>`;
+                case 'text': return `<p class="mb-4 text-gray-600 leading-relaxed">${block.content}</p>`;
+                case 'button': return `<button class="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition">${block.content}</button>`;
+                case 'image': return `<div class="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 mb-4 border-2 border-dashed border-gray-300">Image Placeholder</div>`;
+                default: return '';
+            }
+        }).join('\n');
+
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <script src="https://cdn.tailwindcss.com"></script>
+                <style>body { font-family: sans-serif; padding: 2rem; }</style>
+            </head>
+            <body>
+                <div class="max-w-2xl mx-auto">
+                    ${bodyContent}
+                </div>
+            </body>
+            </html>
+        `;
+    };
+
+    const runPreview = () => {
+        setIsRunning(true);
+        setTimeout(() => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+            const blob = new Blob([generateHTML()], { type: 'text/html' });
+            setPreviewUrl(URL.createObjectURL(blob));
+            setIsRunning(false);
+        }, 500);
+    };
+}
