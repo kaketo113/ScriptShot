@@ -107,7 +107,44 @@ const SortableBlock =({ id, type, content, onDelete, onChange }: { id: string, t
                         placeholder="Heading Title"
                     />
                 )}
+                {type === 'text' && (
+                    <textarea 
+                        value={content}
+                        onChange={(e) => onChange(id, e.target.value)}
+                        className="w-full bg-transparent text-sm text-gray-300 placeholder-gray-600 focus:outline-none resize-none field-sizing-content min-h-[60px]"
+                        placeholder="Enter text here..."
+                    />
+                )}
+                {type === 'button' && (
+                    <div className="flex items-center gap-2">
+                        <div className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md opacity-80 pointer-events-none">
+                            Button
+                        </div>
+                        <input 
+                            type="text" 
+                            value={content}
+                            onChange={(e) => onChange(id, e.target.value)}
+                            className="flex-1 bg-transparent text-sm text-white placeholder-gray-600 focus:outline-none border-b border-white/10 focus:border-blue-500 px-2 py-1"
+                            placeholder="Button Label"
+                        />
+                    </div>
+                )}
+                {type === 'image' && (
+                    <div className="p-4 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center text-gray-500 gap-2 bg-black/20">
+                        <ImageIcon size={24} />
+                        <span className="text-xs">Image Placeholder</span>
+                    </div>
+                )}
             </div>
+
+            {/* Delete Button */}
+            <button 
+                onClick={() => onDelete(id)}
+                className="absolute right-3 top-3 p-1.5 text-gray-600 hover:text-red-400 hover:bg-red-400/10 rounded opacity-0 group-hover:opacity-100 transition-all"
+            >
+                <Trash2 size={14} />
+            </button>
         </div>
-    )
-}
+    );
+};
+
