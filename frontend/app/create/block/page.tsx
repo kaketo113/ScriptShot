@@ -47,6 +47,21 @@ interface SidebarItemProps {
     icon: React.ElementType;
 }
 
+//ツールボックスのアイテム
+const SidebarItem = ({ type, label, icon: Icon, onClick }: SidebarItemProps & { onClick: () => void }) => (
+    <div 
+        onClick={onClick}
+        className="flex items-center gap-3 p-3 bg-[#2a2a2a] rounded-lg cursor-pointer hover:bg-[#333] hover:scale-[1.02] transition-all border border-transparent hover:border-white/10 group select-none active:scale-95"
+    >
+        <div className="p-2 bg-black/30 rounded-md text-gray-400 group-hover:text-white transition-colors">
+            <Icon size={18} />
+        </div>
+        <span className="text-sm font-medium text-gray-300 group-hover:text-white">{label}</span>
+        <div className="ml-auto opacity-0 group-hover:opacity-100 text-xs text-gray-500 bg-black/50 px-2 py-0.5 rounded">
+            Add
+        </div>
+    </div>
+);
 
 export default function CreateBlockPage() {
     const [generatedCode, setGeneratedCode] = useState('');//生成されたコードを保存するステート
