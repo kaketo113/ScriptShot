@@ -4,6 +4,58 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { Play, Image as ImageIcon, Loader2, Code2, Box, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+const highlightHTML = (code: string) => {
+    if (!code) return [];
+
+    // トークン分割ロジック
+    // 1. コメント
+    // 2. スタイルタグブロック
+    // 3. タグ (<div, </div> など)
+    // 4. 属性値 ("...")
+    // 5. 記号/その他
+    const regex = /(<!--[\s\S]*?-->)|(<style>[\s\S]*?<\/style>)|(<\/?[a-z0-9-]+)|("[^"]*")|(>)|([^<]+)/gi;
+
+    const tokens = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(code)) !== null) {
+        const [fullMatch, comment, styleBlock, tag, attrValue, closeBracket, text] = match;
+        const key = match.index;
+
+        // マッチしなかった隙間のテキスト（安全策）
+        if (match.index > lastIndex) {
+            tokens.push(<span key={`gap-${lastIndex}`} className="text-gray-300">{code.slice(lastIndex, match.index)}</span>);
+        }
+
+        if (comment) {
+            tokens.push(<span key={key} className="text-gray-500 italic">{fullMatch}</span>);
+        } else if (styleBlock) {
+            // styleタグの中身は黄色っぽく、タグは青く
+            const inner = fullMatch.replace(/<\/?style>/g, '');
+            tokens.push(
+                <span key={key}>
+                    <span className="text-blue-400">&lt;style&gt;</span>
+                    <span className="text-yellow-200">{inner}</span>
+                    <span className="text-blue-400">&lt;/style&gt;</span>
+                </span>
+            );
+        } else if (tag) {
+            tokens.push(<span key={key} className="text-blue-400 font-semibold">{fullMatch}</span>);
+        } else if (attrValue) {
+            tokens.push(<span key={key} className="text-orange-300">{fullMatch}</span>);
+        } else if (closeBracket) {
+            tokens.push(<span key={key} className="text-blue-400">{fullMatch}</span>);
+        } else if (text) {
+            tokens.push(<span key={key} className="text-gray-100">{fullMatch}</span>);
+        }
+
+        lastIndex = regex.lastIndex;
+    }
+
+    return tokens;
+};
+
 export default function CreatePage() {
     const [code, setCode] = useState(`<!-- HTML/CSSを入力 -->
 <div class="container">
