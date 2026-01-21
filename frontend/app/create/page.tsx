@@ -32,6 +32,7 @@ export default function CreatePage() {
         color: #3b82f6;
     }
 </style>`);
+// {TODO:エディタの色分け}
         
         const [isRunning, setIsRunning] = useState(false);
         const [previewUrl, setPreviewUrl] = useState<string | null>(null);
