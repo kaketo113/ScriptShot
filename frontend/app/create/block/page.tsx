@@ -90,7 +90,7 @@ export default function CreateBlockPage() {
                     </div>
 
 
-                    <div className="flex bg-[#161616] p-1 rounded-lg">
+                    <div className="flex bg-[#161616] p-1 rounded-lg border border-white/5">
                         <button 
                             onClick={handleSwitchToText}
                             className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5`}

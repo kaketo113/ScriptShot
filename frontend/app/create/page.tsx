@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Play, Image as ImageIcon, Loader2, Code2, Box, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 const highlightHTML = (code: string) => {
     if (!code) return [];
@@ -85,6 +86,12 @@ export default function CreatePage() {
 
     const [isRunning, setIsRunning] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const router = useRouter();
+
+    //モード切替処理(Blockモードは実装済み)
+        const switchToBlockMode = () => {
+            router.push('/create/block');
+        };
 
     // コード実行（Blob URL生成）
     const runCode = useCallback(() => {
@@ -128,7 +135,7 @@ export default function CreatePage() {
                             <Code2 className='w-4 h-4' />
                             <span>Text</span>
                         </button>
-                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium'>
+                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium' onClick={switchToBlockMode}>
                             <Box className='w-4 h-4' />
                             <span>Block</span>
                         </button>
@@ -202,7 +209,7 @@ export default function CreatePage() {
                         </div>
                     </div>
 
-                    {/* --- PREVIEW AREA (RIGHT) --- */}
+                    {/* --- プレビュー --- */}
                     <div className='w-1/2 bg-[#050505] flex flex-col'>
                         <div className='flex-1 flex items-center justify-center relative overflow-hidden bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:16px_16px] p-8'>
                             {previewUrl ? (
