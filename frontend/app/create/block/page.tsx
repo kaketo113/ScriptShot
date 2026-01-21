@@ -1,12 +1,36 @@
 'use client';
 
 import React, { useState } from 'react';
-import { BlocklyWorkspace } from 'react-blockly'; 
-import { Play, Image as  ImageIcon, Loader2,Code2, Box, ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import {  javascriptGenerator } from 'blockly/javascript';
-import 'blockly/msg/ja';//日本語化
+import { 
+    DndContext, 
+    closestCenter, 
+    KeyboardSensor, 
+    PointerSensor, 
+    useSensor, 
+    useSensors, 
+    DragEndEvent
+} from '@dnd-kit/core';
+import { 
+    arrayMove, 
+    SortableContext, 
+    sortableKeyboardCoordinates, 
+    verticalListSortingStrategy, 
+    useSortable 
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { 
+    Type, 
+    Image as ImageIcon, 
+    Square, 
+    GripVertical, 
+    Trash2, 
+    ArrowLeft, 
+    Code2, 
+    Box, 
+    Play,
+    Loader2
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 
 //Blocklyのツールボックス定義
 const initalbox = {
