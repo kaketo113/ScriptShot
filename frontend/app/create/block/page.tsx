@@ -32,42 +32,21 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-//Blocklyのツールボックス定義
-const initalbox = {
-    kind: 'categoryToolbox',
-    contents: [
-        {
-            kind:'category',
-            name: '基本',
-            colour: '#5C81A6',
-            contents: [
-                {kind: 'block', type: 'controls_if'},//もし～なら
-                {kind: 'block', type: 'logic_compare'},//比較
-                {kind: 'block', type: 'math_number'},//数値
-                {kind: 'block', type: 'text'},//テキスト
-                {kind: 'block', type: 'text_print'},//表示
-            ],
-        },
-        {
-            kind:'category',
-            name: 'ループ',
-            colour: '#5CA65C',
-            contents: [
-                {kind: 'block', type: 'controls_repeat_ext'},//繰り返し
-                {kind: 'block', type: 'controls_whileUntil'},//～の間
-            ],
-        },
-        {
-            kind:'category',
-            name: '変数',
-            colour: '#5C5CA6',
-            contents: [
-                {kind: 'block', type: 'variables_get'},//変数の取得
-                {kind: 'block', type: 'variables_set'},//変数の設定
-            ],
-        },
-    ],
-};
+// --- Types ---
+type BlockType = 'heading' | 'text' | 'image' | 'button';
+
+interface BlockItem {
+    id: string;
+    type: BlockType;
+    content: string;
+}
+
+interface SidebarItemProps {
+    type: BlockType;
+    label: string;
+    icon: React.ElementType;
+}
+
 
 export default function CreateBlockPage() {
     const [generatedCode, setGeneratedCode] = useState('');//生成されたコードを保存するステート
