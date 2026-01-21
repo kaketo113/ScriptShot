@@ -57,21 +57,22 @@ const highlightHTML = (code: string) => {
 };
 
 export default function CreatePage() {
+    // デフォルトコード
     const [code, setCode] = useState(`<!-- HTML/CSSを入力 -->
 <div class="container">
-    <h1>Hello, World!</h1>
-    <p>Code generated preview</p>
+    <h1>Hello, ScriptShot!</h1>
+    <p>Code generated preview.</p>
 </div>
 
 <style>
-    body {
+    body { 
         font-family: sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-        background-color: #fff;
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        height: 100vh; 
+        margin: 0; 
+        background: #fff;
     }
     .container {
         text-align: center;
@@ -79,9 +80,7 @@ export default function CreatePage() {
         border: 2px dashed #3b82f6;
         border-radius: 1rem;
     }
-    h1 {
-        color: #3b82f6;
-    }
+    h1 { color: #3b82f6; }
 </style>`);
 // {TODO:エディタの色分け}
         
