@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     DndContext, 
     closestCenter, 
@@ -9,9 +9,6 @@ import {
     useSensor, 
     useSensors, 
     DragEndEvent,
-    DragOverlay,
-    DragStartEvent,
-    defaultDropAnimationSideEffects
 } from '@dnd-kit/core';
 import { 
     arrayMove, 
@@ -27,26 +24,27 @@ import {
     Box, 
     ArrowLeft, 
     Trash2,
-    Zap,
     GripVertical,
-    Repeat,
-    MessageSquare,
-    Move,
-    RotateCw,
-    Command,
-    CornerDownRight
+    Layout,
+    Type,
+    Image as ImageIcon,
+    MousePointerClick,
+    Square,
+    Layers
 } from 'lucide-react';
 
 // --- Block Types & Definitions ---
-type BlockCategory = 'event' | 'control' | 'motion' | 'looks';
+type BlockCategory = 'layout' | 'content' | 'component';
 
 interface BlockDefinition {
     type: string;
     label: string;
     category: BlockCategory;
     hasInput?: boolean;
+    inputType?: 'text' | 'color'; // 入力タイプ拡張
+    defaultContent?: string;
     icon?: React.ElementType;
-    isWrapper?: boolean; // C-shape block (like Loop)
+    isWrapper?: boolean; // Sectionなどのコンテナ扱い
 }
 
 interface BlockInstance {
@@ -54,43 +52,42 @@ interface BlockInstance {
     type: string;
     content: string;
     category: BlockCategory;
-    parentId?: string | null; // For nesting (future implementation)
 }
 
 // Visual Config
 const BLOCK_HEIGHT = 42;
-const INDENT_SIZE = 16;
 
 const CATEGORY_STYLES = {
-    event: { 
-        bg: 'bg-[#EAB308]', // Yellow-500
-        border: 'border-[#CA8A04]',
-        shadow: 'shadow-yellow-900/20'
+    layout: { 
+        bg: 'bg-blue-600', 
+        border: 'border-blue-700',
+        shadow: 'shadow-blue-900/20'
     },
-    control: { 
-        bg: 'bg-[#F97316]', // Orange-500
-        border: 'border-[#EA580C]',
-        shadow: 'shadow-orange-900/20'
+    content: { 
+        bg: 'bg-slate-600', 
+        border: 'border-slate-700',
+        shadow: 'shadow-slate-900/20'
     },
-    motion: { 
-        bg: 'bg-[#06B6D4]', // Cyan-500
-        border: 'border-[#0891B2]',
-        shadow: 'shadow-cyan-900/20'
-    },
-    looks: { 
-        bg: 'bg-[#A855F7]', // Purple-500
-        border: 'border-[#9333EA]',
-        shadow: 'shadow-purple-900/20'
+    component: { 
+        bg: 'bg-emerald-600', 
+        border: 'border-emerald-700',
+        shadow: 'shadow-emerald-900/20'
     },
 };
 
 const TOOLBOX_BLOCKS: BlockDefinition[] = [
-    { type: 'start', label: 'Start', category: 'event', icon: Zap },
-    { type: 'loop', label: 'Forever', category: 'control', icon: Repeat, isWrapper: true },
-    { type: 'if', label: 'If', category: 'control', icon: Command, isWrapper: true },
-    { type: 'move', label: 'Move', category: 'motion', hasInput: true, icon: Move },
-    { type: 'turn', label: 'Turn', category: 'motion', hasInput: true, icon: RotateCw },
-    { type: 'say', label: 'Say', category: 'looks', hasInput: true, icon: MessageSquare },
+    // Layout
+    { type: 'section', label: 'Section Wrapper', category: 'layout', icon: Layout, isWrapper: true },
+    { type: 'container', label: 'Container', category: 'layout', icon: Box, isWrapper: true },
+    
+    // Content
+    { type: 'heading', label: 'Heading H1', category: 'content', hasInput: true, defaultContent: 'Hello World', icon: Type },
+    { type: 'text', label: 'Paragraph', category: 'content', hasInput: true, defaultContent: 'Welcome to my website.', icon: Type },
+    { type: 'image', label: 'Image URL', category: 'content', hasInput: true, defaultContent: 'https://placehold.co/600x400', icon: ImageIcon },
+
+    // Components
+    { type: 'button', label: 'Button', category: 'component', hasInput: true, defaultContent: 'Click Me', icon: MousePointerClick },
+    { type: 'card', label: 'Simple Card', category: 'component', hasInput: true, defaultContent: 'Card Content', icon: Square },
 ];
 
 // --- Puzzle Notch Component (SVG) ---
@@ -136,8 +133,8 @@ const SortableBlock = ({
 
     const styles = CATEGORY_STYLES[block.category];
     const def = TOOLBOX_BLOCKS.find(b => b.type === block.type);
-    const Icon = def?.icon || Command;
-    const isWrapper = def?.isWrapper; // C-shape check
+    const Icon = def?.icon || Layers;
+    const isWrapper = def?.isWrapper;
 
     return (
         <div 
@@ -154,11 +151,10 @@ const SortableBlock = ({
                 rounded-r-sm shadow-md cursor-grab active:cursor-grabbing
                 border-t border-b border-r border-white/10
                 ${isWrapper ? 'rounded-tl-sm' : 'rounded-l-sm'}
-                ${block.type === 'start' ? 'rounded-t-xl mt-4 !border-t-0' : ''}
             `}>
-                {/* Notch Visuals */}
-                {block.type !== 'start' && <TopNotch className="text-black/20" />} {/* Shadow for depth */}
-                {block.type !== 'start' && <TopNotch className={styles.bg} />}
+                {/* Visual Notches */}
+                <TopNotch className="text-black/20" />
+                <TopNotch className={styles.bg} />
                 
                 {!isWrapper && <BottomNotch className="text-black/20 translate-y-[1px]" />}
                 {!isWrapper && <BottomNotch className={styles.bg} />}
@@ -170,20 +166,19 @@ const SortableBlock = ({
 
                     {/* Input Fields */}
                     {def?.hasInput && (
-                        <div className="flex items-center gap-1 bg-black/20 rounded px-1 py-0.5 mx-1 shadow-inner border border-black/10">
+                        <div className="flex-1 flex items-center gap-1 bg-black/20 rounded px-2 py-0.5 mx-2 shadow-inner border border-black/10 min-w-0">
                             <input 
                                 type="text" 
-                                className="w-12 bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder-white/50"
+                                className="w-full bg-transparent text-xs font-mono text-white focus:outline-none placeholder-white/50 truncate"
                                 value={block.content}
                                 onChange={(e) => onChange(id, e.target.value)}
                                 onPointerDown={(e) => e.stopPropagation()}
-                                placeholder="0"
                             />
                         </div>
                     )}
                 </div>
 
-                {/* Delete Button (Hover) */}
+                {/* Delete Button */}
                 <button 
                     onClick={(e) => { e.stopPropagation(); onDelete(id); }}
                     className="ml-auto p-1 text-white/50 hover:text-white hover:bg-black/20 rounded opacity-0 group-hover:opacity-100 transition-all"
@@ -192,23 +187,17 @@ const SortableBlock = ({
                 </button>
             </div>
 
-            {/* C-Shape Wrapper Visuals (Bottom Arm) */}
+            {/* Wrapper Visuals (Bottom Arm for Layouts) */}
             {isWrapper && (
-                <div className="ml-3 pl-3 border-l-[12px] border-l-inherit min-h-[30px] flex flex-col justify-end relative" style={{ borderColor: 'inherit' }}>
-                    {/* The connector bar color needs to match block color. 
-                        Since we can't easily inherit tailwind colors in style prop without mapping,
-                        we use a trick or mapping. Here we rely on the parent div's color context.
-                    */}
+                <div className="ml-3 pl-3 border-l-[12px] border-l-inherit min-h-[20px] flex flex-col justify-end relative opacity-80" style={{ borderColor: 'inherit' }}>
                     <div className={`absolute inset-y-0 left-0 w-3 ${styles.bg} opacity-50`}></div>
-                    
-                    {/* The closing bottom piece of the C-shape */}
                     <div className={`
-                        relative h-6 w-24 ${styles.bg} rounded-b-sm rounded-tr-sm
+                        relative h-5 w-20 ${styles.bg} rounded-b-sm rounded-tr-sm
                         flex items-center px-2 text-[10px] text-white/70 font-mono mt-0.5
                     `}>
                         <TopNotch className={styles.bg} />
                         <BottomNotch className={styles.bg} />
-                        <span className="ml-4 opacity-50">end</span>
+                        <span className="ml-4 opacity-50">&lt;/{def?.type}&gt;</span>
                     </div>
                 </div>
             )}
@@ -219,7 +208,7 @@ const SortableBlock = ({
 // --- Toolbox Item ---
 const ToolboxBlock = ({ def, onClick }: { def: BlockDefinition, onClick: () => void }) => {
     const styles = CATEGORY_STYLES[def.category];
-    const Icon = def.icon || Command;
+    const Icon = def.icon || Layers;
     
     return (
         <div 
@@ -231,7 +220,6 @@ const ToolboxBlock = ({ def, onClick }: { def: BlockDefinition, onClick: () => v
                 select-none relative
             `}
         >
-            {/* Pseudo Notches for Preview */}
             <div className="absolute -top-[3px] left-3 w-3 h-[3px] bg-inherit rounded-t-sm opacity-50"></div>
             <div className="absolute -bottom-[3px] left-3 w-3 h-[3px] bg-inherit rounded-b-sm shadow-sm"></div>
 
@@ -242,13 +230,13 @@ const ToolboxBlock = ({ def, onClick }: { def: BlockDefinition, onClick: () => v
 };
 
 export default function BlockCreatePage() {
+    // State
     const [blocks, setBlocks] = useState<BlockInstance[]>([
-        { id: '1', type: 'start', content: '', category: 'event' },
-        { id: '2', type: 'loop', content: '', category: 'control' },
-        { id: '3', type: 'move', content: '10', category: 'motion' },
-        { id: '4', type: 'say', content: 'Hello', category: 'looks' },
+        { id: '1', type: 'heading', content: 'Welcome to Web Builder', category: 'content' },
+        { id: '2', type: 'text', content: 'Build websites by stacking blocks.', category: 'content' },
+        { id: '3', type: 'button', content: 'Get Started', category: 'component' },
     ]);
-    const [generatedCode, setGeneratedCode] = useState('');
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -259,7 +247,7 @@ export default function BlockCreatePage() {
         const newBlock: BlockInstance = {
             id: crypto.randomUUID(),
             type: def.type,
-            content: def.hasInput ? '10' : '',
+            content: def.defaultContent || '',
             category: def.category
         };
         setBlocks([...blocks, newBlock]);
@@ -284,52 +272,71 @@ export default function BlockCreatePage() {
         }
     };
 
-    // Code Generation Logic
-    const generateCode = () => {
-        let code = "// LOGIC FLOW\n";
-        let indent = "";
+    // HTML Generator
+    const generateHTML = () => {
+        let html = '';
         
         blocks.forEach(block => {
-            // Simple Indent Logic based on previous block type
-            // (Real implementation would need a tree structure)
-            
             switch(block.type) {
-                case 'start': 
-                    code += "onStart(() => {\n"; 
-                    indent = "  ";
+                case 'section':
+                    html += `<section class="py-12 px-6 bg-white border-b border-gray-200">\n`;
+                    // Note: Nesting logic would go here in a full tree structure
+                    html += `  <div class="p-4 border-2 border-dashed border-blue-200 text-center text-blue-400 rounded">Section Content Area</div>\n`;
+                    html += `</section>\n`;
                     break;
-                case 'loop': 
-                    code += `${indent}while(true) {\n`; 
-                    indent += "  ";
+                case 'container':
+                    html += `<div class="container mx-auto max-w-4xl p-4">\n`;
+                    html += `  <div class="p-4 border-2 border-dashed border-gray-200 text-gray-400 rounded">Container Content</div>\n`;
+                    html += `</div>\n`;
                     break;
-                case 'if':
-                    code += `${indent}if (condition) {\n`;
-                    indent += "  ";
+                case 'heading':
+                    html += `<h1 class="text-3xl font-bold text-gray-900 mb-4">${block.content}</h1>\n`;
                     break;
-                case 'move': 
-                    code += `${indent}actor.move(${block.content || 0});\n`; 
+                case 'text':
+                    html += `<p class="text-gray-600 mb-4 leading-relaxed">${block.content}</p>\n`;
                     break;
-                case 'turn': 
-                    code += `${indent}actor.rotate(${block.content || 0});\n`; 
+                case 'image':
+                    html += `<img src="${block.content}" alt="Image" class="w-full h-64 object-cover rounded-lg mb-6 shadow-md" />\n`;
                     break;
-                case 'say': 
-                    code += `${indent}console.log("${block.content}");\n`; 
+                case 'button':
+                    html += `<button class="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition shadow-lg active:scale-95">${block.content}</button>\n`;
+                    break;
+                case 'card':
+                    html += `<div class="p-6 bg-white rounded-xl shadow-lg border border-gray-100 mb-4">\n`;
+                    html += `  <h3 class="font-bold text-lg mb-2">Card Title</h3>\n`;
+                    html += `  <p class="text-gray-500">${block.content}</p>\n`;
+                    html += `</div>\n`;
                     break;
             }
         });
-        
-        // Close brackets (Pseudo)
-        code += "});";
-        setGeneratedCode(code);
+
+        // Wrap in full HTML document
+        return `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <script src="https://cdn.tailwindcss.com"></script>
+                <style>body { background-color: #f3f4f6; padding: 2rem; font-family: system-ui, sans-serif; }</style>
+            </head>
+            <body>
+                <div class="max-w-2xl mx-auto bg-gray-50 min-h-screen p-8 shadow-xl rounded-xl">
+                    ${html || '<div class="text-center text-gray-400 py-10">Add blocks to see preview</div>'}
+                </div>
+            </body>
+            </html>
+        `;
     };
 
-    React.useEffect(() => {
-        generateCode();
+    // Update preview when blocks change
+    useEffect(() => {
+        const html = generateHTML();
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        setPreviewUrl(url);
+        return () => URL.revokeObjectURL(url);
     }, [blocks]);
-
-    const runCode = () => {
-        alert("Running Code...");
-    };
 
     return (
         <div className='min-h-screen bg-[#111] text-white flex flex-col font-sans'>
@@ -340,7 +347,7 @@ export default function BlockCreatePage() {
                     <a href='/' className='text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full'>
                         <ArrowLeft className='w-5 h-5' />
                     </a>
-                    <h2 className='font-bold text-lg tracking-tight text-gray-200'>Logic Editor</h2>
+                    <h2 className='font-bold text-lg tracking-tight text-gray-200'>Web Builder</h2>
                 </div>
                 <div className='flex bg-[#161616] p-1 rounded-lg border border-white/5'>
                     <a href="/create" className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium'>
@@ -352,13 +359,7 @@ export default function BlockCreatePage() {
                         <span>Block</span>
                     </button>
                 </div>
-                <button
-                    onClick={runCode}
-                    className='flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md font-bold transition-all shadow-lg active:scale-95 text-sm'
-                >
-                    <Play className='w-4 h-4 fill-current' />
-                    <span>Run</span>
-                </button>
+                <div className="w-24"></div> {/* Spacer */}
             </header>
 
             <div className='flex-1 flex overflow-hidden'>
@@ -366,27 +367,32 @@ export default function BlockCreatePage() {
                 {/* Toolbox */}
                 <div className='w-64 bg-[#161616] border-r border-white/10 flex flex-col'>
                     <div className='p-4 border-b border-white/5'>
-                        <h3 className='text-[10px] font-bold text-gray-500 uppercase tracking-widest'>Blocks</h3>
+                        <h3 className='text-[10px] font-bold text-gray-500 uppercase tracking-widest'>Web Parts</h3>
                     </div>
                     <div className='flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar'>
                         <div>
-                            <div className='text-[10px] font-bold text-gray-600 mb-3 px-1'>EVENT & CONTROL</div>
-                            {TOOLBOX_BLOCKS.filter(b => ['event', 'control'].includes(b.category)).map(b => (
+                            <div className='text-[10px] font-bold text-gray-600 mb-3 px-1'>LAYOUT</div>
+                            {TOOLBOX_BLOCKS.filter(b => b.category === 'layout').map(b => (
                                 <ToolboxBlock key={b.type} def={b} onClick={() => addBlock(b)} />
                             ))}
                         </div>
                         <div>
-                            <div className='text-[10px] font-bold text-gray-600 mb-3 px-1'>ACTIONS</div>
-                            {TOOLBOX_BLOCKS.filter(b => ['motion', 'looks'].includes(b.category)).map(b => (
+                            <div className='text-[10px] font-bold text-gray-600 mb-3 px-1'>CONTENT</div>
+                            {TOOLBOX_BLOCKS.filter(b => b.category === 'content').map(b => (
+                                <ToolboxBlock key={b.type} def={b} onClick={() => addBlock(b)} />
+                            ))}
+                        </div>
+                        <div>
+                            <div className='text-[10px] font-bold text-gray-600 mb-3 px-1'>COMPONENTS</div>
+                            {TOOLBOX_BLOCKS.filter(b => b.category === 'component').map(b => (
                                 <ToolboxBlock key={b.type} def={b} onClick={() => addBlock(b)} />
                             ))}
                         </div>
                     </div>
                 </div>
 
-                {/* Workspace */}
-                <div className='flex-1 bg-[#0f0f0f] relative flex flex-col'>
-                    {/* Dot Grid Background */}
+                {/* Workspace (Center) */}
+                <div className='flex-1 bg-[#0f0f0f] relative flex flex-col border-r border-white/10'>
                     <div className='absolute inset-0 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:20px_20px] opacity-20 pointer-events-none'></div>
                     
                     <div className='flex-1 overflow-auto p-8 relative z-0 custom-scrollbar'>
@@ -399,7 +405,7 @@ export default function BlockCreatePage() {
                                 items={blocks.map(b => b.id)} 
                                 strategy={verticalListSortingStrategy}
                             >
-                                <div className='min-h-[600px] pb-40 max-w-2xl'>
+                                <div className='min-h-[600px] pb-40 max-w-2xl mx-auto'>
                                     {blocks.map((block) => (
                                         <SortableBlock 
                                             key={block.id} 
@@ -413,7 +419,7 @@ export default function BlockCreatePage() {
                                     {blocks.length === 0 && (
                                         <div className='flex flex-col items-center justify-center py-20 opacity-30'>
                                             <Box className='w-16 h-16 mb-4 text-gray-500' />
-                                            <p className='text-gray-400 font-bold'>Workspace Empty</p>
+                                            <p className='text-gray-400 font-bold'>Start Building</p>
                                         </div>
                                     )}
                                 </div>
@@ -422,18 +428,27 @@ export default function BlockCreatePage() {
                     </div>
                 </div>
 
-                {/* Preview Panel */}
-                <div className='w-80 bg-[#161616] border-l border-white/10 flex flex-col'>
-                    <div className='p-4 border-b border-white/5 flex justify-between items-center'>
-                        <h3 className='text-[10px] font-bold text-gray-500 uppercase tracking-widest'>Code Output</h3>
-                        <div className="flex gap-1">
-                            <div className="w-2 h-2 rounded-full bg-red-500/20"></div>
-                            <div className="w-2 h-2 rounded-full bg-yellow-500/20"></div>
-                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                {/* Live Preview (Right) */}
+                <div className='w-96 bg-[#111] flex flex-col'>
+                    <div className='p-3 border-b border-white/5 flex justify-between items-center bg-[#161616]'>
+                        <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                            <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
                         </div>
+                        <span className='text-[10px] font-bold text-gray-500 uppercase tracking-widest'>Live Preview</span>
                     </div>
-                    <div className='flex-1 p-4 font-mono text-xs text-blue-300 leading-relaxed overflow-auto'>
-                        <pre>{generatedCode}</pre>
+                    <div className='flex-1 bg-white relative'>
+                         {previewUrl ? (
+                            <iframe 
+                                src={previewUrl}
+                                className="w-full h-full border-none"
+                                title="Live Preview"
+                                sandbox="allow-scripts"
+                            />
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-gray-400 text-sm">Loading...</div>
+                        )}
                     </div>
                 </div>
 
