@@ -92,7 +92,7 @@ const TOOLBOX_BLOCKS: BlockDefinition[] = [
     { type: 'image', label: 'Image URL', category: 'content', hasInput: true, defaultContent: 'https://placehold.co/600x400', icon: ImageIcon },
 
     // Components
-    { type: 'button', label: 'Button', category: 'component', hasInput: true, defaultContent: 'Click Me', icon: MousePointerClick },
+    { type: 'button', label: 'Button', category: 'component', hasInput: true, defaultContent: 'Button', icon: MousePointerClick },
     { type: 'card', label: 'Simple Card', category: 'component', hasInput: true, defaultContent: 'Card Content', icon: Square },
 ];
 
@@ -368,16 +368,19 @@ export default function BlockCreatePage() {
                     </a>
                     <h2 className='font-bold text-lg tracking-tight text-gray-200'>Create New Post</h2>
                 </div>
-                <div className='flex bg-[#161616] p-1 rounded-lg border border-white/5'>
+                <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0'>
+                    <div className='flex bg-[#161616] p-1 rounded-lg border border-white/5'>
                     <a href="/create" className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium'>
                         <Code2 className='w-4 h-4' />
                         <span>Text</span>
                     </a>
-                    <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all bg-blue-600 text-white shadow-lg font-medium'>
+                    <a href="/create/block" className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all bg-blue-600 text-white shadow-lg font-medium'>
                         <Box className='w-4 h-4' />
                         <span>Block</span>
-                    </button>
+                    </a>
+                    </div>
                 </div>
+                
                 <div className="w-24"></div> {/* Spacer */}
             </header>
 

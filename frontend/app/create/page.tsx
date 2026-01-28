@@ -129,16 +129,20 @@ export default function CreatePage() {
                         </a>
                         <h2 className='font-bold text-lg tracking-tight'>Create New Post</h2>
                     </div>
-
-                    <div className='flex bg-[#161616] p-1 rounded-lg border border-white/5'>
-                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all bg-blue-600 text-white shadow-lg font-medium'>
-                            <Code2 className='w-4 h-4' />
-                            <span>Text</span>
-                        </button>
-                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium' onClick={switchToBlockMode}>
-                            <Box className='w-4 h-4' />
-                            <span>Block</span>
-                        </button>
+                    <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0'>
+                        <div className='flex bg-[#161616] p-1 rounded-lg border border-white/5'>
+                            <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all bg-blue-600 text-white shadow-lg font-medium'>
+                                <Code2 className='w-4 h-4' />
+                                <span>Text</span>
+                            </button>
+                            <a
+                                href='create/block'
+                                className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium'
+                            >
+                                    <Box className='w-4 h-4' />
+                                    <span>Block</span>
+                            </a>
+                        </div>
                     </div>
 
                     <div className='w-40 flex justify-end items-center gap-3'>
