@@ -30,13 +30,13 @@ const CATEGORY_STYLES = {
 
 // ブロックの凹凸パーツ
 const TopNotch = ({ className }: { className?: string }) => (
-    <svg className={`absolute -top-[4px] left-4 w-4 h-[5px] z-10 ${className}`} viewBox="0 0 16 5" fill="currentColor">
-        <path d="M0 5h2l1-1 1-2 2-2h4l2 2 1 2 1 1h2v5H0z" />
+    <svg className={`absolute -top-[4px] left-4 w-4 h-[5px] z-10 ${className}`} viewBox='0 0 16 5' fill='currentColor'>
+        <path d='M0 5h2l1-1 1-2 2-2h4l2 2 1 2 1 1h2v5H0z' />
     </svg>
 );
 const BottomNotch = ({ className }: { className?: string }) => (
-    <svg className={`absolute -bottom-[4px] left-4 w-4 h-[5px] z-10 ${className}`} viewBox="0 0 16 5" fill="currentColor">
-        <path d="M0 0h2l1 1 1 2 2 2h4l2-2 1-2 1-1h2v0H0z" />
+    <svg className={`absolute -bottom-[4px] left-4 w-4 h-[5px] z-10 ${className}`} viewBox='0 0 16 5' fill='currentColor'>
+        <path d='M0 0h2l1 1 1 2 2 2h4l2-2 1-2 1-1h2v0H0z' />
     </svg>
 );
 
@@ -50,7 +50,7 @@ const ReadOnlyBlock = ({ block }: { block: BlockData }) => {
     if (block.type === 'section' || block.type === 'container') Icon = Layout;
 
     return (
-        <div className="relative mb-0.5 select-none transform scale-90 origin-left">
+        <div className='relative mb-0.5 select-none transform scale-90 origin-left'>
             <div className={`
                 relative flex items-center h-[36px] px-3 py-1
                 ${styles.bg} text-white
@@ -58,17 +58,17 @@ const ReadOnlyBlock = ({ block }: { block: BlockData }) => {
                 border-t border-b border-r border-white/10
                 ${block.isWrapper ? 'rounded-tl-sm' : 'rounded-l-sm'}
             `}>
-                <TopNotch className="text-black/20" />
+                <TopNotch className='text-black/20' />
                 <TopNotch className={styles.bg} />
-                {!block.isWrapper && <BottomNotch className="text-black/20 translate-y-[1px]" />}
+                {!block.isWrapper && <BottomNotch className='text-black/20 translate-y-[1px]' />}
                 {!block.isWrapper && <BottomNotch className={styles.bg} />}
 
-                <div className="flex items-center gap-2">
-                    <Icon size={14} className="text-white/90" />
-                    <span className="font-bold text-[10px] tracking-wide">{block.type}</span>
+                <div className='flex items-center gap-2'>
+                    <Icon size={14} className='text-white/90' />
+                    <span className='font-bold text-[10px] tracking-wide'>{block.type}</span>
                     {block.content && (
-                        <div className="bg-black/20 rounded px-1.5 py-0.5 shadow-inner border border-black/10">
-                            <span className="text-[10px] font-mono text-white/90 block max-w-[120px] truncate">
+                        <div className='bg-black/20 rounded px-1.5 py-0.5 shadow-inner border border-black/10'>
+                            <span className='text-[10px] font-mono text-white/90 block max-w-[120px] truncate'>
                                 {block.content}
                             </span>
                         </div>
@@ -76,7 +76,7 @@ const ReadOnlyBlock = ({ block }: { block: BlockData }) => {
                 </div>
             </div>
             {block.isWrapper && (
-                <div className="ml-3 pl-3 border-l-[12px] border-l-inherit min-h-[10px] flex flex-col justify-end relative opacity-80" style={{ borderColor: 'inherit' }}>
+                <div className='ml-3 pl-3 border-l-[12px] border-l-inherit min-h-[10px] flex flex-col justify-end relative opacity-80' style={{ borderColor: 'inherit' }}>
                     <div className={`absolute inset-y-0 left-0 w-3 ${styles.bg} opacity-50`}></div>
                     <div className={`
                         relative h-4 w-16 ${styles.bg} rounded-b-sm rounded-tr-sm
@@ -132,9 +132,9 @@ const MOCK_POSTS: Post[] = [
         comments: 3,
         time: '2h ago',
         previewImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop',
-        codeSnippet: `<div class="backdrop-blur-md bg-white/30 border border-white/20 rounded-xl p-6 shadow-lg">
-  <h2 class="text-white font-bold">Glass UI</h2>
-  <p class="text-blue-100">Modern design style.</p>
+        codeSnippet: `<div class='backdrop-blur-md bg-white/30 border border-white/20 rounded-xl p-6 shadow-lg'>
+  <h2 class='text-white font-bold'>Glass UI</h2>
+  <p class='text-blue-100'>Modern design style.</p>
 </div>`
     },
     {
@@ -178,15 +178,15 @@ const PostCard = ({ post }: { post: Post }) => {
                         <h3 className='font-bold text-sm text-white hover:text-blue-400 cursor-pointer transition-colors'>
                             {post.user.name}
                         </h3>
-                        <div className="flex items-center gap-2">
+                        <div className='flex items-center gap-2'>
                             <span className='text-[10px] text-gray-500'>{post.time}</span>
                             {post.type === 'block' ? (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1">
-                                    <Layers className="w-3 h-3" /> Block
+                                <span className='text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1'>
+                                    <Layers className='w-3 h-3' /> Block
                                 </span>
                             ) : (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center gap-1">
-                                    <Code2 className="w-3 h-3" /> Text
+                                <span className='text-[10px] px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center gap-1'>
+                                    <Code2 className='w-3 h-3' /> Text
                                 </span>
                             )}
                         </div>
@@ -202,12 +202,12 @@ const PostCard = ({ post }: { post: Post }) => {
                 
                 {/* Left */}
                 <div className='w-full md:w-1/2 bg-[#0d0d0d] border-b md:border-b-0 md:border-r border-white/5 relative overflow-hidden group'>
-                    <div className="absolute top-3 left-4 text-[10px] font-bold text-gray-600 uppercase tracking-widest flex items-center gap-2 z-10">
-                        {post.type === 'text' ? <Code2 className="w-3 h-3" /> : <Layers className="w-3 h-3" />}
+                    <div className='absolute top-3 left-4 text-[10px] font-bold text-gray-600 uppercase tracking-widest flex items-center gap-2 z-10'>
+                        {post.type === 'text' ? <Code2 className='w-3 h-3' /> : <Layers className='w-3 h-3' />}
                         {post.type === 'text' ? 'Code' : 'Logic Flow'}
                     </div>
                     
-                    <div className="p-6 pt-10 h-full overflow-auto custom-scrollbar relative">
+                    <div className='p-6 pt-10 h-full overflow-auto custom-scrollbar relative'>
                         {/* 背景装飾 */}
                         {post.type === 'block' && (
                             <div className='absolute inset-0 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:16px_16px] opacity-20 pointer-events-none'></div>
@@ -218,7 +218,7 @@ const PostCard = ({ post }: { post: Post }) => {
                                 {post.codeSnippet}
                             </pre>
                         ) : (
-                            <div className="pl-2">
+                            <div className='pl-2'>
                                 {post.blocks?.map((block) => (
                                     <ReadOnlyBlock key={block.id} block={block} />
                                 ))}
@@ -229,22 +229,23 @@ const PostCard = ({ post }: { post: Post }) => {
 
                 {/* Right */}
                 <div className='w-full md:w-1/2 bg-[#222] relative overflow-hidden group'>
-                    <div className="absolute top-3 right-4 text-[10px] font-bold text-white/80 uppercase tracking-widest bg-black/50 backdrop-blur-md px-2 py-1 rounded border border-white/10 z-10">
+                    <div className='absolute top-3 right-4 text-[10px] font-bold text-white/80 uppercase tracking-widest bg-black/50 backdrop-blur-md px-2 py-1 rounded border border-white/10 z-10'>
                         Preview
                     </div>
                     
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
                         src={post.previewImage} 
-                        alt="Preview" 
-                        className="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" 
+                        alt='Preview' 
+                        className='w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105' 
                     />
                     
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 shadow-lg cursor-pointer hover:bg-white/20 hover:scale-110 transition-all">
-                            <Play className="w-5 h-5 text-white fill-current ml-0.5" />
+                    {/* Play Button */}
+                    {/* <div className='absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
+                        <div className='w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 shadow-lg cursor-pointer hover:bg-white/20 hover:scale-110 transition-all'>
+                            <Play className='w-5 h-5 text-white fill-current ml-0.5' />
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
 
@@ -280,9 +281,9 @@ export default function HomePage() {
         <div className='flex min-h-screen bg-black text-white font-sans'>
             <Sidebar />
             <main className='flex-1 md:ml-64 bg-[#0a0a0a] min-h-screen'>
-                <div className="h-4 md:h-8"></div>
+                <div className='h-4 md:h-8'></div>
                 <div className='max-w-3xl mx-auto px-4 pb-20'>
-                    <div className="md:hidden flex items-center justify-between mb-6 px-2">
+                    <div className='md:hidden flex items-center justify-between mb-6 px-2'>
                         <span className='text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent'>ScriptShot</span>
                     </div>
                     <div className='space-y-6'>
@@ -291,7 +292,7 @@ export default function HomePage() {
                         ))}
                     </div>
                     <div className='text-center py-12 text-gray-600 text-sm'>
-                        <div className="w-1 h-8 bg-gradient-to-b from-transparent via-gray-800 to-transparent mx-auto mb-4"></div>
+                        <div className='w-1 h-8 bg-gradient-to-b from-transparent via-gray-800 to-transparent mx-auto mb-4'></div>
                         <p>You're all caught up!</p>
                     </div>
                 </div>
