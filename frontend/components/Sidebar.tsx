@@ -65,7 +65,9 @@ export function Sidebar() {
 
             {/* User Profile / Logout */}
             <div className='p-4 mt-auto border-t border-white/10'>
-                <button className='flex items-center gap-3 w-full p-3 rounded-xl hover:bg-[#1a1a1a] transition-colors text-left group'>
+                <button className='flex items-center gap-3 w-full p-3 rounded-xl hover:bg-[#1a1a1a] transition-colors text-left group' onClick={() => {
+                    window.location.href = '/login';
+                }}>
                     <div className='w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 border border-white/10'></div>
                     <div className='flex-1 min-w-0'>
                         <p className='text-sm font-bold text-white truncate'>Demo User</p>
