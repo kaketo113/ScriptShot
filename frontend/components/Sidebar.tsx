@@ -1,56 +1,79 @@
-'use client'
+'use client';
 
-import React from 'react';
-import { Home, Search, PlusSquare, Bell, User, LogOut } from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { 
+    Home, 
+    Search, 
+    PlusSquare, 
+    User, 
+    LogOut, 
+    Code2
+} from 'lucide-react';
 
-export const Sidebar = () => {
-  const pathname = usePathname(); // 現在のURLを取得して、メニューを光らせる
-
-  const menuItems = [
+const MENU_ITEMS = [
     { icon: Home, label: 'Home', href: '/' },
     { icon: Search, label: 'Search', href: '/search' },
     { icon: PlusSquare, label: 'Create', href: '/create' },
     { icon: User, label: 'Profile', href: '/profile' },
-  ];
+];
 
-  return (
-    <aside className='fixed left-0 top-0 h-screen w-64 bg-[#0a0a0a] border-r border-white/5 flex flex-col p-6 hidden md:flex z-50'>
-        {/* ロゴ */}
-        <div className='mb-10 pl-2'>
-            <h1 className='text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent'>
-                ScriptShot
-            </h1>
-        </div>
+export function Sidebar() {
+    const [pathname, setPathname] = useState('/');
 
-        {/* メニュー */}
-        <nav className='flex-1 space-y-2'>
-            {menuItems.map((item) => {
-                const isActive= pathname === item.href;
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setPathname(window.location.pathname);
+        }
+    }, []);
 
-                return (
-                    <Link 
-                        key={item.label} 
-                        href={item.href} 
-                        className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 group ${
-                            isActive 
-                                ? 'bg-blue-600/10 text-blue-400 font-medium' 
-                                : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                        }`}
-                    >
-                        <item.icon className={`w-6 h-6 transition-colors ${isActive ? 'text-blue-400' : 'text-gray-400 group-hover:text-white'}`} />
-                        <span className='text-base'>{item.label}</span>
-                    </Link>
-                );
-            })}
-        </nav>
+    return (
+        <aside className='hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 border-r border-white/10 bg-black z-50'>
+            {/* Logo */}
+            <div className='p-6 mb-4'>
+                <a href="/" className='flex items-center gap-2 group'>
+                    <div className='w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300'>
+                        <Code2 className='w-5 h-5 text-white' />
+                    </div>
+                    <span className='text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent'>
+                        ScriptShot
+                    </span>
+                </a>
+            </div>
 
-        {/* フッター */}
-        <button className='flex items-center gap-4 px-4 py-3 text-gray-500 hover:text-red-400 transition-colors mt-auto w-full text-left'>
-            <LogOut className='w-5 h-5' />
-            <span className='text-sm'>Log out</span>
-        </button>
-    </aside>
-  );
-};
+            {/* Navigation */}
+            <nav className='flex-1 px-4 space-y-2'>
+                {MENU_ITEMS.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                        <a 
+                            key={item.label} 
+                            href={item.href}
+                            className={`
+                                flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 group
+                                ${isActive 
+                                    ? 'bg-blue-600/10 text-blue-400 font-bold' 
+                                    : 'text-gray-400 hover:bg-[#1a1a1a] hover:text-white'
+                                }
+                            `}
+                        >
+                            <item.icon className={`w-6 h-6 ${isActive ? 'fill-current' : ''} group-hover:scale-110 transition-transform`} />
+                            <span className="text-sm">{item.label}</span>
+                        </a>
+                    );
+                })}
+            </nav>
+
+            {/* User Profile / Logout */}
+            <div className='p-4 mt-auto border-t border-white/10'>
+                <button className='flex items-center gap-3 w-full p-3 rounded-xl hover:bg-[#1a1a1a] transition-colors text-left group'>
+                    <div className='w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 border border-white/10'></div>
+                    <div className='flex-1 min-w-0'>
+                        <p className='text-sm font-bold text-white truncate'>Demo User</p>
+                        <p className='text-xs text-gray-500 truncate'>@demouser</p>
+                    </div>
+                    <LogOut className='w-5 h-5 text-gray-500 group-hover:text-red-400 transition-colors' />
+                </button>
+            </div>
+        </aside>
+    );
+}
