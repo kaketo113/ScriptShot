@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useId } from 'react';
+import React, { useState, useEffect, useId, useRef } from 'react';
 import { 
     DndContext, 
     closestCenter, 
@@ -19,8 +19,6 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { 
-    Play, 
-    Code2, 
     Box, 
     ArrowLeft, 
     Trash2,
@@ -30,10 +28,11 @@ import {
     Image as ImageIcon,
     MousePointerClick,
     Square,
-    Layers
+    Layers,
+    Code2
 } from 'lucide-react';
 
-// --- Block Types & Definitions ---
+// --- Types & Definitions ---
 type BlockCategory = 'layout' | 'content' | 'component';
 
 interface BlockDefinition {
@@ -41,10 +40,9 @@ interface BlockDefinition {
     label: string;
     category: BlockCategory;
     hasInput?: boolean;
-    inputType?: 'text' | 'color'; // 入力タイプ拡張
     defaultContent?: string;
     icon?: React.ElementType;
-    isWrapper?: boolean; // Sectionなどのコンテナ扱い
+    isWrapper?: boolean;
 }
 
 interface BlockInstance {
@@ -54,57 +52,90 @@ interface BlockInstance {
     category: BlockCategory;
 }
 
-// Visual Config
-const BLOCK_HEIGHT = 42;
-
-const CATEGORY_STYLES = {
-    layout: { 
-        bg: 'bg-blue-600', 
-        border: 'border-blue-700',
-        shadow: 'shadow-blue-900/20'
-    },
-    content: { 
-        bg: 'bg-slate-600', 
-        border: 'border-slate-700',
-        shadow: 'shadow-slate-900/20'
-    },
-    component: { 
-        bg: 'bg-emerald-600', 
-        border: 'border-emerald-700',
-        shadow: 'shadow-emerald-900/20'
-    },
+// --- Visual Config (Theme) ---
+const BLOCK_THEME = {
+  layout: {
+    base: 'bg-indigo-600',
+    border: 'border-indigo-500',
+    gradient: 'from-indigo-500/50 to-indigo-700/50',
+    shadow: 'shadow-[0_4px_0_#312e81]',
+  },
+  content: {
+    base: 'bg-slate-700',
+    border: 'border-slate-600',
+    gradient: 'from-slate-600/50 to-slate-800/50',
+    shadow: 'shadow-[0_4px_0_#1e293b]',
+  },
+  component: {
+    base: 'bg-emerald-600',
+    border: 'border-emerald-500',
+    gradient: 'from-emerald-500/50 to-emerald-700/50',
+    shadow: 'shadow-[0_4px_0_#064e3b]',
+  }
 };
 
 const TOOLBOX_BLOCKS: BlockDefinition[] = [
-    // Layout
     { type: 'section', label: 'Section Wrapper', category: 'layout', icon: Layout, isWrapper: true },
     { type: 'container', label: 'Container', category: 'layout', icon: Box, isWrapper: true },
-    
-    // Content
-    { type: 'heading', label: 'Heading H1', category: 'content', hasInput: true, defaultContent: 'Hello World', icon: Type },
-    { type: 'text', label: 'Paragraph', category: 'content', hasInput: true, defaultContent: 'Welcome to my website.', icon: Type },
-    { type: 'image', label: 'Image URL', category: 'content', hasInput: true, defaultContent: 'https://placehold.co/600x400', icon: ImageIcon },
-
-    // Components
-    { type: 'button', label: 'Button', category: 'component', hasInput: true, defaultContent: 'Click Me', icon: MousePointerClick },
-    { type: 'card', label: 'Simple Card', category: 'component', hasInput: true, defaultContent: 'Card Content', icon: Square },
+    { type: 'heading', label: '見出し', category: 'content', hasInput: true, defaultContent: 'Hello World', icon: Type },
+    { type: 'text', label: '本文', category: 'content', hasInput: true, defaultContent: 'Welcome to my website.', icon: Type },
+    { type: 'image', label: '画像', category: 'content', hasInput: true, defaultContent: 'https://placehold.co/600x400', icon: ImageIcon },
+    { type: 'button', label: 'ボタン', category: 'component', hasInput: true, defaultContent: 'Click Me', icon: MousePointerClick },
+    { type: 'card', label: 'カード', category: 'component', hasInput: true, defaultContent: 'Card Content', icon: Square },
 ];
 
-//Puzzle Notch Component (SVG)
-const TopNotch = ({ className }: { className?: string }) => (
-    <svg className={`absolute -top-[4px] left-4 w-4 h-[5px] z-10 ${className}`} viewBox="0 0 16 5" fill="currentColor">
-        <path d="M0 5h2l1-1 1-2 2-2h4l2 2 1 2 1 1h2v5H0z" />
+// --- Sub Components ---
+
+// 3D Notch
+const TopNotch3D = ({ className, colorClass }: { className?: string, colorClass: string }) => (
+  <div className={`absolute -top-[5px] left-4 z-10 ${className}`}>
+    <svg width="16" height="5" viewBox="0 0 16 5" className="absolute top-[1px] opacity-30 text-black block">
+      <path d="M0 5h2l1-1 1-2 2-2h4l2 2 1 2 1 1h2v5H0z" fill="currentColor" />
     </svg>
+    <svg width="16" height="5" viewBox="0 0 16 5" className={`${colorClass} block`}>
+      <path d="M0 5h2l1-1 1-2 2-2h4l2 2 1 2 1 1h2v5H0z" fill="currentColor" />
+    </svg>
+    <svg width="16" height="5" viewBox="0 0 16 5" className="absolute top-0 left-0 opacity-40 text-white pointer-events-none">
+       <path d="M2 5l1-1 1-2 2-2h4l2 2 1 2 1 1" fill="none" stroke="currentColor" strokeWidth="1" />
+    </svg>
+  </div>
 );
 
-const BottomNotch = ({ className }: { className?: string }) => (
-    <svg className={`absolute -bottom-[4px] left-4 w-4 h-[5px] z-10 ${className}`} viewBox="0 0 16 5" fill="currentColor">
-        <path d="M0 0h2l1 1 1 2 2 2h4l2-2 1-2 1-1h2v0H0z" />
-    </svg>
-);
+// Auto Resize TextArea Hook
+const useAutoResizeTextArea = (value: string | undefined) => {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.height = 'auto';
+      ref.current.style.height = ref.current.scrollHeight + 'px';
+    }
+  }, [value]);
+  return ref;
+};
 
-// Block Component (Sortable)
-const SortableBlock = ({ 
+// Toolbox Item
+const ToolboxBlock = ({ def, onClick }: { def: BlockDefinition, onClick: () => void }) => {
+    const styles = BLOCK_THEME[def.category];
+    const Icon = def.icon || Layers;
+    
+    return (
+        <div 
+            onClick={onClick}
+            className={`
+                flex items-center gap-2 px-3 py-2 mb-2 
+                ${styles.base} text-white rounded-sm shadow-sm
+                cursor-pointer transition-transform hover:scale-105 hover:brightness-110
+                select-none relative group border border-white/10
+            `}
+        >
+            <Icon size={16} className="text-white/90" />
+            <span className="font-bold text-xs">{def.label}</span>
+        </div>
+    );
+};
+
+// --- Main Block Component (Pro Version) ---
+const ProBlock = ({ 
     id, 
     block, 
     onDelete, 
@@ -124,120 +155,119 @@ const SortableBlock = ({
         isDragging
     } = useSortable({ id });
 
+    const theme = BLOCK_THEME[block.category] || BLOCK_THEME.content;
+    const textAreaRef = useAutoResizeTextArea(block.content);
+    const def = TOOLBOX_BLOCKS.find(b => b.type === block.type);
+    const isWrapper = def?.isWrapper;
+
     const style = {
-        transform: CSS.Transform.toString(transform),
+        transform: CSS.Translate.toString(transform),
         transition,
         zIndex: isDragging ? 999 : 'auto',
-        opacity: isDragging ? 0.8 : 1,
     };
-
-    const styles = CATEGORY_STYLES[block.category];
-    const def = TOOLBOX_BLOCKS.find(b => b.type === block.type);
-    const Icon = def?.icon || Layers;
-    const isWrapper = def?.isWrapper;
 
     return (
         <div 
             ref={setNodeRef} 
             style={style} 
+            className={`
+                group relative mb-3 pl-2 pr-2 py-1 transition-all select-none
+                ${isDragging ? 'scale-105 rotate-1 opacity-90 z-50' : ''}
+            `}
             {...attributes} 
-            {...listeners}
-            className={`group relative mb-0.5 select-none ${isDragging ? 'z-50' : ''}`}
         >
-            {/* Main Block Shape */}
-            <div className={`
-                relative flex items-center h-[${BLOCK_HEIGHT}px] px-3 py-2
-                ${styles.bg} text-white
-                rounded-r-sm shadow-md cursor-grab active:cursor-grabbing
-                border-t border-b border-r border-white/10
-                ${isWrapper ? 'rounded-tl-sm' : 'rounded-l-sm'}
-            `}>
-                {/* Visual Notches */}
-                <TopNotch className="text-black/20" />
-                <TopNotch className={styles.bg} />
+            <div 
+                className={`
+                    relative rounded-lg flex flex-col
+                    ${theme.base} 
+                    bg-gradient-to-br ${theme.gradient}
+                    border-t border-l border-white/20 border-r border-b border-black/20
+                    ${isDragging ? 'shadow-2xl ring-2 ring-white/30' : theme.shadow}
+                    transition-shadow duration-200
+                `}
+            >
+                <TopNotch3D colorClass={theme.base} />
                 
-                {!isWrapper && <BottomNotch className="text-black/20 translate-y-[1px]" />}
-                {!isWrapper && <BottomNotch className={styles.bg} />}
+                <div className="flex items-start gap-3 p-3 min-h-[50px]">
+                    <div 
+                        {...listeners}
+                        className="mt-1 cursor-grab active:cursor-grabbing text-white/30 hover:text-white/80 transition-colors p-1 rounded hover:bg-black/10"
+                    >
+                        <GripVertical size={18} />
+                    </div>
 
-                {/* Content */}
-                <div className="flex items-center gap-2 w-full">
-                    <Icon size={16} className="text-white/90" />
-                    <span className="font-bold text-xs tracking-wide">{def?.label}</span>
+                    <div className="flex flex-col gap-1 pt-1.5 min-w-[100px]">
+                        <div className="flex items-center gap-1.5 text-white font-bold text-xs tracking-wider uppercase opacity-90 text-shadow-sm">
+                            {def?.icon && <def.icon size={12} />}
+                            <span>{def?.label}</span>
+                        </div>
+                    </div>
 
-                    {/* Input Fields */}
                     {def?.hasInput && (
-                        <div className="flex-1 flex items-center gap-1 bg-black/20 rounded px-2 py-0.5 mx-2 shadow-inner border border-black/10 min-w-0">
-                            <input 
-                                type="text" 
-                                className="w-full bg-transparent text-xs font-mono text-white focus:outline-none placeholder-white/50 truncate"
+                        <div className="flex-1 relative group/input pt-0.5">
+                             <div className={`
+                                absolute -inset-1 rounded opacity-0 group-hover/input:opacity-100 transition-opacity
+                                bg-black/10 pointer-events-none
+                             `}></div>
+                            <textarea
+                                ref={textAreaRef}
                                 value={block.content}
                                 onChange={(e) => onChange(id, e.target.value)}
+                                className="w-full bg-black/20 text-white text-sm font-mono p-2 rounded border border-transparent focus:border-white/30 focus:bg-black/40 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all resize-none overflow-hidden leading-relaxed placeholder-white/30"
+                                placeholder="Value..."
+                                rows={1}
                                 onPointerDown={(e) => e.stopPropagation()}
                             />
                         </div>
                     )}
+
+                    <button 
+                        onClick={() => onDelete(id)}
+                        className="mt-1 p-1.5 text-white/40 hover:text-red-300 hover:bg-red-500/20 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                    >
+                        <Trash2 size={16} />
+                    </button>
                 </div>
 
-                {/* Delete Button */}
-                <button 
-                    onClick={(e) => { e.stopPropagation(); onDelete(id); }}
-                    className="ml-auto p-1 text-white/50 hover:text-white hover:bg-black/20 rounded opacity-0 group-hover:opacity-100 transition-all"
-                >
-                    <Trash2 size={12} />
-                </button>
-            </div>
-
-            {/* Wrapper Visuals (Bottom Arm for Layouts) */}
-            {isWrapper && (
-                <div className="ml-3 pl-3 border-l-[12px] border-l-inherit min-h-[20px] flex flex-col justify-end relative opacity-80" style={{ borderColor: 'inherit' }}>
-                    <div className={`absolute inset-y-0 left-0 w-3 ${styles.bg} opacity-50`}></div>
-                    <div className={`
-                        relative h-5 w-20 ${styles.bg} rounded-b-sm rounded-tr-sm
-                        flex items-center px-2 text-[10px] text-white/70 font-mono mt-0.5
-                    `}>
-                        <TopNotch className={styles.bg} />
-                        <BottomNotch className={styles.bg} />
-                        <span className="ml-4 opacity-50">&lt;/{def?.type}&gt;</span>
+                {isWrapper && (
+                    <div className="px-3 pb-2">
+                        <div className="border-l-2 border-white/10 ml-4 pl-4 py-2 min-h-[30px] flex items-center text-xs text-white/30 border-dashed">
+                             <span className="italic">Children would go here...</span>
+                        </div>
+                        <div className="h-2 bg-black/10 mx-4 rounded-b-sm"></div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };
 
-// --- Toolbox Item ---
-const ToolboxBlock = ({ def, onClick }: { def: BlockDefinition, onClick: () => void }) => {
-    const styles = CATEGORY_STYLES[def.category];
-    const Icon = def.icon || Layers;
-    
-    return (
-        <div 
-            onClick={onClick}
-            className={`
-                flex items-center gap-2 px-3 py-2 mb-2 
-                ${styles.bg} text-white rounded-sm shadow-sm
-                cursor-pointer transition-transform hover:scale-105 hover:brightness-110
-                select-none relative
-            `}
-        >
-            <div className="absolute -top-[3px] left-3 w-3 h-[3px] bg-inherit rounded-t-sm opacity-50"></div>
-            <div className="absolute -bottom-[3px] left-3 w-3 h-[3px] bg-inherit rounded-b-sm shadow-sm"></div>
+// --- Debounce Hook for Performance ---
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
-            <Icon size={16} className="text-white/90" />
-            <span className="font-bold text-xs">{def.label}</span>
-        </div>
-    );
-};
-
+// --- Main Page Component ---
 export default function BlockCreatePage() {
     // State
     const [blocks, setBlocks] = useState<BlockInstance[]>([
-        { id: '1', type: 'heading', content: 'Welcome to Web Builder', category: 'content' },
-        { id: '2', type: 'text', content: 'Build websites by stacking blocks.', category: 'content' },
-        { id: '3', type: 'button', content: 'Get Started', category: 'component' },
+        { id: '1', type: 'heading', content: 'Block Editer', category: 'content' },
+        { id: '2', type: 'text', content: 'さあはじめよう！', category: 'content' },
+        { id: '3', type: 'button', content: 'ボタン', category: 'component' },
     ]);
+    
+    // Performance: Use debounced blocks for preview generation
+    const debouncedBlocks = useDebounce(blocks, 500);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const dndContextId = useId(); // ★ ID不一致エラーを防ぐための一意なID
+    
+    const dndContextId = useId();
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -273,142 +303,101 @@ export default function BlockCreatePage() {
         }
     };
 
-    // HTML Generator
-    const generateHTML = () => {
-        let html = '';
-        
-        blocks.forEach(block => {
-            switch(block.type) {
-                case 'section':
-                    html += `<section class="py-12 px-6 bg-white border-b border-gray-200">\n`;
-                    // Note: Nesting logic would go here in a full tree structure
-                    html += `  <div class="p-4 border-2 border-dashed border-blue-200 text-center text-blue-400 rounded">Section Content Area</div>\n`;
-                    html += `</section>\n`;
-                    break;
-                case 'container':
-                    html += `<div class="container mx-auto max-w-4xl p-4">\n`;
-                    html += `  <div class="p-4 border-2 border-dashed border-gray-200 text-gray-400 rounded">Container Content</div>\n`;
-                    html += `</div>\n`;
-                    break;
-                case 'heading':
-                    html += `<h1 class="text-3xl font-bold text-gray-900 mb-4">${block.content}</h1>\n`;
-                    break;
-                case 'text':
-                    html += `<p class="text-gray-600 mb-4 leading-relaxed">${block.content}</p>\n`;
-                    break;
-                case 'image':
-                    html += `<img src="${block.content}" alt="Image" class="w-full h-64 object-cover rounded-lg mb-6 shadow-md" />\n`;
-                    break;
-                case 'button':
-                    html += `<button class="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition shadow-lg active:scale-95">${block.content}</button>\n`;
-                    break;
-                case 'card':
-                    html += `<div class="p-6 bg-white rounded-xl shadow-lg border border-gray-100 mb-4">\n`;
-                    html += `  <h3 class="font-bold text-lg mb-2">Card Title</h3>\n`;
-                    html += `  <p class="text-gray-500">${block.content}</p>\n`;
-                    html += `</div>\n`;
-                    break;
-            }
-        });
-
-        // Wrap in full HTML document
-        return `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <script src="https://cdn.tailwindcss.com"></script>
-                <style>body { background-color: #f3f4f6; padding: 2rem; font-family: system-ui, sans-serif; }</style>
-            </head>
-            <body>
-                <div class="max-w-2xl mx-auto bg-gray-50 min-h-screen p-8 shadow-xl rounded-xl">
-                    ${html || '<div class="text-center text-gray-400 py-10">Add blocks to see preview</div>'}
-                </div>
-            </body>
-            </html>
-        `;
-    };
-
-    // Update preview when blocks change
+    // HTML Generator (Updated to use debounced blocks)
     useEffect(() => {
+        const generateHTML = () => {
+            let html = '';
+            debouncedBlocks.forEach(block => {
+                switch(block.type) {
+                    case 'section':
+                        html += `<section class="py-12 px-6 bg-white border-b border-gray-200"><div class="p-4 border-2 border-dashed border-blue-200 text-center text-blue-400 rounded">Section</div></section>`; break;
+                    case 'container':
+                        html += `<div class="container mx-auto max-w-4xl p-4"><div class="p-4 border-2 border-dashed border-gray-200 text-gray-400 rounded">Container</div></div>`; break;
+                    case 'heading':
+                        html += `<h1 class="text-3xl font-bold text-gray-900 mb-4">${block.content}</h1>`; break;
+                    case 'text':
+                        html += `<p class="text-gray-600 mb-4 leading-relaxed">${block.content}</p>`; break;
+                    case 'image':
+                        html += `<img src="${block.content}" alt="Image" class="w-full h-64 object-cover rounded-lg mb-6 shadow-md" />`; break;
+                    case 'button':
+                        html += `<button class="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition shadow-lg">${block.content}</button>`; break;
+                    case 'card':
+                        html += `<div class="p-6 bg-white rounded-xl shadow-lg border border-gray-100 mb-4"><p>${block.content}</p></div>`; break;
+                }
+            });
+            return `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <script src="https://cdn.tailwindcss.com"></script>
+                    <style>body { background-color: #f3f4f6; padding: 2rem; font-family: system-ui, sans-serif; }</style>
+                </head>
+                <body>
+                    <div class="max-w-2xl mx-auto bg-gray-50 min-h-screen p-8 shadow-xl rounded-xl">
+                        ${html || '<div class="text-center text-gray-400 py-10">Empty Canvas</div>'}
+                    </div>
+                </body>
+                </html>
+            `;
+        };
+
         const html = generateHTML();
         const blob = new Blob([html], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         setPreviewUrl(url);
         return () => URL.revokeObjectURL(url);
-    }, [blocks]);
+    }, [debouncedBlocks]);
 
     return (
         <div className='min-h-screen bg-[#111] text-white flex flex-col font-sans'>
-            
-            {/* --- HEADER (Absolute Center Layout) --- */}
-            <header className='h-16 border-b border-white/10 flex items-center px-6 bg-[#0a0a0a] sticky top-0 z-50 relative'>
-                
-                {/* Left: Title & Back */}
+            {/* HEADER */}
+            <header className='h-16 border-b border-white/10 flex items-center px-6 bg-[#0a0a0a] sticky top-0 z-50'>
                 <div className='flex items-center gap-4 z-10'>
                     <a href='/' className='text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full'>
                         <ArrowLeft className='w-5 h-5' />
                     </a>
-                    <h2 className='font-bold text-lg tracking-tight text-gray-200'>Web Builder</h2>
+                    <h2 className='font-bold text-lg tracking-tight text-gray-200'>Builder Pro</h2>
                 </div>
-
-                {/* Center: Mode Toggle (Absolute Positioning) */}
-                <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0'>
-                    <div className='flex bg-[#161616] p-1 rounded-lg border border-white/5'>
-                        <a href="/create" className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium'>
+                <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'>
+                     <div className='flex bg-[#161616] p-1 rounded-lg border border-white/5'>
+                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm text-gray-400 hover:text-white transition-all'>
                             <Code2 className='w-4 h-4' />
                             <span>Text</span>
-                        </a>
-                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all bg-blue-600 text-white shadow-lg font-medium'>
+                        </button>
+                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm bg-indigo-600 text-white shadow-lg font-medium'>
                             <Box className='w-4 h-4' />
                             <span>Block</span>
                         </button>
                     </div>
                 </div>
-
-                {/* Right: Spacer to balance layout */}
-                <div className='ml-auto w-40 flex justify-end items-center gap-3 z-10'>
-                    <div className='text-xs text-gray-500'>Autosaved</div>
-                </div>
             </header>
 
             <div className='flex-1 flex overflow-hidden'>
-                
-                {/* Toolbox */}
+                {/* TOOLBOX */}
                 <div className='w-64 bg-[#161616] border-r border-white/10 flex flex-col'>
                     <div className='p-4 border-b border-white/5'>
-                        <h3 className='text-[10px] font-bold text-gray-500 uppercase tracking-widest'>Web Parts</h3>
+                        <h3 className='text-[10px] font-bold text-gray-500 uppercase tracking-widest'>Components</h3>
                     </div>
                     <div className='flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar'>
-                        <div>
-                            <div className='text-[10px] font-bold text-gray-600 mb-3 px-1'>LAYOUT</div>
-                            {TOOLBOX_BLOCKS.filter(b => b.category === 'layout').map(b => (
-                                <ToolboxBlock key={b.type} def={b} onClick={() => addBlock(b)} />
-                            ))}
-                        </div>
-                        <div>
-                            <div className='text-[10px] font-bold text-gray-600 mb-3 px-1'>CONTENT</div>
-                            {TOOLBOX_BLOCKS.filter(b => b.category === 'content').map(b => (
-                                <ToolboxBlock key={b.type} def={b} onClick={() => addBlock(b)} />
-                            ))}
-                        </div>
-                        <div>
-                            <div className='text-[10px] font-bold text-gray-600 mb-3 px-1'>COMPONENTS</div>
-                            {TOOLBOX_BLOCKS.filter(b => b.category === 'component').map(b => (
-                                <ToolboxBlock key={b.type} def={b} onClick={() => addBlock(b)} />
-                            ))}
-                        </div>
+                        {['layout', 'content', 'component'].map(cat => (
+                            <div key={cat}>
+                                <div className='text-[10px] font-bold text-gray-600 mb-3 px-1 uppercase'>{cat}</div>
+                                {TOOLBOX_BLOCKS.filter(b => b.category === cat).map(b => (
+                                    <ToolboxBlock key={b.type} def={b} onClick={() => addBlock(b)} />
+                                ))}
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* Workspace (Center) */}
+                {/* WORKSPACE */}
                 <div className='flex-1 bg-[#0f0f0f] relative flex flex-col border-r border-white/10'>
                     <div className='absolute inset-0 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:20px_20px] opacity-20 pointer-events-none'></div>
-                    
                     <div className='flex-1 overflow-auto p-8 relative z-0 custom-scrollbar'>
                         <DndContext 
-                            id={dndContextId} // ★ ID固定
+                            id={dndContextId}
                             sensors={sensors} 
                             collisionDetection={closestCenter} 
                             onDragEnd={handleDragEnd}
@@ -419,7 +408,7 @@ export default function BlockCreatePage() {
                             >
                                 <div className='min-h-[600px] pb-40 max-w-2xl mx-auto'>
                                     {blocks.map((block) => (
-                                        <SortableBlock 
+                                        <ProBlock 
                                             key={block.id} 
                                             id={block.id}
                                             block={block} 
@@ -427,11 +416,10 @@ export default function BlockCreatePage() {
                                             onChange={updateBlockContent}
                                         />
                                     ))}
-                                    
                                     {blocks.length === 0 && (
                                         <div className='flex flex-col items-center justify-center py-20 opacity-30'>
                                             <Box className='w-16 h-16 mb-4 text-gray-500' />
-                                            <p className='text-gray-400 font-bold'>Start Building</p>
+                                            <p className='text-gray-400 font-bold'>Drag blocks here</p>
                                         </div>
                                     )}
                                 </div>
@@ -440,14 +428,9 @@ export default function BlockCreatePage() {
                     </div>
                 </div>
 
-                {/* Live Preview (Right) */}
+                {/* PREVIEW */}
                 <div className='w-96 bg-[#111] flex flex-col'>
                     <div className='p-3 border-b border-white/5 flex justify-between items-center bg-[#161616]'>
-                        <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                            <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                        </div>
                         <span className='text-[10px] font-bold text-gray-500 uppercase tracking-widest'>Live Preview</span>
                     </div>
                     <div className='flex-1 bg-white relative'>
@@ -459,11 +442,10 @@ export default function BlockCreatePage() {
                                 sandbox="allow-scripts"
                             />
                         ) : (
-                            <div className="flex items-center justify-center h-full text-gray-400 text-sm">Loading...</div>
+                            <div className="flex items-center justify-center h-full text-gray-400 text-sm">Initializing...</div>
                         )}
                     </div>
                 </div>
-
             </div>
         </div>
     );
