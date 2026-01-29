@@ -358,14 +358,14 @@ export default function BlockCreatePage() {
                     <a href='/' className='text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full'>
                         <ArrowLeft className='w-5 h-5' />
                     </a>
-                    <h2 className='font-bold text-lg tracking-tight text-gray-200'>Builder Pro</h2>
+                    <h2 className='font-bold text-lg tracking-tight text-gray-200'>Create New Post</h2>
                 </div>
                 <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'>
                      <div className='flex bg-[#161616] p-1 rounded-lg border border-white/5'>
-                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm text-gray-400 hover:text-white transition-all'>
+                        <a href='../create' className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm text-gray-400 hover:text-white transition-all'>
                             <Code2 className='w-4 h-4' />
                             <span>Text</span>
-                        </button>
+                        </a>
                         <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm bg-indigo-600 text-white shadow-lg font-medium'>
                             <Box className='w-4 h-4' />
                             <span>Block</span>
