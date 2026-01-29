@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-// dnd-kit: ドラッグ＆ドロップ機能の中核ライブラリ
+import React, { useState, useEffect, useId } from 'react';
 import { 
     DndContext, 
     closestCenter, 
@@ -11,7 +10,6 @@ import {
     useSensors, 
     DragEndEvent,
 } from '@dnd-kit/core';
-// dnd-kit/sortable: リストの並び替えに特化した機能
 import { 
     arrayMove, 
     SortableContext, 
@@ -38,7 +36,6 @@ import {
 // --- Block Types & Definitions ---
 type BlockCategory = 'layout' | 'content' | 'component';
 
-// ブロックの「設計図」の型定義
 interface BlockDefinition {
     type: string;
     label: string;
@@ -47,21 +44,19 @@ interface BlockDefinition {
     inputType?: 'text' | 'color'; // 入力タイプ拡張
     defaultContent?: string;
     icon?: React.ElementType;
-    isWrapper?: boolean; //重要: これがtrueだと「Section」のように他の要素を囲むような見た目（C字型）になります
+    isWrapper?: boolean; // Sectionなどのコンテナ扱い
 }
 
-// 実際に配置されたブロック「実体」の型定義
 interface BlockInstance {
-    id: string; // 一意なID (UUID等)
+    id: string;
     type: string;
-    content: string; // ユーザーが入力したテキスト等
+    content: string;
     category: BlockCategory;
 }
 
 // Visual Config
 const BLOCK_HEIGHT = 42;
 
-// カテゴリごとの色設定（Tailwindクラス）
 const CATEGORY_STYLES = {
     layout: { 
         bg: 'bg-blue-600', 
@@ -80,7 +75,6 @@ const CATEGORY_STYLES = {
     },
 };
 
-// ツールボックスに表示するブロックのリスト定義
 const TOOLBOX_BLOCKS: BlockDefinition[] = [
     // Layout
     { type: 'section', label: 'Section Wrapper', category: 'layout', icon: Layout, isWrapper: true },
@@ -92,12 +86,11 @@ const TOOLBOX_BLOCKS: BlockDefinition[] = [
     { type: 'image', label: 'Image URL', category: 'content', hasInput: true, defaultContent: 'https://placehold.co/600x400', icon: ImageIcon },
 
     // Components
-    { type: 'button', label: 'Button', category: 'component', hasInput: true, defaultContent: 'Button', icon: MousePointerClick },
+    { type: 'button', label: 'Button', category: 'component', hasInput: true, defaultContent: 'Click Me', icon: MousePointerClick },
     { type: 'card', label: 'Simple Card', category: 'component', hasInput: true, defaultContent: 'Card Content', icon: Square },
 ];
 
-// Puzzle Notch Component (SVG) 
-// パズルの「凹凸」を表現するためのSVGパーツ
+//Puzzle Notch Component (SVG)
 const TopNotch = ({ className }: { className?: string }) => (
     <svg className={`absolute -top-[4px] left-4 w-4 h-[5px] z-10 ${className}`} viewBox="0 0 16 5" fill="currentColor">
         <path d="M0 5h2l1-1 1-2 2-2h4l2 2 1 2 1 1h2v5H0z" />
@@ -110,8 +103,7 @@ const BottomNotch = ({ className }: { className?: string }) => (
     </svg>
 );
 
-// --- Block Component (Sortable) ---
-// 重要: キャンバス上でドラッグ可能な個々のブロックコンポーネント
+// Block Component (Sortable)
 const SortableBlock = ({ 
     id, 
     block, 
@@ -123,7 +115,6 @@ const SortableBlock = ({
     onDelete: (id: string) => void, 
     onChange: (id: string, val: string) => void 
 }) => {
-    // dnd-kitのuseSortableフックを使って、この要素をドラッグ可能にする
     const {
         attributes,
         listeners,
@@ -133,7 +124,6 @@ const SortableBlock = ({
         isDragging
     } = useSortable({ id });
 
-    // ドラッグ中のスタイル計算（GPU加速のためにtransformを使用）
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
@@ -148,10 +138,10 @@ const SortableBlock = ({
 
     return (
         <div 
-            ref={setNodeRef} // ここにRefを渡すことで、dnd-kitがDOM要素を認識する
+            ref={setNodeRef} 
             style={style} 
-            {...attributes} // アクセシビリティ属性
-            {...listeners}  // ドラッグイベントリスナー (onMouseDown等)
+            {...attributes} 
+            {...listeners}
             className={`group relative mb-0.5 select-none ${isDragging ? 'z-50' : ''}`}
         >
             {/* Main Block Shape */}
@@ -162,7 +152,7 @@ const SortableBlock = ({
                 border-t border-b border-r border-white/10
                 ${isWrapper ? 'rounded-tl-sm' : 'rounded-l-sm'}
             `}>
-                {/* Visual Notches (パズルの凸凹描画) */}
+                {/* Visual Notches */}
                 <TopNotch className="text-black/20" />
                 <TopNotch className={styles.bg} />
                 
@@ -174,7 +164,7 @@ const SortableBlock = ({
                     <Icon size={16} className="text-white/90" />
                     <span className="font-bold text-xs tracking-wide">{def?.label}</span>
 
-                    {/* Input Fields (文字入力エリア) */}
+                    {/* Input Fields */}
                     {def?.hasInput && (
                         <div className="flex-1 flex items-center gap-1 bg-black/20 rounded px-2 py-0.5 mx-2 shadow-inner border border-black/10 min-w-0">
                             <input 
@@ -182,7 +172,6 @@ const SortableBlock = ({
                                 className="w-full bg-transparent text-xs font-mono text-white focus:outline-none placeholder-white/50 truncate"
                                 value={block.content}
                                 onChange={(e) => onChange(id, e.target.value)}
-                                // 重要: ここでstopPropagationしないと、入力しようとしてドラッグが始まってしまう
                                 onPointerDown={(e) => e.stopPropagation()}
                             />
                         </div>
@@ -199,7 +188,6 @@ const SortableBlock = ({
             </div>
 
             {/* Wrapper Visuals (Bottom Arm for Layouts) */}
-            {/* isWrapperがtrueの時だけ表示される、下の「受け皿」部分 */}
             {isWrapper && (
                 <div className="ml-3 pl-3 border-l-[12px] border-l-inherit min-h-[20px] flex flex-col justify-end relative opacity-80" style={{ borderColor: 'inherit' }}>
                     <div className={`absolute inset-y-0 left-0 w-3 ${styles.bg} opacity-50`}></div>
@@ -217,8 +205,7 @@ const SortableBlock = ({
     );
 };
 
-// Toolbox Item
-// 左側のパレットにある、クリックして追加するためのボタン
+// --- Toolbox Item ---
 const ToolboxBlock = ({ def, onClick }: { def: BlockDefinition, onClick: () => void }) => {
     const styles = CATEGORY_STYLES[def.category];
     const Icon = def.icon || Layers;
@@ -243,16 +230,15 @@ const ToolboxBlock = ({ def, onClick }: { def: BlockDefinition, onClick: () => v
 };
 
 export default function BlockCreatePage() {
-    // State: 配置されたブロックの状態管理
+    // State
     const [blocks, setBlocks] = useState<BlockInstance[]>([
         { id: '1', type: 'heading', content: 'Welcome to Web Builder', category: 'content' },
         { id: '2', type: 'text', content: 'Build websites by stacking blocks.', category: 'content' },
         { id: '3', type: 'button', content: 'Get Started', category: 'component' },
     ]);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const dndContextId = useId(); // ★ ID不一致エラーを防ぐための一意なID
 
-    // 重要: ドラッグ操作を検知するセンサーの設定
-    // PointerSensor: マウスやタッチ操作用。distance: 5 は「5px動かしたらドラッグ開始」という意味（クリック時の誤作動防止）
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -260,7 +246,7 @@ export default function BlockCreatePage() {
 
     const addBlock = (def: BlockDefinition) => {
         const newBlock: BlockInstance = {
-            id: crypto.randomUUID(), // ランダムなIDを生成
+            id: crypto.randomUUID(),
             type: def.type,
             content: def.defaultContent || '',
             category: def.category
@@ -276,29 +262,26 @@ export default function BlockCreatePage() {
         setBlocks(blocks.map(b => b.id === id ? { ...b, content } : b));
     };
 
-    // 重要: ドラッグ終了時の処理（並び替えの確定）
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
-        // active: 掴んでいるアイテム, over: 重なっている先のアイテム
         if (active.id !== over?.id && over) {
             setBlocks((items) => {
                 const oldIndex = items.findIndex((item) => item.id === active.id);
                 const newIndex = items.findIndex((item) => item.id === over.id);
-                return arrayMove(items, oldIndex, newIndex); // dnd-kitのユーティリティで配列を並び替え
+                return arrayMove(items, oldIndex, newIndex);
             });
         }
     };
 
-    // HTML Generator: ブロックの配列から実際のHTML文字列を生成する関数
+    // HTML Generator
     const generateHTML = () => {
         let html = '';
         
         blocks.forEach(block => {
-            // 各ブロックタイプに応じたHTMLタグを生成
             switch(block.type) {
                 case 'section':
                     html += `<section class="py-12 px-6 bg-white border-b border-gray-200">\n`;
-                    // Note: 本来はネスト構造に対応する必要がありますが、今回は簡易的に中身を固定しています
+                    // Note: Nesting logic would go here in a full tree structure
                     html += `  <div class="p-4 border-2 border-dashed border-blue-200 text-center text-blue-400 rounded">Section Content Area</div>\n`;
                     html += `</section>\n`;
                     break;
@@ -328,7 +311,7 @@ export default function BlockCreatePage() {
             }
         });
 
-        // プレビュー用のHTML全体を構築（Tailwind CSSのCDNを含める）
+        // Wrap in full HTML document
         return `
             <!DOCTYPE html>
             <html lang="en">
@@ -350,38 +333,44 @@ export default function BlockCreatePage() {
     // Update preview when blocks change
     useEffect(() => {
         const html = generateHTML();
-        // 重要: HTML文字列をBlobにして、iframe用のURLを生成（セキュリティ対策・データURIより軽量）
         const blob = new Blob([html], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         setPreviewUrl(url);
-        return () => URL.revokeObjectURL(url); // メモリリーク防止のためクリーンアップ
+        return () => URL.revokeObjectURL(url);
     }, [blocks]);
 
     return (
         <div className='min-h-screen bg-[#111] text-white flex flex-col font-sans'>
             
-            {/* Header */}
-            <header className='h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#0a0a0a] sticky top-0 z-50'>
-                <div className='flex items-center gap-4'>
+            {/* --- HEADER (Absolute Center Layout) --- */}
+            <header className='h-16 border-b border-white/10 flex items-center px-6 bg-[#0a0a0a] sticky top-0 z-50 relative'>
+                
+                {/* Left: Title & Back */}
+                <div className='flex items-center gap-4 z-10'>
                     <a href='/' className='text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full'>
                         <ArrowLeft className='w-5 h-5' />
                     </a>
-                    <h2 className='font-bold text-lg tracking-tight text-gray-200'>Create New Post</h2>
+                    <h2 className='font-bold text-lg tracking-tight text-gray-200'>Web Builder</h2>
                 </div>
+
+                {/* Center: Mode Toggle (Absolute Positioning) */}
                 <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0'>
                     <div className='flex bg-[#161616] p-1 rounded-lg border border-white/5'>
-                    <a href="/create" className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium'>
-                        <Code2 className='w-4 h-4' />
-                        <span>Text</span>
-                    </a>
-                    <a href="/create/block" className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all bg-blue-600 text-white shadow-lg font-medium'>
-                        <Box className='w-4 h-4' />
-                        <span>Block</span>
-                    </a>
+                        <a href="/create" className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium'>
+                            <Code2 className='w-4 h-4' />
+                            <span>Text</span>
+                        </a>
+                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all bg-blue-600 text-white shadow-lg font-medium'>
+                            <Box className='w-4 h-4' />
+                            <span>Block</span>
+                        </button>
                     </div>
                 </div>
-                
-                <div className="w-24"></div> {/* Spacer */}
+
+                {/* Right: Spacer to balance layout */}
+                <div className='ml-auto w-40 flex justify-end items-center gap-3 z-10'>
+                    <div className='text-xs text-gray-500'>Autosaved</div>
+                </div>
             </header>
 
             <div className='flex-1 flex overflow-hidden'>
@@ -418,13 +407,12 @@ export default function BlockCreatePage() {
                     <div className='absolute inset-0 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:20px_20px] opacity-20 pointer-events-none'></div>
                     
                     <div className='flex-1 overflow-auto p-8 relative z-0 custom-scrollbar'>
-                        {/* 重要: ここからドラッグ＆ドロップのコンテキスト（範囲） */}
                         <DndContext 
+                            id={dndContextId} // ★ ID固定
                             sensors={sensors} 
                             collisionDetection={closestCenter} 
                             onDragEnd={handleDragEnd}
                         >
-                            {/* ソート可能なリストの定義。itemsには並び替え対象のID配列を渡す */}
                             <SortableContext 
                                 items={blocks.map(b => b.id)} 
                                 strategy={verticalListSortingStrategy}
