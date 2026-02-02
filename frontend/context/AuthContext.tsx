@@ -32,6 +32,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // デバッグログ: Firebase Authの読み込み確認
+        if (!auth) {
+            console.error("AuthContext: Firebase Authの初期化に失敗しています。lib/firebase.tsを確認してください。");
+            return;
+        }
+
         console.log("AuthContext: 認証状態の監視を開始します...");
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             console.log("AuthContext: 認証状態が変化しました:", currentUser ? "ログイン済み" : "未ログイン", currentUser?.uid);
@@ -50,7 +56,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             console.error("AuthContext: ログイン失敗", error);
             console.error("Error Code:", error.code);
             console.error("Error Message:", error.message);
-            alert(`ログインに失敗しました。\nエラー: ${error.message}`);
+            // ポップアップブロッカーなどで閉じられた場合はアラートを出さない手もありですが、今回は確認のため出します
+            if (error.code !== 'auth/popup-closed-by-user') {
+                alert(`ログインに失敗しました。\nエラー: ${error.message}`);
+            }
         }
     };
 
