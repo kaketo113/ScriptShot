@@ -7,8 +7,11 @@ import {
     PlusSquare, 
     User, 
     LogOut, 
-    Code2
+    Code2,
+    LogIn 
 } from 'lucide-react';
+// パス: app/components から見て ../context/AuthContext
+import { useAuth } from '../context/AuthContext';
 
 const MENU_ITEMS = [
     { icon: Home, label: 'Home', href: '/' },
@@ -19,12 +22,25 @@ const MENU_ITEMS = [
 
 export function Sidebar() {
     const [pathname, setPathname] = useState('/');
+    const { user, login, logout } = useAuth(); 
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
             setPathname(window.location.pathname);
         }
-    }, []);
+    }, [user]);
+
+    const handleLogin = async () => {
+        try {
+            await login();
+            // ログイン成功時にリロードして状態を確実に反映
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+        } catch (e) {
+            console.error("Login error:", e);
+        }
+    };
 
     return (
         <aside className='hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 border-r border-white/10 bg-black z-50'>
@@ -63,18 +79,42 @@ export function Sidebar() {
                 })}
             </nav>
 
-            {/* User Profile / Logout */}
+            {/* User Profile / Login Area */}
             <div className='p-4 mt-auto border-t border-white/10'>
-                <button className='flex items-center gap-3 w-full p-3 rounded-xl hover:bg-[#1a1a1a] transition-colors text-left group' onClick={() => {
-                    window.location.href = '/login';
-                }}>
-                    <div className='w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 border border-white/10'></div>
-                    <div className='flex-1 min-w-0'>
-                        <p className='text-sm font-bold text-white truncate'>Demo User</p>
-                        <p className='text-xs text-gray-500 truncate'>@demouser</p>
+                {user ? (
+                    // ログイン済み
+                    <div className='flex items-center gap-3 w-full p-3 rounded-xl hover:bg-[#1a1a1a] transition-colors text-left group cursor-default bg-[#1a1a1a]/50 border border-blue-500/20'>
+                        {user.photoURL ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={user.photoURL} alt="User" className='w-10 h-10 rounded-full border border-white/10' />
+                        ) : (
+                            <div className='w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 border border-white/10'></div>
+                        )}
+                        <div className='flex-1 min-w-0'>
+                            <p className='text-sm font-bold text-white truncate'>{user.displayName || 'User'}</p>
+                            <p className='text-xs text-green-400 truncate'>● Online</p>
+                        </div>
+                        <button 
+                            onClick={() => {
+                                logout();
+                                setTimeout(() => window.location.reload(), 500); 
+                            }} 
+                            className='p-2 hover:bg-white/10 rounded-full transition-colors' 
+                            title="Logout"
+                        >
+                            <LogOut className='w-5 h-5 text-gray-500 group-hover:text-red-400 transition-colors' />
+                        </button>
                     </div>
-                    <LogOut className='w-5 h-5 text-gray-500 group-hover:text-red-400 transition-colors' />
-                </button>
+                ) : (
+                    // 未ログイン
+                    <button 
+                        onClick={handleLogin}
+                        className='flex items-center justify-center gap-3 w-full p-3 rounded-xl bg-blue-600 hover:bg-blue-500 transition-colors text-white font-bold shadow-lg active:scale-95'
+                    >
+                        <LogIn className='w-5 h-5' />
+                        <span>Sign In</span>
+                    </button>
+                )}
             </div>
         </aside>
     );
