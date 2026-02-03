@@ -7,7 +7,7 @@ import {
     signOut, 
     User 
 } from 'firebase/auth';
-// パス: app/context から見て ../lib/firebase
+// lib/firebaseの場所に合わせてパスを調整してください（現在はルート直下を想定）
 import { auth, googleProvider } from '../lib/firebase'; 
 
 type AuthContextType = {
@@ -24,50 +24,40 @@ const AuthContext = createContext<AuthContextType>({
     logout: async () => {},
 });
 
-// ★重要: エラーの原因はこの行がない（またはexportされていない）ことです
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
+    // アプリ起動時に「ログインしてるか？」を監視
     useEffect(() => {
-        // デバッグログ: Firebase Authの読み込み確認
-        if (!auth) {
-            console.error("AuthContext: Firebase Authの初期化に失敗しています。lib/firebase.tsを確認してください。");
-            return;
-        }
-
-        console.log("AuthContext: 認証状態の監視を開始します...");
+        console.log("AuthContext: Start monitoring auth state...");
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            console.log("AuthContext: 認証状態が変化しました:", currentUser ? "ログイン済み" : "未ログイン", currentUser?.uid);
+            console.log("AuthContext: User state changed!", currentUser?.email); // ログ追加
             setUser(currentUser);
             setLoading(false);
         });
         return () => unsubscribe();
     }, []);
 
+    // Googleログイン実行
     const login = async () => {
         try {
-            console.log("AuthContext: Googleログインを開始します...");
-            const result = await signInWithPopup(auth, googleProvider);
-            console.log("AuthContext: ログイン成功！", result.user.uid);
-        } catch (error: any) {
-            console.error("AuthContext: ログイン失敗", error);
-            console.error("Error Code:", error.code);
-            console.error("Error Message:", error.message);
-            // ポップアップブロッカーなどで閉じられた場合はアラートを出さない手もありですが、今回は確認のため出します
-            if (error.code !== 'auth/popup-closed-by-user') {
-                alert(`ログインに失敗しました。\nエラー: ${error.message}`);
-            }
+            console.log("AuthContext: Starting login popup...");
+            await signInWithPopup(auth, googleProvider);
+            console.log("AuthContext: Popup closed, login processing...");
+        } catch (error) {
+            console.error("Login failed:", error);
+            alert("ログインに失敗しました。");
         }
     };
 
+    // ログアウト実行
     const logout = async () => {
         try {
-            console.log("AuthContext: ログアウト処理を開始します...");
             await signOut(auth);
-            console.log("AuthContext: ログアウトしました");
+            console.log("AuthContext: Logged out");
         } catch (error) {
             console.error("Logout failed:", error);
         }

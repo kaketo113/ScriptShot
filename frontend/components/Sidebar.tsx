@@ -10,7 +10,6 @@ import {
     Code2,
     LogIn 
 } from 'lucide-react';
-// パス: app/components から見て ../context/AuthContext
 import { useAuth } from '../context/AuthContext';
 
 const MENU_ITEMS = [
