@@ -47,12 +47,12 @@ const CATEGORY_STYLES = {
 //ここがツールボックス
 const TOOLBOX_BLOCKS: BlockDefinition[] = [
     { type: 'section', label: '項', category: 'layout', icon: Layout, isWrapper: true },
-    { type: 'container', label: 'コンテナ', category: 'layout', icon: Box, isWrapper: true },
-    { type: 'heading', label: '見出し', category: 'content', hasInput: true, defaultContent: 'Hello', icon: Type },
-    { type: 'text', label: 'テキスト', category: 'content', hasInput: true, defaultContent: 'Content...', icon: Type },
+    { type: 'container', label: '容器', category: 'layout', icon: Box, isWrapper: true },
+    { type: 'heading', label: '見出し', category: 'content', hasInput: true, defaultContent: '見出し', icon: Type },
+    { type: 'text', label: 'テキスト', category: 'content', hasInput: true, defaultContent: 'テキスト', icon: Type },
     { type: 'image', label: '画像', category: 'content', hasInput: true, defaultContent: 'https://placehold.co/400', icon: ImageIcon },
-    { type: 'button', label: 'ボタン', category: 'component', hasInput: true, defaultContent: 'Click', icon: MousePointerClick },
-    { type: 'card', label: 'カード', category: 'component', hasInput: true, defaultContent: 'Card', icon: Square },
+    { type: 'button', label: 'ボタン', category: 'component', hasInput: true, defaultContent: 'ボタン', icon: MousePointerClick },
+    { type: 'card', label: 'カード', category: 'component', hasInput: true, defaultContent: 'カード', icon: Square },
 ];
 
 const TopNotch = ({ className }: { className?: string }) => (
@@ -111,8 +111,8 @@ const ToolboxBlock = ({ def, onClick }: { def: BlockDefinition, onClick: () => v
 
 export default function BlockCreatePage() {
     const [blocks, setBlocks] = useState<BlockInstance[]>([
-        { id: '1', type: 'heading', content: 'Welcome', category: 'content' },
-        { id: '2', type: 'button', content: 'Click Me', category: 'component' },
+        { id: '1', type: 'heading', content: 'ようこそ！', category: 'content' },
+        { id: '2', type: 'button', content: '押してみて！', category: 'component' },
     ]);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
