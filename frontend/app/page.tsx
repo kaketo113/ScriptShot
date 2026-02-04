@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-    Heart, MessageCircle, MoreHorizontal, Code2, Play, Share2, Layers, Layout, Type, Image as ImageIcon, MousePointerClick, Square, Box, Loader2
+    Heart, MessageCircle, MoreHorizontal, Code2, Play, Share2, Layers, Layout, Type, Image as ImageIcon, MousePointerClick, Box, Loader2
 } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { db } from '../lib/firebase';
-import { collection, query, orderBy, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, getDocs, Timestamp } from 'firebase/firestore';
 
 // --- Block Definitions & Styles ---
 type BlockCategory = 'layout' | 'content' | 'component';
@@ -87,6 +87,7 @@ interface PostData {
     type: 'text' | 'block';
     code?: string;
     codeSnippet?: string;
+    thumbnail?: string; // 画像データのフィールド
     blocks?: any[];
     likes: number;
     comments: number;
@@ -100,25 +101,25 @@ const PostCard = ({ post }: { post: PostData }) => {
     const previewCode = post.type === 'text' ? post.code : post.codeSnippet;
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+    // 画像がない場合のみ、フォールバックとしてiframe用のURLを生成
     useEffect(() => {
-        if (previewCode) {
+        if (!post.thumbnail && previewCode) {
             const blob = new Blob([previewCode], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             setPreviewUrl(url);
             return () => URL.revokeObjectURL(url);
         }
-    }, [previewCode]);
+    }, [previewCode, post.thumbnail]);
 
     const date = post.createdAt?.toDate ? post.createdAt.toDate().toLocaleString() : 'Just now';
 
-    // ★重要: カードクリック時の遷移処理
     const handleClick = () => {
         window.location.href = `/post/${post.id}`;
     };
 
     return (
         <article 
-            onClick={handleClick} // ★クリックイベントを追加
+            onClick={handleClick}
             className='bg-[#161616] rounded-3xl overflow-hidden mb-8 shadow-xl border border-white/5 hover:border-white/10 transition-colors cursor-pointer group/card'
         >
             {/* Header */}
@@ -148,7 +149,7 @@ const PostCard = ({ post }: { post: PostData }) => {
                     </div>
                 </div>
                 <button 
-                    onClick={(e) => { e.stopPropagation(); /* メニュー操作などで遷移しないように */ }}
+                    onClick={(e) => { e.stopPropagation(); }}
                     className='text-gray-500 hover:text-white p-2 hover:bg-white/5 rounded-full transition-colors'
                 >
                     <MoreHorizontal className='w-5 h-5' />
@@ -157,6 +158,7 @@ const PostCard = ({ post }: { post: PostData }) => {
 
             {/* Body */}
             <div className='flex flex-col md:flex-row h-80 md:h-72 border-b border-white/5'>
+                {/* Left: Code/Blocks */}
                 <div className='w-full md:w-1/2 bg-[#0d0d0d] border-b md:border-b-0 md:border-r border-white/5 relative overflow-hidden group'>
                     <div className="absolute top-3 left-4 text-[10px] font-bold text-gray-600 uppercase tracking-widest flex items-center gap-2 z-10">
                         {post.type === 'text' ? <Code2 className="w-3 h-3" /> : <Layers className="w-3 h-3" />}
@@ -184,22 +186,35 @@ const PostCard = ({ post }: { post: PostData }) => {
                     </div>
                 </div>
 
+                {/* Right: Preview (Modified for Performance) */}
                 <div className='w-full md:w-1/2 bg-[#222] relative overflow-hidden group'>
                     <div className="absolute top-3 right-4 text-[10px] font-bold text-white/80 uppercase tracking-widest bg-black/50 backdrop-blur-md px-2 py-1 rounded border border-white/10 z-10">
                         Preview
                     </div>
-                    {previewUrl ? (
+                    
+                    {/* 画像があれば画像を優先表示 */}
+                    {post.thumbnail ? (
+                        <div className="w-full h-full bg-white flex items-center justify-center">
+                            <img 
+                                src={post.thumbnail} 
+                                alt="Preview" 
+                                className="w-full h-full object-contain"
+                            />
+                        </div>
+                    ) : previewUrl ? (
                         <iframe 
                             src={previewUrl}
-                            className="w-full h-full border-none opacity-90 transition-opacity duration-700 group-hover:opacity-100"
+                            className="w-full h-full border-none opacity-90 transition-opacity duration-700 group-hover:opacity-100 bg-white"
                             title="Post Preview"
                             sandbox="allow-scripts"
-                            style={{ pointerEvents: 'none' }} // iframe内のクリック暴発防止
+                            style={{ pointerEvents: 'none' }}
                         />
                     ) : (
                         <div className="flex items-center justify-center h-full text-gray-500 text-xs">Loading Preview...</div>
                     )}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300">
+
+                    {/* Overlay Play Button */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 pointer-events-none">
                         <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 shadow-lg cursor-pointer hover:bg-white/20 hover:scale-110 transition-all">
                             <Play className="w-5 h-5 text-white fill-current ml-0.5" />
                         </div>
@@ -212,7 +227,7 @@ const PostCard = ({ post }: { post: PostData }) => {
                 <div className='flex items-center gap-6'>
                     <button 
                         onClick={(e) => { 
-                            e.stopPropagation(); // ★クリックイベントの伝播を止める（詳細遷移を防ぐ）
+                            e.stopPropagation(); 
                             setIsLiked(!isLiked); 
                         }}
                         className={`flex items-center gap-2 text-sm font-medium transition-colors group ${isLiked ? 'text-pink-500' : 'text-gray-400 hover:text-white'}`}
@@ -246,7 +261,7 @@ export default function HomePage() {
     useEffect(() => {
         const fetchPosts = async () => {
             try {
-                // インデックスエラー回避のためソートなしで取得し、クライアント側でソート
+                // インデックスエラー回避のためクライアントサイドソート
                 const q = query(collection(db, "posts"));
                 const querySnapshot = await getDocs(q);
                 
