@@ -1,239 +1,286 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Sidebar } from '../../../components/Sidebar';
+import React, { useState, useEffect } from 'react';
 import { 
-  ArrowLeft, Heart, MessageCircle, Share2, 
-  MoreHorizontal, Sparkles, Bot, User, Send 
+    Heart, MessageCircle, MoreHorizontal, Code2, Play, Share2, ArrowLeft, Layers, Layout, Type, Image as ImageIcon, MousePointerClick, Square, Box, Loader2
 } from 'lucide-react';
-import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Sidebar } from '../../../components/Sidebar';
+// Firebase関連
+import { db } from '../../../lib/firebase';
+import { doc, getDoc, Timestamp } from 'firebase/firestore';
 
-const POST_DATA = {
-  id: 1,
-  user: {
-    name: 'mizoguchi_kanto',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kanto',
-  },
-  image: 'https://images.unsplash.com/photo-1550439062-609e1531270e?q=80&w=1000&auto=format&fit=crop',
-  caption: 'Next.jsとFramer Motionでログイン画面のアニメーションを作ってみた！発光表現がいい感じ。',
-  tags: ['Nextjs', 'TailwindCSS', 'FramerMotion'],
-  likes: 128,
-  comments: 5,
-  time: '2h ago',
-  //ダミーコード   
-  code: `<span class="text-pink-400">export default</span> <span class="text-blue-400">function</span> <span class="text-yellow-300">LoginPage</span>() {
-  <span class="text-pink-400">return</span> (
-    &lt;<span class="text-green-400">motion.div</span>
-      <span class="text-purple-400">initial</span>={{ <span class="text-orange-300">opacity</span>: 0 }}
-      <span class="text-purple-400">animate</span>={{ <span class="text-orange-300">opacity</span>: 1 }}
-    &gt;
-      &lt;<span class="text-green-400">h1</span>&gt;Welcome&lt;/<span class="text-green-400">h1</span>&gt;
-    &lt;/<span class="text-green-400">motion.div</span>&gt;
-  );
-}`
+// --- Block Definitions & Styles ---
+type BlockCategory = 'layout' | 'content' | 'component';
+
+const CATEGORY_STYLES = {
+    layout: { bg: 'bg-blue-600', border: 'border-blue-700' },
+    content: { bg: 'bg-slate-600', border: 'border-slate-700' },
+    component: { bg: 'bg-emerald-600', border: 'border-emerald-700' },
 };
 
-const AI_REVIEWS = [
-  {
-    type: 'suggestion',
-    title: 'アクセシビリティの改善提案',
-    content: '`motion.div` に `role="main"` を追加すると、スクリーンリーダー利用者にとってより親切な構造になります。',
-    codeSuggestion: '<motion.div role="main" ...>'
-  },
-  {
-    type: 'performance',
-    title: 'レンダリング最適化',
-    content: 'アニメーション要素が多いため、`layout` プロパティの使用を検討してください。GPU負荷を軽減できる可能性があります。',
-  }
-];
+// ブロックの凹凸パーツ
+const TopNotch = ({ className }: { className?: string }) => (
+    <svg className={`absolute -top-[4px] left-4 w-4 h-[5px] z-10 ${className}`} viewBox="0 0 16 5" fill="currentColor">
+        <path d="M0 5h2l1-1 1-2 2-2h4l2 2 1 2 1 1h2v5H0z" />
+    </svg>
+);
+const BottomNotch = ({ className }: { className?: string }) => (
+    <svg className={`absolute -bottom-[4px] left-4 w-4 h-[5px] z-10 ${className}`} viewBox="0 0 16 5" fill="currentColor">
+        <path d="M0 0h2l1 1 1 2 2 2h4l2-2 1-2 1-1h2v0H0z" />
+    </svg>
+);
 
-const USER_COMMENTS = [
-  { id: 1, user: 'tanaka_dev', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix', text: '発光のブラー具合が絶妙ですね！参考にします。' },
-  { id: 2, user: 'suzuki_ui', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka', text: 'コードも見やすくて助かります。' },
-];
+// 読み取り専用ブロックコンポーネント
+const ReadOnlyBlock = ({ block }: { block: any }) => {
+    const styles = CATEGORY_STYLES[block.category as BlockCategory] || CATEGORY_STYLES.content;
+    let Icon = Box;
+    if (block.type === 'heading' || block.type === 'text') Icon = Type;
+    if (block.type === 'image') Icon = ImageIcon;
+    if (block.type === 'button') Icon = MousePointerClick;
+    if (block.type === 'section' || block.type === 'container') Icon = Layout;
 
-export default function PostDetailPage() {
-  const [activeTab, setActiveTab] = useState<'ai' | 'comments'>('ai');
-  const [isCodeOpen, setIsCodeOpen] = useState(true);
+    return (
+        <div className="relative mb-0.5 select-none transform scale-90 origin-left">
+            <div className={`
+                relative flex items-center h-[36px] px-3 py-1
+                ${styles.bg} text-white
+                rounded-r-sm shadow-sm
+                border-t border-b border-r border-white/10
+                ${block.isWrapper ? 'rounded-tl-sm' : 'rounded-l-sm'}
+            `}>
+                <TopNotch className="text-black/20" />
+                <TopNotch className={styles.bg} />
+                {!block.isWrapper && <BottomNotch className="text-black/20 translate-y-[1px]" />}
+                {!block.isWrapper && <BottomNotch className={styles.bg} />}
 
-  return (
-    <div className='min-h-screen bg-black text-white flex'>
-        <Sidebar />
-
-        <main className='flex-1 md:ml-64 min-h-screen relative'>
-
-            {/* ヘッダー：戻るボタン */}
-            <header className='sticky top-0 z-20 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/10 px-6 h-16 flex items-center gap-4'>
-              <Link href="/" className='p-2 hover:bg-white' />
-            </header>
-
-            <div className='flex flex-col lg:flex-row h-[calc(100vh-64px)]'>
-
-                {/* コンテンツ */}
-                <div className='flex-1 overflow-y-auto custom-scrollbar border-r border-white/10'>
-
-                    {/* 実行結果 */}
-                    <div className='w-full aspect-video bg-[#111] relative group'>
-                        <img src={POST_DATA.image} alt="Post Image" className='w-full h-full object-cover' />
-                        <div className='absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-momo text-blue-400 border border-blue-500/30'>
-                            Executed via ScriptShot
+                <div className="flex items-center gap-2">
+                    <Icon size={14} className="text-white/90" />
+                    <span className="font-bold text-[10px] tracking-wide">{block.type}</span>
+                    {block.content && (
+                        <div className="bg-black/20 rounded px-1.5 py-0.5 shadow-inner border border-black/10">
+                            <span className="text-[10px] font-mono text-white/90 block max-w-[120px] truncate">
+                                {block.content}
+                            </span>
                         </div>
-                    </div>
-
-                    {/* 投稿情報 */}
-                    <div className='p-4 border-b border-white/10'>
-                        <div className='flex items-center justify-between mb-4'>
-                            <div className='flex items-center gap-3'>
-                                <img src={POST_DATA.user.avatar} className='w-10 h-10 rounded-full bg-gray-700' />
-                                <div>
-                                    <h3 className='font-bold text-sm'>{POST_DATA.user.name}</h3>
-                                    <p className='text-xs text-gray-500'>{POST_DATA.time}</p>
-                                </div>
-                            </div>
-                            <button className='text-gray-500 hover:text-white'>
-                                <MoreHorizontal className='w-5 h-5' />
-                            </button>
-                        </div>
-                        <p className='text-gray-200 mb-4 leading-relaxed'>{POST_DATA.caption}</p>
-                        <div className='flex gap-2 mb-6'>
-                            {POST_DATA.tags.map((tag) => (
-                                <span key={tag} className='text-sm text-blue-400 bg-blue-900/10 px-2 py-1 rounded hover:bg-blue-900/20 cursor-pointer'>#{tag}</span>
-                            ))}
-                        </div>
-
-                        {/* アクションボタン */}
-                        <div className='flex gap-6'>
-                            <button className='flex items-center gap-2 text-pink-500'><Heart className='w-6 h-6 fill-current' /> {POST_DATA.likes}</button>
-                            <button className='flex items-center gap-2 text-gray-400 hover:text-white'><MessageCircle className='w-6 h-6' /> {POST_DATA.comments}</button>
-                            <button className='flex items-center gap-2 text-gray-400 hover:text-white ml-auto'><Share2 className='w-6 h-6' /></button>
-                        </div>
-                    </div>
-
-                    {/* ソースコード表示エリア */}
-                    <div className='p-6'>
-                        <button
-                            onClick={() => setIsCodeOpen(!isCodeOpen)}
-                            className='flex items-center justify-between w-full mb-4 text-sm font-bold text-gray-400 hover:text-white transition-colors'
-                        >
-                            <span>SOURCE CODE</span>
-                            <span className='text-xs bg-[#222] px-2 py-1 rounded'>TypeScript</span>
-                        </button>
-
-                        {isCodeOpen && (
-                            <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                className='bg-[#111] rounded-xl border border-white/5 p-4 font-mono text-sm overflow-x-auto'
-                            >
-                                <pre className='text-gray-300' dangerouslySetInnerHTML={{ __html: POST_DATA.code }} />
-                            </motion.div>
-                        )}
-                    </div>
-                </div>
-                
-                {/* AIレビュー ＆ コメント */}
-                <div className="w-full lg:w-[400px] bg-[#0c0c0c] flex flex-col">
-            
-                    {/* タブ */}
-                    <div className="flex border-b border-white/10">
-                    <button 
-                        onClick={() => setActiveTab('ai')}
-                        className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'ai' ? 'text-blue-400 border-b-2 border-blue-400 bg-blue-900/5' : 'text-gray-500 hover:text-gray-300'}`}
-                    >
-                        <Bot className="w-4 h-4" /> AI Review
-                    </button>
-                    <button 
-                        onClick={() => setActiveTab('comments')}
-                        className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'comments' ? 'text-white border-b-2 border-white' : 'text-gray-500 hover:text-gray-300'}`}
-                    >
-                        Comments <span className="bg-[#222] text-xs px-1.5 rounded-full">{POST_DATA.comments}</span>
-                    </button>
-                    </div>
-
-                    {/* タブコンテンツ */}
-                    <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                    <AnimatePresence mode="wait">
-                        {activeTab === 'ai' ? (
-                        <motion.div 
-                            key="ai"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="space-y-4"
-                        >
-                            {/* AIレビューカード */}
-                            <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-500/30 rounded-xl p-4">
-                            <div className="flex items-center gap-2 mb-3 text-blue-400 font-bold text-sm">
-                                <Sparkles className="w-4 h-4" />
-                                ScriptShot AI Analysis
-                            </div>
-                            <p className="text-sm text-gray-300 mb-4">
-                                全体的に素晴らしいコードです！以下のポイントを改善すると、さらにパフォーマンスが向上します。
-                            </p>
-                            
-                            {AI_REVIEWS.map((review, i) => (
-                                <div key={i} className="bg-[#0a0a0a]/50 rounded-lg p-3 mb-2 border border-white/5">
-                                <h4 className="text-xs font-bold text-cyan-200 mb-1 flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                                    {review.title}
-                                </h4>
-                                <p className="text-xs text-gray-400 leading-relaxed">{review.content}</p>
-                                {review.codeSuggestion && (
-                                    <div className="mt-2 bg-black rounded p-2 text-[10px] font-mono text-green-300 border border-white/5">
-                                    {review.codeSuggestion}
-                                    </div>
-                                )}
-                                </div>
-                            ))}
-                            </div>
-                        </motion.div>
-                        ) : (
-                        <motion.div 
-                            key="comments"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="space-y-4"
-                        >
-                            {USER_COMMENTS.map(comment => (
-                            <div key={comment.id} className="flex gap-3">
-                                <img src={comment.avatar} className="w-8 h-8 rounded-full bg-gray-700" />
-                                <div className="flex-1">
-                                <div className="bg-[#1a1a1a] rounded-lg p-3 rounded-tl-none">
-                                    <span className="text-xs font-bold text-gray-400 block mb-1">{comment.user}</span>
-                                    <p className="text-sm text-gray-200">{comment.text}</p>
-                                </div>
-                                <div className="flex gap-3 mt-1 ml-1">
-                                    <button className="text-xs text-gray-500 hover:text-white">Reply</button>
-                                    <button className="text-xs text-gray-500 hover:text-white">Like</button>
-                                </div>
-                                </div>
-                            </div>
-                            ))}
-                        </motion.div>
-                        )}
-                    </AnimatePresence>
-                    </div>
-
-                    {/* コメント入力欄 */}
-                    <div className="p-4 border-t border-white/10 bg-[#0a0a0a]">
-                    <div className="relative">
-                        <input 
-                        type="text" 
-                        placeholder="Add a comment..." 
-                        className="w-full bg-[#161616] border border-white/10 rounded-full py-3 pl-4 pr-12 text-sm text-white focus:outline-none focus:border-blue-500/50"
-                        />
-                        <button className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors">
-                        <Send className="w-4 h-4" />
-                        </button>
-                    </div>
-                    </div>
-
+                    )}
                 </div>
             </div>
+            {block.isWrapper && (
+                <div className="ml-3 pl-3 border-l-[12px] border-l-inherit min-h-[10px] flex flex-col justify-end relative opacity-80" style={{ borderColor: 'inherit' }}>
+                    <div className={`absolute inset-y-0 left-0 w-3 ${styles.bg} opacity-50`}></div>
+                    <div className={`
+                        relative h-4 w-16 ${styles.bg} rounded-b-sm rounded-tr-sm
+                        flex items-center px-2 mt-0.5
+                    `}>
+                        <TopNotch className={styles.bg} />
+                        <BottomNotch className={styles.bg} />
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
-        </main>
-    </div>
+// --- Type Definitions ---
+interface PostData {
+    id: string;
+    userId: string;
+    userName: string;
+    userAvatar: string;
+    type: 'text' | 'block';
+    code?: string;
+    codeSnippet?: string;
+    blocks?: any[];
+    likes: number;
+    comments: number;
+    createdAt: Timestamp;
+}
+
+export default function PostDetailPage({ params }: { params: { id: string } }) {
+    const [post, setPost] = useState<PostData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [isLiked, setIsLiked] = useState(false);
+
+    // IDから投稿データを取得
+    useEffect(() => {
+        const fetchPost = async () => {
+            try {
+                if (!params.id) return;
+                const docRef = doc(db, "posts", params.id);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    setPost({ id: docSnap.id, ...docSnap.data() } as PostData);
+                } else {
+                    console.log("No such document!");
+                    setPost(null);
+                }
+            } catch (error) {
+                console.error("Error fetching post:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPost();
+    }, [params.id]);
+
+    // プレビュー生成
+    useEffect(() => {
+        if (post) {
+            const displayCode = post.type === 'text' ? post.code : post.codeSnippet;
+            if (displayCode) {
+                const blob = new Blob([displayCode], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                setPreviewUrl(url);
+                return () => URL.revokeObjectURL(url);
+            }
+        }
+    }, [post]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-black text-white flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            </div>
+        );
+    }
+
+    if (!post) {
+        return (
+            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
+                <h1 className="text-2xl font-bold">Post not found</h1>
+                <p className="text-gray-500">The post you are looking for does not exist.</p>
+                {/* Link -> a に変更 */}
+                <a href="/" className="text-blue-400 hover:underline flex items-center gap-2">
+                    <ArrowLeft className="w-4 h-4" /> Back to Home
+                </a>
+            </div>
+        );
+    }
+
+    const date = post.createdAt?.toDate ? post.createdAt.toDate().toLocaleString() : 'Unknown date';
+
+    return (
+        <div className="min-h-screen bg-black text-white font-sans flex">
+            {/* Sidebar */}
+            <Sidebar />
+
+            <main className="flex-1 md:ml-64 bg-[#0a0a0a] min-h-screen flex flex-col">
+                
+                {/* Header */}
+                <header className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#0a0a0a] sticky top-0 z-50">
+                    <div className="flex items-center gap-4">
+                        {/* Link -> a に変更 */}
+                        <a href="/" className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
+                            <ArrowLeft className="w-5 h-5" />
+                        </a>
+                        <span className="font-bold text-sm text-gray-400">Back to Feed</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className='w-8 h-8 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 p-[1px]'>
+                             {/* eslint-disable-next-line @next/next/no-img-element */}
+                             <img src={post.userAvatar} alt={post.userName} className='w-full h-full rounded-full bg-black object-cover' 
+                                 onError={(e) => { (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest'; }} />
+                        </div>
+                    </div>
+                </header>
+
+                {/* Content */}
+                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+                    
+                    {/* Left: Code/Logic View */}
+                    <div className="w-full lg:w-1/2 bg-[#0d0d0d] border-b lg:border-b-0 lg:border-r border-white/5 relative flex flex-col min-h-[50vh] lg:min-h-auto">
+                        <div className="absolute top-4 left-6 z-10 flex items-center gap-3">
+                            <div className="flex gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-full bg-red-500/20"></div>
+                                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20"></div>
+                                <div className="w-2.5 h-2.5 rounded-full bg-green-500/20"></div>
+                            </div>
+                            <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest flex items-center gap-2">
+                                {post.type === 'text' ? <Code2 className="w-3 h-3" /> : <Layers className="w-3 h-3" />}
+                                {post.type === 'text' ? 'Source Code' : 'Logic Blocks'}
+                            </span>
+                        </div>
+
+                        <div className="flex-1 overflow-auto p-6 pt-12 custom-scrollbar relative">
+                            {post.type === 'block' && (
+                                <div className='absolute inset-0 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:16px_16px] opacity-20 pointer-events-none'></div>
+                            )}
+
+                            {post.type === 'text' ? (
+                                <pre className='font-mono text-sm text-blue-300 leading-relaxed whitespace-pre-wrap break-all max-w-4xl mx-auto'>
+                                    {post.code || 'No code content'}
+                                </pre>
+                            ) : (
+                                <div className="pl-4 max-w-2xl mx-auto">
+                                    {post.blocks && post.blocks.length > 0 ? (
+                                        post.blocks.map((block: any) => (
+                                            <ReadOnlyBlock key={block.id} block={block} />
+                                        ))
+                                    ) : (
+                                        <p className="text-gray-500 text-sm italic">No blocks data available.</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right: Preview & Details */}
+                    <div className="w-full lg:w-1/2 bg-[#1a1a1a] flex flex-col relative z-10 shadow-[-10px_0_30px_rgba(0,0,0,0.3)]">
+                        
+                        {/* Preview Area */}
+                        <div className="flex-1 bg-white relative min-h-[40vh]">
+                            <div className="absolute top-0 right-0 p-3 z-10">
+                                <span className="px-2 py-1 bg-black/10 backdrop-blur-md rounded text-[10px] font-bold text-black/50 border border-black/5">LIVE PREVIEW</span>
+                            </div>
+                            {previewUrl ? (
+                                <iframe 
+                                    src={previewUrl}
+                                    className="w-full h-full border-none"
+                                    title="Post Preview"
+                                    sandbox="allow-scripts"
+                                />
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-gray-500 text-sm">Loading Preview...</div>
+                            )}
+                        </div>
+
+                        {/* Meta Info Area */}
+                        <div className="bg-[#0a0a0a] border-t border-white/10 p-6">
+                            <div className="flex items-start justify-between mb-4">
+                                <div>
+                                    <h1 className="text-lg font-bold text-white mb-1">{post.userName}&apos;s Snippet</h1>
+                                    <p className="text-xs text-gray-500">Posted on {date}</p>
+                                </div>
+                                <button className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-400 hover:text-white">
+                                    <MoreHorizontal className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <button 
+                                    onClick={() => setIsLiked(!isLiked)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full bg-[#161616] border border-white/5 hover:bg-[#222] transition-colors group ${isLiked ? 'text-pink-500 border-pink-500/20' : 'text-gray-400'}`}
+                                >
+                                    <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                                    <span className="text-xs font-bold">{post.likes + (isLiked ? 1 : 0)}</span>
+                                </button>
+                                <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#161616] border border-white/5 hover:bg-[#222] transition-colors text-gray-400 hover:text-blue-400 group">
+                                    <MessageCircle className="w-4 h-4" />
+                                    <span className="text-xs font-bold">{post.comments}</span>
+                                </button>
+                                <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#161616] border border-white/5 hover:bg-[#222] transition-colors text-gray-400 hover:text-green-400 ml-auto">
+                                    <Share2 className="w-4 h-4" />
+                                    <span className="text-xs font-bold">Share</span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </main>
+        </div>
     );
 }

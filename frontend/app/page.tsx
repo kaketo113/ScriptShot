@@ -45,7 +45,10 @@ const BottomNotch = ({ className }: { className?: string }) => (
 
 // 読み取り専用ブロックコンポーネント
 const ReadOnlyBlock = ({ block }: { block: any }) => {
-    const styles = CATEGORY_STYLES[block.category as BlockCategory] || CATEGORY_STYLES.content;
+    // カテゴリが見つからない場合のフォールバックを追加
+    const category = block.category as BlockCategory;
+    const styles = CATEGORY_STYLES[category] || CATEGORY_STYLES.content;
+    
     let Icon = Box;
     if (block.type === 'heading' || block.type === 'text') Icon = Type;
     if (block.type === 'image') Icon = ImageIcon;
