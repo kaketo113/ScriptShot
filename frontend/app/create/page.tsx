@@ -1,60 +1,37 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { Play, Image as ImageIcon, Loader2, Code2, Box, ArrowLeft, Save } from 'lucide-react';
 import { db } from '../../lib/firebase'; 
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; 
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
+import { toJpeg } from 'html-to-image'; 
 
-// Prismのインポート
 import Prism from 'prismjs';
 import 'prismjs/components/prism-css';
-import 'prismjs/components/prism-markup'; // HTML用
+import 'prismjs/components/prism-markup'; 
 import 'prismjs/themes/prism-tomorrow.css';
 
 export default function CreatePage() {
-    const [code, setCode] = useState(`<div class="container">
-    <h1>Hello, ScriptShot!</h1>
-    <p>Code generated preview.</p>
-</div>
-
-<style>
-    body { 
-        font-family: sans-serif;
-        display: flex; 
-        justify-content: center; 
-        align-items: center; 
-        height: 100vh; 
-        margin: 0; 
-        background: #fff;
-    }
-    .container {
-        text-align: center;
-        padding: 2rem;
-        border: 2px dashed #3b82f6;
-        border-radius: 1rem;
-    }
-    h1 { color: #3b82f6; }
-</style>`);
+    const [code, setCode] = useState(`<div class="container">\n    <h1>Hello, ScriptShot!</h1>\n    <p>Code generated preview.</p>\n</div>\n\n<style>\n    body { \n        font-family: sans-serif;\n        display: flex; \n        justify-content: center; \n        align-items: center; \n        height: 100vh; \n        margin: 0; \n        background: #fff;\n    }\n    .container {\n        text-align: center;\n        padding: 2rem;\n        border: 2px dashed #3b82f6;\n        border-radius: 1rem;\n    }\n    h1 { color: #3b82f6; }\n</style>`);
 
     const [isRunning, setIsRunning] = useState(false);
     const [isSaving, setIsSaving] = useState(false); 
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [caption, setCaption] = useState(""); 
     const { user } = useAuth();
+    
+    // キャプチャ対象の参照
+    const previewRef = useRef<HTMLDivElement>(null);
 
-    // 変更点：Prismによる安全なハイライト
     const highlightedCode = useMemo(() => {
-        // HTML(Markup)としてパース。CSSが含まれていてもPrismが良しなに処理します
         return Prism.highlight(code, Prism.languages.markup, 'markup');
     }, [code]);
 
     const runCode = useCallback(() => {
         if (!code) return;
         setIsRunning(true);
-        
-        // setTimeoutはUX的な演出として残していますが、
-        // 実際は即時実行でも問題ありません
         setTimeout(() => {
             try {
                 if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -69,25 +46,52 @@ export default function CreatePage() {
         }, 400);
     }, [code, previewUrl]);
 
+    // 画像をBase64文字列（JPEG）として生成する関数
+    const generateThumbnail = async () => {
+        if (!previewRef.current) return null;
+        try {
+            // Firestoreの1MB制限を回避するため、画質を0.5(50%)に落とし、サイズも制限
+            const dataUrl = await toJpeg(previewRef.current, {
+                quality: 0.5, 
+                width: 640, 
+                height: 480,
+                cacheBust: true,
+                style: { background: 'white' } // 背景がないと透明になり黒くなるのを防ぐ
+            });
+            return dataUrl;
+        } catch (err) {
+            console.error('Thumbnail generation failed:', err);
+            return null;
+        }
+    };
+
     const handlePost = async () => {
-        if (!code) return;
+        if (!code || !previewUrl) return;
         setIsSaving(true);
         try {
+            // 画像生成
+            const thumbnailBase64 = await generateThumbnail();
+
+            // 保存処理
             await addDoc(collection(db, "posts"), {
                 userId: user?.uid || "guest_user", 
                 userName: user?.displayName || "Guest User",
                 userAvatar: user?.photoURL || "https://api.dicebear.com/7.x/avataaars/svg?seed=Guest",
                 type: 'text',
                 code: code,
+                caption: caption,
+                // ここに画像を直接保存
+                thumbnail: thumbnailBase64 || null, 
                 likes: 0,
                 comments: 0,
                 createdAt: serverTimestamp(),
             });
+
             alert("投稿しました！");
             window.location.href = '/'; 
         } catch (error) {
-            console.error("Error adding document: ", error);
-            alert("保存に失敗しました...");
+            console.error("Post Error: ", error);
+            alert("保存に失敗しました。画像サイズが大きすぎる可能性があります。");
         } finally {
             setIsSaving(false);
         }
@@ -122,8 +126,6 @@ export default function CreatePage() {
                         </div>
                         <div className='flex-1 relative font-mono text-sm p-4 pt-4'>
                             <div className='absolute top-0 right-4 bg-[#2d2d2d] text-[10px] text-gray-400 px-3 py-1 rounded-b-md z-30 font-mono border-x border-b border-white/5'>HTML / CSS</div>
-                            
-                            {/* 重ね合わせエディタのコア部分 */}
                             <div className="relative w-full h-full">
                                 <pre 
                                     aria-hidden="true" 
@@ -142,7 +144,12 @@ export default function CreatePage() {
                         </div>
                     </div>
                     <div className='h-32 border-t border-white/10 p-4 bg-[#161616] shrink-0'>
-                        <textarea className='w-full h-full bg-transparent text-sm text-gray-300 placeholder-gray-600 resize-none focus:outline-none leading-relaxed' placeholder='Write a caption...' />
+                        <textarea 
+                            className='w-full h-full bg-transparent text-sm text-gray-300 placeholder-gray-600 resize-none focus:outline-none leading-relaxed' 
+                            placeholder='Write a caption...' 
+                            value={caption}
+                            onChange={(e) => setCaption(e.target.value)}
+                        />
                     </div>
                 </div>
 
@@ -150,7 +157,12 @@ export default function CreatePage() {
                 <div className='w-1/2 bg-[#050505] flex flex-col overflow-hidden'>
                     <div className='flex-1 flex items-center justify-center relative bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:16px_16px] p-8 overflow-hidden'>
                         {previewUrl ? (
-                            <motion.div initial={{ opacity: 0, scale: 0.98, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} className='relative w-full h-full max-h-[600px] rounded-lg overflow-hidden border border-white/10 shadow-2xl bg-white flex flex-col'>
+                            <motion.div 
+                                ref={previewRef} // refをここに設定
+                                initial={{ opacity: 0, scale: 0.98, y: 10 }} 
+                                animate={{ opacity: 1, scale: 1, y: 0 }} 
+                                className='relative w-full h-full max-h-[600px] rounded-lg overflow-hidden border border-white/10 shadow-2xl bg-white flex flex-col'
+                            >
                                 <div className='h-8 bg-[#f1f1f1] flex items-center px-3 gap-1.5 border-b border-gray-300 shrink-0'>
                                     <div className='w-2.5 h-2.5 rounded-full bg-[#ff5f57] border border-[#e0443e]'></div>
                                     <div className='w-2.5 h-2.5 rounded-full bg-[#febc2e] border border-[#d89e24]'></div>
@@ -169,7 +181,14 @@ export default function CreatePage() {
 
                     <div className='h-20 border-t border-white/10 flex items-center justify-between px-8 bg-[#111] shrink-0'>
                         <button onClick={runCode} disabled={isRunning} className='flex items-center gap-2 px-6 py-2.5 bg-white text-black text-sm font-bold rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 shadow-[0_0_20px_rgba(255,255,255,0.15)] active:scale-95 transform duration-100'>{isRunning ? <Loader2 className='w-4 h-4 animate-spin' /> : <Play className='w-4 h-4 fill-current' />}<span>Run Code</span></button>
-                        <button onClick={handlePost} disabled={!previewUrl || isSaving} className='flex items-center gap-2 px-8 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-md hover:bg-blue-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20 active:scale-95 transform duration-100'>{isSaving ? <Loader2 className='w-4 h-4 animate-spin' /> : <Save className='w-4 h-4' />}<span>{isSaving ? 'Posting...' : 'Post Creation'}</span></button>
+                        <button 
+                            onClick={handlePost} 
+                            disabled={!previewUrl || isSaving} 
+                            className='flex items-center gap-2 px-8 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-md hover:bg-blue-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20 active:scale-95 transform duration-100'
+                        >
+                            {isSaving ? <Loader2 className='w-4 h-4 animate-spin' /> : <Save className='w-4 h-4' />}
+                            <span>{isSaving ? 'Posting...' : 'Post Creation'}</span>
+                        </button>
                     </div>
                 </div>
             </div>
