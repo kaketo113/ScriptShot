@@ -7,7 +7,6 @@ import {
     signOut, 
     User 
 } from 'firebase/auth';
-// パス修正: app/context から見て ../lib/firebase
 import { auth, googleProvider } from '../lib/firebase'; 
 
 type AuthContextType = {
@@ -24,7 +23,6 @@ const AuthContext = createContext<AuthContextType>({
     logout: async () => {},
 });
 
-// ★この export が重要です
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {

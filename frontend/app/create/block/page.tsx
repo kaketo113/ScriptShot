@@ -11,10 +11,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { 
     Code2, Box, ArrowLeft, Trash2, Layout, Type, Image as ImageIcon, MousePointerClick, Square, Layers, Loader2, Save
 } from 'lucide-react';
-// パス修正: 1階層上なので ../lib/firebase
 import { db } from '../../../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-// パス修正: 1階層上なので ../context/AuthContext
 import { useAuth } from '../../../context/AuthContext';
 
 // --- Block Definitions & Styles ---
@@ -118,7 +116,7 @@ export default function BlockCreatePage() {
     const [isSaving, setIsSaving] = useState(false);
     const dndContextId = useId(); 
     
-    // ★ ユーザー情報を取得
+    // ユーザー情報を取得
     const { user } = useAuth();
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
@@ -163,7 +161,7 @@ export default function BlockCreatePage() {
         return () => URL.revokeObjectURL(url);
     }, [blocks]);
 
-    // ★ Blockモードの保存処理（ユーザー情報連携版）
+    // Blockモードの保存処理
     const handlePost = async () => {
         setIsSaving(true);
         try {

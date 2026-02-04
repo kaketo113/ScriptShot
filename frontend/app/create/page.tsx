@@ -3,7 +3,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Play, Image as ImageIcon, Loader2, Code2, Box, ArrowLeft, Save } from 'lucide-react';
 import { motion } from 'framer-motion';
-// パスはそのまま
 import { db } from '../../lib/firebase'; 
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; 
 import { useAuth } from '../../context/AuthContext';

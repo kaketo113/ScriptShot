@@ -17,13 +17,12 @@ import {
     Box,
     Loader2
 } from 'lucide-react';
-// Sidebarは名前付きエクスポートなので { Sidebar } で読み込みます
 import { Sidebar } from '../components/Sidebar';
 // Firebase関連
 import { db } from '../lib/firebase';
 import { collection, query, orderBy, getDocs, Timestamp } from 'firebase/firestore';
 
-// --- Block Definitions & Styles (読み取り専用用) ---
+// --- Block Definitions & Styles ---
 type BlockCategory = 'layout' | 'content' | 'component';
 
 const CATEGORY_STYLES = {
@@ -177,10 +176,6 @@ const PostCard = ({ post }: { post: PostData }) => {
                     </div>
                     
                     <div className="p-6 pt-10 h-full overflow-auto custom-scrollbar relative">
-                        {/* Blockモードの場合は背景にグリッドを入れる */}
-                        {post.type === 'block' && (
-                            <div className='absolute inset-0 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:16px_16px] opacity-20 pointer-events-none'></div>
-                        )}
 
                         {post.type === 'text' ? (
                             <pre className='font-mono text-xs text-gray-400 leading-relaxed whitespace-pre-wrap break-all'>
@@ -254,7 +249,7 @@ export default function HomePage() {
         const fetchPosts = async () => {
             try {
                 // created_atで降順（新しい順）
-                // インデックスエラー回避のため、まずはソートなしで取得する安全策をとります
+                // インデックスエラー回避のため、まずはソートなしで取得する安全策
                 // const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
                 const q = query(collection(db, "posts"));
                 const querySnapshot = await getDocs(q);
