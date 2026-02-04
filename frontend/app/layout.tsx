@@ -1,6 +1,6 @@
 import React from 'react';
+import "./globals.css"; 
 import { AuthProvider } from "../context/AuthContext";
-import "./globals.css";
 
 export const metadata = {
   title: "ScriptShot",
@@ -15,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased bg-black text-white">
-        {/* この AuthProvider が無いと、ログインしても画面は変わらない */}
+        {/* アプリ全体を認証機能で包む */}
         <AuthProvider>
           {children}
         </AuthProvider>
