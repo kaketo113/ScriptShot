@@ -3,18 +3,11 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Play, Image as ImageIcon, Loader2, Code2, Box, ArrowLeft, Save } from 'lucide-react';
 import { motion } from 'framer-motion';
-// --- 必要なモジュールを追加（相対パスに修正） ---
-// app/create/page.tsx から見て2つ上の階層にある lib/firebase を参照
-import { db, auth } from '../../lib/firebase'; 
+// パスはそのまま
+import { db } from '../../lib/firebase'; 
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; 
-// 同様に context/AuthContext を参照
-import { useAuth } from '../../context/AuthContext'; 
-// next/navigation は削除し、標準の window.location を使用します
-// import { useRouter } from 'next/navigation'; 
+import { useAuth } from '../../context/AuthContext';
 
-// ------------------------------------------------------------------
-// 簡易シンタックスハイライター
-// ------------------------------------------------------------------
 const highlightHTML = (code: string) => {
     if (!code) return [];
     const regex = /(<!--[\s\S]*?-->)|(<style>[\s\S]*?<\/style>)|(<\/?[a-z0-9-]+)|("[^"]*")|(>)|([^<]+)/gi;
@@ -65,10 +58,9 @@ export default function CreatePage() {
 </style>`);
 
     const [isRunning, setIsRunning] = useState(false);
-    const [isSaving, setIsSaving] = useState(false); // 保存中の状態
+    const [isSaving, setIsSaving] = useState(false); 
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const { user } = useAuth(); // ログインユーザー取得
-    // const router = useRouter(); // 削除
+    const { user } = useAuth();
 
     const runCode = useCallback(() => {
         if (!code) return;
@@ -87,30 +79,24 @@ export default function CreatePage() {
         }, 600);
     }, [code, previewUrl]);
 
-    // ★ 保存処理の実装
     const handlePost = async () => {
-        if (!user) {
-            alert("投稿するにはログインしてください！");
-            return;
-        }
         if (!code) return;
 
         setIsSaving(true);
         try {
-            // Firestoreの 'posts' コレクションにデータを追加
             await addDoc(collection(db, "posts"), {
-                userId: user.uid,
-                userName: user.displayName || "Unknown User",
-                userAvatar: user.photoURL || "",
-                type: 'text', // 投稿タイプ
-                code: code,   // コードの中身
+                userId: user?.uid || "guest_user", 
+                userName: user?.displayName || "Guest User",
+                userAvatar: user?.photoURL || "https://api.dicebear.com/7.x/avataaars/svg?seed=Guest",
+                type: 'text',
+                code: code,
                 likes: 0,
-                createdAt: serverTimestamp(), // サーバー時間
+                comments: 0,
+                createdAt: serverTimestamp(),
             });
 
             alert("投稿しました！");
-            // router.push('/'); // 削除
-            window.location.href = '/'; // 標準機能でトップページへ戻る
+            window.location.href = '/'; 
         } catch (error) {
             console.error("Error adding document: ", error);
             alert("保存に失敗しました...");
@@ -149,7 +135,7 @@ export default function CreatePage() {
 
                     <div className='ml-auto w-40 flex justify-end items-center gap-3 z-10'>
                         <div className='text-xs text-gray-500'>
-                            {user ? 'Autosaved' : 'Not logged in'}
+                            {user ? 'Autosaved' : 'Guest Mode'}
                         </div>
                     </div>
                 </header>
@@ -207,10 +193,9 @@ export default function CreatePage() {
                                 <span>Run Code</span>
                             </button>
 
-                            {/* 保存ボタン */}
                             <button
                                 onClick={handlePost}
-                                disabled={!previewUrl || isSaving} // プレビューしてない、または保存中は押せない
+                                disabled={!previewUrl || isSaving}
                                 className='flex items-center gap-2 px-8 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-md hover:bg-blue-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20 active:scale-95 transform duration-100'
                             >
                                 {isSaving ? <Loader2 className='w-4 h-4 animate-spin' /> : <Save className='w-4 h-4' />}
