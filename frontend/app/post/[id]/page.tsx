@@ -1,64 +1,83 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
-    Heart, MessageCircle, MoreHorizontal, Code2, Share2, ArrowLeft, Layers, Layout, Type, Image as ImageIcon, MousePointerClick, Box, Loader2
+    Heart, MessageCircle, Code2, Share2, ArrowLeft, Layers, 
+    Layout, Type, Image as ImageIcon, MousePointerClick, Box, Loader2,
+    Play, Copy, Check
 } from 'lucide-react';
 import { Sidebar } from '../../../components/Sidebar';
 import { db } from '../../../lib/firebase';
 import { doc, getDoc, Timestamp } from 'firebase/firestore';
+import Prism from 'prismjs';
+import 'prismjs/themes/prism-tomorrow.css';
+// ★修正1: Variants を追加インポート
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 
-// --- Block Definitions & Styles ---
+// --- Animation Variants ---
+// ★修正2: 型注釈 (: Variants) を追加
+const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: { 
+        opacity: 1,
+        transition: { 
+            staggerChildren: 0.1,
+            delayChildren: 0.2
+        }
+    }
+};
+
+// ★修正3: 型注釈 (: Variants) を追加
+const itemVariants: Variants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { 
+        y: 0, 
+        opacity: 1,
+        transition: { type: "spring", stiffness: 100 }
+    }
+};
+
+// --- Block Definitions ---
 type BlockCategory = 'layout' | 'content' | 'component';
-
 const CATEGORY_STYLES = {
     layout: { bg: 'bg-blue-600', border: 'border-blue-700' },
     content: { bg: 'bg-slate-600', border: 'border-slate-700' },
     component: { bg: 'bg-emerald-600', border: 'border-emerald-700' },
 };
 
-const TopNotch = ({ className }: { className?: string }) => (
-    <svg className={`absolute -top-[4px] left-4 w-4 h-[5px] z-10 ${className}`} viewBox="0 0 16 5" fill="currentColor">
-        <path d="M0 5h2l1-1 1-2 2-2h4l2 2 1 2 1 1h2v5H0z" />
-    </svg>
-);
-
-const BottomNotch = ({ className }: { className?: string }) => (
-    <svg className={`absolute -bottom-[4px] left-4 w-4 h-[5px] z-10 ${className}`} viewBox="0 0 16 5" fill="currentColor">
-        <path d="M0 0h2l1 1 1 2 2 2h4l2-2 1-2 1-1h2v0H0z" />
-    </svg>
-);
-
-const ReadOnlyBlock = ({ block }: { block: any }) => {
+const DetailBlock = ({ block, index }: { block: any, index: number }) => {
     const styles = CATEGORY_STYLES[block.category as BlockCategory] || CATEGORY_STYLES.content;
     let Icon = Box;
-
     if (block.type === 'heading' || block.type === 'text') Icon = Type;
     if (block.type === 'image') Icon = ImageIcon;
     if (block.type === 'button') Icon = MousePointerClick;
     if (block.type === 'section' || block.type === 'container') Icon = Layout;
 
     return (
-        <div className="relative mb-0.5 select-none transform scale-90 origin-left">
-            <div className={`relative flex items-center h-[36px] px-3 py-1 ${styles.bg} text-white rounded-r-sm shadow-sm border-t border-b border-r border-white/10 ${block.isWrapper ? 'rounded-tl-sm' : 'rounded-l-sm'}`}>
-                <TopNotch className="text-black/20" />
-                <TopNotch className={styles.bg} />
-                {!block.isWrapper && <BottomNotch className="text-black/20 translate-y-[1px]" />}
-                {!block.isWrapper && <BottomNotch className={styles.bg} />}
-
-                <div className="flex items-center gap-2">
-                    <Icon size={14} />
-                    <span className="font-bold text-[10px] tracking-wide">{block.type}</span>
-                    {block.content && (
-                        <div className="bg-black/20 rounded px-1.5 py-0.5">
-                            <span className="text-[10px] font-mono truncate block max-w-[120px]">
-                                {block.content}
-                            </span>
-                        </div>
-                    )}
-                </div>
+        <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.05 }}
+            className={`
+                relative flex items-center h-[42px] px-4 py-2 mb-2
+                ${styles.bg} text-white rounded-md shadow-lg border border-white/10
+                cursor-default
+                ${block.isWrapper ? 'ml-0' : 'ml-6'}
+            `}
+            whileHover={{ scale: 1.02, x: 5 }}
+        >
+            <div className="flex items-center gap-3">
+                <Icon size={16} className="text-white/90" />
+                <span className="font-bold text-xs tracking-wider uppercase opacity-90">{block.type}</span>
             </div>
-        </div>
+            {block.content && (
+                <div className="ml-auto bg-black/20 rounded px-2 py-1 border border-black/10">
+                    <span className="text-xs font-mono text-white/90 truncate max-w-[150px] block">
+                        {block.content}
+                    </span>
+                </div>
+            )}
+        </motion.div>
     );
 };
 
@@ -82,23 +101,19 @@ export default function PostDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-
-    const { id } = React.use(params); // ✅ Promise unwrap
-
+    const { id } = React.use(params);
     const [post, setPost] = useState<PostData | null>(null);
     const [loading, setLoading] = useState(true);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isLiked, setIsLiked] = useState(false);
+    const [copied, setCopied] = useState(false);
 
-    // Fetch post
     useEffect(() => {
         const fetchPost = async () => {
             try {
                 if (!id) return;
-
                 const docRef = doc(db, "posts", id);
                 const docSnap = await getDoc(docRef);
-
                 if (docSnap.exists()) {
                     setPost({ id: docSnap.id, ...docSnap.data() } as PostData);
                 } else {
@@ -110,119 +125,222 @@ export default function PostDetailPage({
                 setLoading(false);
             }
         };
-
         fetchPost();
     }, [id]);
 
-    // Preview generator
     useEffect(() => {
         if (!post) return;
-
         const displayCode = post.type === 'text' ? post.code : post.codeSnippet;
-
         if (!displayCode) return;
-
         const blob = new Blob([displayCode], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         setPreviewUrl(url);
-
         return () => URL.revokeObjectURL(url);
     }, [post]);
+
+    const highlightedCode = useMemo(() => {
+        if (!post?.code) return '';
+        return Prism.highlight(post.code, Prism.languages.markup, 'markup');
+    }, [post?.code]);
+
+    const handleCopy = () => {
+        if (!post?.code) return;
+        navigator.clipboard.writeText(post.code);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
 
     if (loading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center text-white">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex flex-col items-center gap-4"
+                >
+                    <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+                    <p className="text-sm text-gray-400 font-mono animate-pulse">Loading masterpiece...</p>
+                </motion.div>
             </div>
         );
     }
 
-    if (!post) {
-        return (
-            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
-                <h1 className="text-2xl font-bold">Post not found</h1>
-                <a href="/" className="text-blue-400 hover:underline flex items-center gap-2">
-                    <ArrowLeft className="w-4 h-4" /> Back to Home
-                </a>
-            </div>
-        );
-    }
+    if (!post) return null;
 
-    const date = post.createdAt?.toDate
-        ? post.createdAt.toDate().toLocaleString()
-        : 'Unknown date';
+    const date = post.createdAt?.toDate ? post.createdAt.toDate().toLocaleDateString() : 'Just now';
 
     return (
-        <div className="min-h-screen bg-black text-white flex">
+        <div className="flex h-screen bg-black text-white font-sans overflow-hidden">
             <Sidebar />
 
-            <main className="flex-1 md:ml-64 bg-[#0a0a0a] flex flex-col">
-
-                <header className="h-16 border-b border-white/10 flex items-center px-6 sticky top-0 bg-[#0a0a0a] z-50">
-                    <a href="/" className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-white/10">
-                        <ArrowLeft className="w-5 h-5" />
-                    </a>
-                    <span className="ml-3 text-sm text-gray-400 font-bold">Back to Feed</span>
-                </header>
-
-                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-
-                    {/* Left */}
-                    <div className="w-full lg:w-1/2 bg-[#0d0d0d] border-r border-white/5 p-6 overflow-auto">
-                        {post.type === 'text' ? (
-                            <pre className="font-mono text-sm text-blue-300 whitespace-pre-wrap">
-                                {post.code}
-                            </pre>
-                        ) : (
-                            post.blocks?.map((block) => (
-                                <ReadOnlyBlock key={block.id} block={block} />
-                            ))
-                        )}
+            <motion.main 
+                className="flex-1 md:ml-64 flex flex-col h-screen relative"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                
+                {/* Header */}
+                <motion.header variants={itemVariants} className="absolute top-0 left-0 right-0 h-16 px-6 flex items-center justify-between z-50 bg-black/50 backdrop-blur-md border-b border-white/5">
+                    <motion.a 
+                        href="/" 
+                        className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
+                        whileHover={{ x: -5 }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        <div className="p-2 rounded-full group-hover:bg-white/10">
+                            <ArrowLeft className="w-5 h-5" />
+                        </div>
+                        <span className="text-sm font-bold tracking-tight">Back</span>
+                    </motion.a>
+                    
+                    <div className="flex items-center gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                            src={post.userAvatar} 
+                            alt={post.userName} 
+                            className="w-8 h-8 rounded-full border border-white/10"
+                            onError={(e) => { (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest'; }}
+                        />
+                        <div className="text-right hidden sm:block">
+                            <div className="text-sm font-bold text-white leading-none">{post.userName}</div>
+                            <div className="text-[10px] text-gray-500 font-mono mt-1">{date}</div>
+                        </div>
                     </div>
+                </motion.header>
 
-                    {/* Right */}
-                    <div className="w-full lg:w-1/2 bg-[#1a1a1a] flex flex-col">
+                {/* Main Split Content */}
+                <div className="flex-1 flex flex-col lg:flex-row pt-16 h-full">
 
-                        <div className="flex-1 bg-white">
-                            {previewUrl ? (
-                                <iframe src={previewUrl} className="w-full h-full" />
+                    {/* Left Panel */}
+                    <motion.div variants={itemVariants} className="w-full lg:w-1/2 bg-[#1e1e1e] flex flex-col border-r border-black/50 relative z-10">
+                        <div className="h-10 bg-[#252526] flex items-center justify-between px-4 border-b border-black">
+                            <div className="flex items-center gap-2 text-xs font-mono text-gray-400">
+                                {post.type === 'text' ? <Code2 size={14} className="text-blue-400" /> : <Layers size={14} className="text-green-400" />}
+                                <span className="tracking-wider">{post.type === 'text' ? 'SOURCE CODE' : 'BLOCK LOGIC'}</span>
+                            </div>
+                            {post.type === 'text' && (
+                                <motion.button 
+                                    onClick={handleCopy}
+                                    whileTap={{ scale: 0.9 }}
+                                    className="flex items-center gap-1.5 text-[10px] px-2 py-1 rounded hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+                                >
+                                    <AnimatePresence mode="wait">
+                                        {copied ? <motion.span key="check" initial={{scale:0}} animate={{scale:1}} exit={{scale:0}}><Check size={12} className="text-green-400" /></motion.span> : <motion.span key="copy" initial={{scale:0}} animate={{scale:1}} exit={{scale:0}}><Copy size={12} /></motion.span>}
+                                    </AnimatePresence>
+                                    <span>{copied ? 'Copied' : 'Copy'}</span>
+                                </motion.button>
+                            )}
+                        </div>
+
+                        <div className="flex-1 overflow-auto custom-scrollbar p-0 bg-[#1e1e1e]">
+                            {post.type === 'text' ? (
+                                <div className="relative min-h-full">
+                                    <pre 
+                                        className="m-0 p-6 font-mono text-sm leading-relaxed text-gray-300 whitespace-pre-wrap break-all"
+                                        style={{ fontFamily: '"JetBrains Mono", Menlo, Consolas, monospace' }}
+                                        dangerouslySetInnerHTML={{ __html: highlightedCode || post.code || '' }}
+                                    />
+                                </div>
                             ) : (
-                                <div className="flex items-center justify-center h-full text-gray-500">
+                                <div className="p-6 space-y-2 bg-[#1e1e1e] min-h-full overflow-hidden">
+                                    {post.blocks?.map((block, i) => (
+                                        <DetailBlock key={i} block={block} index={i} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+
+                    {/* Right Panel (Preview) */}
+                    <motion.div variants={itemVariants} className="w-full lg:w-1/2 bg-[#0d0d0d] flex flex-col relative overflow-hidden">
+                        
+                        <motion.div 
+                            className="absolute inset-0 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:20px_20px] opacity-50"
+                            animate={{ 
+                                backgroundPosition: ["0px 0px", "-20px -20px"] 
+                            }}
+                            transition={{ 
+                                repeat: Infinity, 
+                                duration: 10, 
+                                ease: "linear" 
+                            }}
+                        />
+
+                        <div className="h-10 bg-[#111] flex items-center justify-between px-4 border-b border-white/5 relative z-10">
+                            <div className="flex items-center gap-2 text-xs font-mono text-gray-400">
+                                <Play size={14} className="text-green-500" />
+                                <span className="tracking-wider">LIVE PREVIEW</span>
+                            </div>
+                            <div className="flex gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-full bg-red-500/20 border border-red-500/50"></div>
+                                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
+                                <div className="w-2.5 h-2.5 rounded-full bg-green-500/20 border border-green-500/50"></div>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 relative p-8 flex flex-col z-10">
+                            {previewUrl ? (
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    transition={{ 
+                                        type: "spring",
+                                        stiffness: 200,
+                                        damping: 20,
+                                        delay: 0.3 
+                                    }}
+                                    className="flex-1 bg-white rounded-lg shadow-2xl overflow-hidden ring-1 ring-white/10 relative"
+                                    whileHover={{ scale: 1.01 }}
+                                >
+                                    <iframe 
+                                        src={previewUrl} 
+                                        className="w-full h-full border-none"
+                                        sandbox="allow-scripts allow-modals"
+                                    />
+                                </motion.div>
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-gray-600">
                                     Loading preview...
                                 </div>
                             )}
                         </div>
 
-                        <div className="p-6 border-t border-white/10 bg-[#0a0a0a]">
-                            <h1 className="text-lg font-bold mb-1">{post.userName}&apos;s Snippet</h1>
-                            <p className="text-xs text-gray-500 mb-4">Posted on {date}</p>
-
-                            <div className="flex gap-4">
-                                <button
+                        <motion.div variants={itemVariants} className="h-16 bg-[#111] border-t border-white/5 flex items-center justify-between px-6 z-20 relative">
+                             <div className="flex items-center gap-4">
+                                <motion.button
                                     onClick={() => setIsLiked(!isLiked)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full bg-[#161616] ${
-                                        isLiked ? 'text-pink-500' : 'text-gray-400'
+                                    whileTap={{ scale: 0.85 }}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
+                                        isLiked 
+                                        ? 'bg-pink-500/10 text-pink-500 border border-pink-500/20' 
+                                        : 'bg-white/5 text-gray-400 border border-white/5 hover:bg-white/10 hover:text-white'
                                     }`}
                                 >
-                                    <Heart className={isLiked ? 'fill-current' : ''} />
-                                    {post.likes + (isLiked ? 1 : 0)}
-                                </button>
+                                    <motion.div animate={isLiked ? { scale: [1, 1.5, 1] } : {}}>
+                                        <Heart size={18} className={isLiked ? 'fill-current' : ''} />
+                                    </motion.div>
+                                    <span className="text-sm font-medium">{post.likes + (isLiked ? 1 : 0)}</span>
+                                </motion.button>
 
-                                <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#161616] text-gray-400">
-                                    <MessageCircle />
-                                    {post.comments}
-                                </button>
-
-                                <button className="ml-auto flex items-center gap-2 px-4 py-2 rounded-full bg-[#161616] text-gray-400">
-                                    <Share2 />
-                                    Share
-                                </button>
+                                <motion.button 
+                                    whileTap={{ scale: 0.9 }}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/5 text-gray-400 hover:bg-white/10 hover:text-white transition-all"
+                                >
+                                    <MessageCircle size={18} />
+                                    <span className="text-sm font-medium">{post.comments}</span>
+                                </motion.button>
                             </div>
-                        </div>
 
-                    </div>
+                            <motion.button whileTap={{ scale: 0.9, rotate: 10 }} className="p-2 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
+                                <Share2 size={20} />
+                            </motion.button>
+                        </motion.div>
+                    </motion.div>
+
                 </div>
-            </main>
+            </motion.main>
         </div>
     );
 }

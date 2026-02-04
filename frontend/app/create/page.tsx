@@ -6,6 +6,7 @@ import { db } from '../../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; 
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
+// toJpegをインポート
 import { toJpeg } from 'html-to-image'; 
 
 import Prism from 'prismjs';
@@ -14,7 +15,7 @@ import 'prismjs/components/prism-markup';
 import 'prismjs/themes/prism-tomorrow.css';
 
 export default function CreatePage() {
-    const [code, setCode] = useState(`<div class="container">\n    <h1>Hello, ScriptShot!</h1>\n    <p>Code generated preview.</p>\n</div>\n\n<style>\n    body { \n        font-family: sans-serif;\n        display: flex; \n        justify-content: center; \n        align-items: center; \n        height: 100vh; \n        margin: 0; \n        background: #fff;\n    }\n    .container {\n        text-align: center;\n        padding: 2rem;\n        border: 2px dashed #3b82f6;\n        border-radius: 1rem;\n    }\n    h1 { color: #3b82f6; }\n</style>`);
+    const [code, setCode] = useState(`<div class="container">\n    <h1>Hello, ScriptShot!</h1>\n    <p>Code generated preview.</p>\n</div>\n\n<style>\n    body { \n        font-family: sans-serif;\n        display: flex; \n        justify-content: center; \n        align-items: center; \n        height: 100vh; \n        margin: 0;\n        background: #f0f0f0;\n    }\n    .container {\n        text-align: center;\n        padding: 2rem;\n        background: white;\n        border-radius: 1rem;\n        box-shadow: 0 4px 6px rgba(0,0,0,0.1);\n    }\n    h1 { color: #3b82f6; }\n</style>`);
 
     const [isRunning, setIsRunning] = useState(false);
     const [isSaving, setIsSaving] = useState(false); 
@@ -22,8 +23,8 @@ export default function CreatePage() {
     const [caption, setCaption] = useState(""); 
     const { user } = useAuth();
     
-    // キャプチャ対象の参照
-    const previewRef = useRef<HTMLDivElement>(null);
+    // 【重要】撮影専用の隠しエリアの参照
+    const captureRef = useRef<HTMLDivElement>(null);
 
     const highlightedCode = useMemo(() => {
         return Prism.highlight(code, Prism.languages.markup, 'markup');
@@ -46,17 +47,23 @@ export default function CreatePage() {
         }, 400);
     }, [code, previewUrl]);
 
-    // 画像をBase64文字列（JPEG）として生成する関数
+    // 【重要】サムネイル生成ロジックの修正
+    // iframeではなく、隠しdiv (captureRef) を撮影します
     const generateThumbnail = async () => {
-        if (!previewRef.current) return null;
+        if (!captureRef.current) return null;
         try {
-            // Firestoreの1MB制限を回避するため、画質を0.5(50%)に落とし、サイズも制限
-            const dataUrl = await toJpeg(previewRef.current, {
-                quality: 0.5, 
-                width: 640, 
-                height: 480,
+            // 一瞬待ってレンダリングを確実にする
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const dataUrl = await toJpeg(captureRef.current, {
+                quality: 0.7, 
+                width: 800, // 高画質化
+                height: 600,
                 cacheBust: true,
-                style: { background: 'white' } // 背景がないと透明になり黒くなるのを防ぐ
+                style: { 
+                    background: 'white', // 背景を白で塗りつぶす
+                    transform: 'scale(1)', // スケールをリセット
+                } 
             });
             return dataUrl;
         } catch (err) {
@@ -66,7 +73,7 @@ export default function CreatePage() {
     };
 
     const handlePost = async () => {
-        if (!code || !previewUrl) return;
+        if (!code) return;
         setIsSaving(true);
         try {
             // 画像生成
@@ -80,7 +87,6 @@ export default function CreatePage() {
                 type: 'text',
                 code: code,
                 caption: caption,
-                // ここに画像を直接保存
                 thumbnail: thumbnailBase64 || null, 
                 likes: 0,
                 comments: 0,
@@ -91,7 +97,7 @@ export default function CreatePage() {
             window.location.href = '/'; 
         } catch (error) {
             console.error("Post Error: ", error);
-            alert("保存に失敗しました。画像サイズが大きすぎる可能性があります。");
+            alert("保存に失敗しました。");
         } finally {
             setIsSaving(false);
         }
@@ -100,7 +106,34 @@ export default function CreatePage() {
     const lineNumbers = useMemo(() => code.split('\n').map((_, i) => i + 1), [code]);
 
     return (
-        <div className='h-screen bg-black text-white flex flex-col font-sans overflow-hidden'>
+        <div className='h-screen bg-black text-white flex flex-col font-sans overflow-hidden relative'>
+            
+            {/* 【重要】撮影用の隠しスタジオ
+               画面の外(-9999px)に配置して、ユーザーには見えないが、
+               html-to-image はここを撮影できる。
+            */}
+            <div 
+                ref={captureRef}
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: '-9999px', // 画面外に飛ばす
+                    width: '800px',
+                    height: '600px',
+                    background: '#fff',
+                    overflow: 'hidden',
+                    zIndex: -1,
+                    // ユーザーのCSSがここに適用されるようにする
+                }}
+            >
+                {/* ユーザーのコードを直接展開 (iframeを使わない) */}
+                <div 
+                    dangerouslySetInnerHTML={{ __html: code }} 
+                    style={{ width: '100%', height: '100%' }}
+                />
+            </div>
+
+
             <header className='h-16 border-b border-white/10 flex items-center px-6 bg-[#0a0a0a] shrink-0 z-50 relative'>
                 <div className='flex items-center gap-4 z-10'>
                     <a href='/' className='text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full'><ArrowLeft className='w-5 h-5' /></a>
@@ -153,12 +186,11 @@ export default function CreatePage() {
                     </div>
                 </div>
 
-                {/* Preview Area */}
+                {/* Preview Area (ユーザーに見せる用は iframe のまま) */}
                 <div className='w-1/2 bg-[#050505] flex flex-col overflow-hidden'>
                     <div className='flex-1 flex items-center justify-center relative bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:16px_16px] p-8 overflow-hidden'>
                         {previewUrl ? (
                             <motion.div 
-                                ref={previewRef} // refをここに設定
                                 initial={{ opacity: 0, scale: 0.98, y: 10 }} 
                                 animate={{ opacity: 1, scale: 1, y: 0 }} 
                                 className='relative w-full h-full max-h-[600px] rounded-lg overflow-hidden border border-white/10 shadow-2xl bg-white flex flex-col'
