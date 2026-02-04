@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextType>({
     logout: async () => {},
 });
 
-// ★この export が Sidebar から使われます
+// ★この export が重要です
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
