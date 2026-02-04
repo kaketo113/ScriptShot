@@ -44,15 +44,15 @@ const CATEGORY_STYLES = {
     content: { bg: 'bg-slate-600', border: 'border-slate-700', shadow: 'shadow-slate-900/20' },
     component: { bg: 'bg-emerald-600', border: 'border-emerald-700', shadow: 'shadow-emerald-900/20' },
 };
-
+//ここがツールボックス
 const TOOLBOX_BLOCKS: BlockDefinition[] = [
-    { type: 'section', label: 'Section', category: 'layout', icon: Layout, isWrapper: true },
-    { type: 'container', label: 'Container', category: 'layout', icon: Box, isWrapper: true },
-    { type: 'heading', label: 'Heading', category: 'content', hasInput: true, defaultContent: 'Hello', icon: Type },
-    { type: 'text', label: 'Text', category: 'content', hasInput: true, defaultContent: 'Content...', icon: Type },
-    { type: 'image', label: 'Image', category: 'content', hasInput: true, defaultContent: 'https://placehold.co/400', icon: ImageIcon },
-    { type: 'button', label: 'Button', category: 'component', hasInput: true, defaultContent: 'Click', icon: MousePointerClick },
-    { type: 'card', label: 'Card', category: 'component', hasInput: true, defaultContent: 'Card', icon: Square },
+    { type: 'section', label: '項', category: 'layout', icon: Layout, isWrapper: true },
+    { type: 'container', label: 'コンテナ', category: 'layout', icon: Box, isWrapper: true },
+    { type: 'heading', label: '見出し', category: 'content', hasInput: true, defaultContent: 'Hello', icon: Type },
+    { type: 'text', label: 'テキスト', category: 'content', hasInput: true, defaultContent: 'Content...', icon: Type },
+    { type: 'image', label: '画像', category: 'content', hasInput: true, defaultContent: 'https://placehold.co/400', icon: ImageIcon },
+    { type: 'button', label: 'ボタン', category: 'component', hasInput: true, defaultContent: 'Click', icon: MousePointerClick },
+    { type: 'card', label: 'カード', category: 'component', hasInput: true, defaultContent: 'Card', icon: Square },
 ];
 
 const TopNotch = ({ className }: { className?: string }) => (
