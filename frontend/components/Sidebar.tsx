@@ -31,11 +31,8 @@ export function Sidebar() {
 
     const handleLogin = async () => {
         try {
+            // リロード処理を削除し、Reactの自動更新に任せる
             await login();
-            // ログイン成功時にリロードして状態を確実に反映
-            setTimeout(() => {
-                window.location.reload();
-            }, 500);
         } catch (e) {
             console.error("Login error:", e);
         }
@@ -94,10 +91,7 @@ export function Sidebar() {
                             <p className='text-xs text-green-400 truncate'>● Online</p>
                         </div>
                         <button 
-                            onClick={() => {
-                                logout();
-                                setTimeout(() => window.location.reload(), 500); 
-                            }} 
+                            onClick={() => logout()} 
                             className='p-2 hover:bg-white/10 rounded-full transition-colors' 
                             title="Logout"
                         >
