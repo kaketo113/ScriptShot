@@ -7,6 +7,9 @@ import { db } from '../../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; 
 import { useAuth } from '../../context/AuthContext';
 
+// ------------------------------------------------------------------
+// 簡易シンタックスハイライター
+// ------------------------------------------------------------------
 const highlightHTML = (code: string) => {
     if (!code) return [];
     const regex = /(<!--[\s\S]*?-->)|(<style>[\s\S]*?<\/style>)|(<\/?[a-z0-9-]+)|("[^"]*")|(>)|([^<]+)/gi;
@@ -59,7 +62,7 @@ export default function CreatePage() {
     const [isRunning, setIsRunning] = useState(false);
     const [isSaving, setIsSaving] = useState(false); 
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const { user } = useAuth();
+    const { user } = useAuth(); // ログインユーザー取得
 
     const runCode = useCallback(() => {
         if (!code) return;
@@ -78,11 +81,13 @@ export default function CreatePage() {
         }, 600);
     }, [code, previewUrl]);
 
+    // ★ 保存処理
     const handlePost = async () => {
         if (!code) return;
 
         setIsSaving(true);
         try {
+            // Firestoreの 'posts' コレクションにデータを追加
             await addDoc(collection(db, "posts"), {
                 userId: user?.uid || "guest_user", 
                 userName: user?.displayName || "Guest User",
@@ -95,7 +100,7 @@ export default function CreatePage() {
             });
 
             alert("投稿しました！");
-            window.location.href = '/'; 
+            window.location.href = '/'; // トップへ戻る
         } catch (error) {
             console.error("Error adding document: ", error);
             alert("保存に失敗しました...");
@@ -192,9 +197,10 @@ export default function CreatePage() {
                                 <span>Run Code</span>
                             </button>
 
+                            {/* 保存ボタン */}
                             <button
                                 onClick={handlePost}
-                                disabled={!previewUrl || isSaving}
+                                disabled={!previewUrl || isSaving} // プレビューしてない、または保存中は押せない
                                 className='flex items-center gap-2 px-8 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-md hover:bg-blue-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20 active:scale-95 transform duration-100'
                             >
                                 {isSaving ? <Loader2 className='w-4 h-4 animate-spin' /> : <Save className='w-4 h-4' />}
