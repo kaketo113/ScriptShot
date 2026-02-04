@@ -6,7 +6,6 @@ import { db } from '../../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; 
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
-// toJpegをインポート
 import { toJpeg } from 'html-to-image'; 
 
 import Prism from 'prismjs';
@@ -23,7 +22,6 @@ export default function CreatePage() {
     const [caption, setCaption] = useState(""); 
     const { user } = useAuth();
     
-    // 【重要】撮影専用の隠しエリアの参照
     const captureRef = useRef<HTMLDivElement>(null);
 
     const highlightedCode = useMemo(() => {
@@ -47,23 +45,21 @@ export default function CreatePage() {
         }, 400);
     }, [code, previewUrl]);
 
-    // 【重要】サムネイル生成ロジックの修正
-    // iframeではなく、隠しdiv (captureRef) を撮影します
+    // サムネイル生成関数
     const generateThumbnail = async () => {
         if (!captureRef.current) return null;
         try {
-            // 一瞬待ってレンダリングを確実にする
             await new Promise(resolve => setTimeout(resolve, 100));
 
             const dataUrl = await toJpeg(captureRef.current, {
-                quality: 0.7, 
-                width: 800, // 高画質化
+                quality: 0.8,
+                width: 800,
                 height: 600,
                 cacheBust: true,
-                style: { 
-                    background: 'white', // 背景を白で塗りつぶす
-                    transform: 'scale(1)', // スケールをリセット
-                } 
+                backgroundColor: '#ffffff',
+                style: {
+                    background: 'white',
+                }
             });
             return dataUrl;
         } catch (err) {
@@ -76,10 +72,8 @@ export default function CreatePage() {
         if (!code) return;
         setIsSaving(true);
         try {
-            // 画像生成
             const thumbnailBase64 = await generateThumbnail();
 
-            // 保存処理
             await addDoc(collection(db, "posts"), {
                 userId: user?.uid || "guest_user", 
                 userName: user?.displayName || "Guest User",
@@ -105,35 +99,17 @@ export default function CreatePage() {
 
     const lineNumbers = useMemo(() => code.split('\n').map((_, i) => i + 1), [code]);
 
+    // 【重要】撮影用にコードを書き換えるロジック
+    // CSSの中にある "body {" を ".snapshot-root {" に置換する
+    // これにより、iframeがないdivの中でも bodyスタイルが適用されるようになる
+    const snapshotCode = useMemo(() => {
+        // 正規表現で "body {" や "body{" を探し、クラス指定に置換
+        return code.replace(/body\s*\{/g, '.snapshot-root {');
+    }, [code]);
+
     return (
-        <div className='h-screen bg-black text-white flex flex-col font-sans overflow-hidden relative'>
+        <div className='h-screen w-full bg-black text-white flex flex-col font-sans overflow-hidden relative'>
             
-            {/* 【重要】撮影用の隠しスタジオ
-               画面の外(-9999px)に配置して、ユーザーには見えないが、
-               html-to-image はここを撮影できる。
-            */}
-            <div 
-                ref={captureRef}
-                style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: '-9999px', // 画面外に飛ばす
-                    width: '800px',
-                    height: '600px',
-                    background: '#fff',
-                    overflow: 'hidden',
-                    zIndex: -1,
-                    // ユーザーのCSSがここに適用されるようにする
-                }}
-            >
-                {/* ユーザーのコードを直接展開 (iframeを使わない) */}
-                <div 
-                    dangerouslySetInnerHTML={{ __html: code }} 
-                    style={{ width: '100%', height: '100%' }}
-                />
-            </div>
-
-
             <header className='h-16 border-b border-white/10 flex items-center px-6 bg-[#0a0a0a] shrink-0 z-50 relative'>
                 <div className='flex items-center gap-4 z-10'>
                     <a href='/' className='text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full'><ArrowLeft className='w-5 h-5' /></a>
@@ -186,7 +162,7 @@ export default function CreatePage() {
                     </div>
                 </div>
 
-                {/* Preview Area (ユーザーに見せる用は iframe のまま) */}
+                {/* Preview Area */}
                 <div className='w-1/2 bg-[#050505] flex flex-col overflow-hidden'>
                     <div className='flex-1 flex items-center justify-center relative bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:16px_16px] p-8 overflow-hidden'>
                         {previewUrl ? (
@@ -224,6 +200,31 @@ export default function CreatePage() {
                     </div>
                 </div>
             </div>
+
+            {/* 撮影用スタジオ
+               置換済みのコード (snapshotCode) を使い、
+               wrapper に "snapshot-root" クラスを与えることで、
+               擬似的に body に対するスタイルを適用させる。
+            */}
+            <div style={{ position: 'fixed', left: '-9999px', top: 0, width: 0, height: 0, overflow: 'hidden' }}>
+                <div 
+                    ref={captureRef}
+                    className="snapshot-root" // ここに body の代わりとなるクラスを付与
+                    style={{
+                        width: '800px',
+                        height: '600px',
+                        background: '#ffffff',
+                        position: 'relative' // relativeを追加して安定させる
+                    }}
+                >
+                    {/* 置換後のコードを展開 */}
+                    <div 
+                        dangerouslySetInnerHTML={{ __html: snapshotCode }} 
+                        style={{ width: '100%', height: '100%' }}
+                    />
+                </div>
+            </div>
+
         </div>
     );
 }
