@@ -9,13 +9,91 @@ import {
     Play, 
     Share2,
     Layers,
+    Layout,
+    Type,
+    Image as ImageIcon,
+    MousePointerClick,
+    Square,
+    Box,
     Loader2
 } from 'lucide-react';
-// Sidebarコンポーネントをインポート (相対パス: ./components/Sidebar)
+// Sidebarは名前付きエクスポートなので { Sidebar } で読み込みます
 import { Sidebar } from '../components/Sidebar';
-// Firebase関連 (相対パス: ./lib/firebase)
+// Firebase関連
 import { db } from '../lib/firebase';
 import { collection, query, orderBy, getDocs, Timestamp } from 'firebase/firestore';
+
+// --- Block Definitions & Styles (読み取り専用用) ---
+type BlockCategory = 'layout' | 'content' | 'component';
+
+const CATEGORY_STYLES = {
+    layout: { bg: 'bg-blue-600', border: 'border-blue-700' },
+    content: { bg: 'bg-slate-600', border: 'border-slate-700' },
+    component: { bg: 'bg-emerald-600', border: 'border-emerald-700' },
+};
+
+// ブロックの凹凸パーツ
+const TopNotch = ({ className }: { className?: string }) => (
+    <svg className={`absolute -top-[4px] left-4 w-4 h-[5px] z-10 ${className}`} viewBox="0 0 16 5" fill="currentColor">
+        <path d="M0 5h2l1-1 1-2 2-2h4l2 2 1 2 1 1h2v5H0z" />
+    </svg>
+);
+const BottomNotch = ({ className }: { className?: string }) => (
+    <svg className={`absolute -bottom-[4px] left-4 w-4 h-[5px] z-10 ${className}`} viewBox="0 0 16 5" fill="currentColor">
+        <path d="M0 0h2l1 1 1 2 2 2h4l2-2 1-2 1-1h2v0H0z" />
+    </svg>
+);
+
+// 読み取り専用ブロックコンポーネント
+const ReadOnlyBlock = ({ block }: { block: any }) => {
+    const styles = CATEGORY_STYLES[block.category as BlockCategory] || CATEGORY_STYLES.content;
+    let Icon = Box;
+    if (block.type === 'heading' || block.type === 'text') Icon = Type;
+    if (block.type === 'image') Icon = ImageIcon;
+    if (block.type === 'button') Icon = MousePointerClick;
+    if (block.type === 'section' || block.type === 'container') Icon = Layout;
+
+    return (
+        <div className="relative mb-0.5 select-none transform scale-90 origin-left">
+            <div className={`
+                relative flex items-center h-[36px] px-3 py-1
+                ${styles.bg} text-white
+                rounded-r-sm shadow-sm
+                border-t border-b border-r border-white/10
+                ${block.isWrapper ? 'rounded-tl-sm' : 'rounded-l-sm'}
+            `}>
+                <TopNotch className="text-black/20" />
+                <TopNotch className={styles.bg} />
+                {!block.isWrapper && <BottomNotch className="text-black/20 translate-y-[1px]" />}
+                {!block.isWrapper && <BottomNotch className={styles.bg} />}
+
+                <div className="flex items-center gap-2">
+                    <Icon size={14} className="text-white/90" />
+                    <span className="font-bold text-[10px] tracking-wide">{block.type}</span>
+                    {block.content && (
+                        <div className="bg-black/20 rounded px-1.5 py-0.5 shadow-inner border border-black/10">
+                            <span className="text-[10px] font-mono text-white/90 block max-w-[120px] truncate">
+                                {block.content}
+                            </span>
+                        </div>
+                    )}
+                </div>
+            </div>
+            {block.isWrapper && (
+                <div className="ml-3 pl-3 border-l-[12px] border-l-inherit min-h-[10px] flex flex-col justify-end relative opacity-80" style={{ borderColor: 'inherit' }}>
+                    <div className={`absolute inset-y-0 left-0 w-3 ${styles.bg} opacity-50`}></div>
+                    <div className={`
+                        relative h-4 w-16 ${styles.bg} rounded-b-sm rounded-tr-sm
+                        flex items-center px-2 mt-0.5
+                    `}>
+                        <TopNotch className={styles.bg} />
+                        <BottomNotch className={styles.bg} />
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 // --- Type Definitions ---
 interface PostData {
@@ -25,7 +103,7 @@ interface PostData {
     userAvatar: string;
     type: 'text' | 'block';
     code?: string;        // Textモード用
-    codeSnippet?: string; // Blockモード用(HTML)
+    codeSnippet?: string; // Blockモード用(HTML) & Textモード用(HTML)
     blocks?: any[];       // Blockモード用(JSON)
     likes: number;
     comments: number;
@@ -36,20 +114,20 @@ interface PostData {
 const PostCard = ({ post }: { post: PostData }) => {
     const [isLiked, setIsLiked] = useState(false);
     
-    // 表示用のコードを判別
-    const displayCode = post.type === 'text' ? post.code : post.codeSnippet;
+    // 表示用のコードを判別 (Textモードならcode, BlockモードならcodeSnippet)
+    const previewCode = post.type === 'text' ? post.code : post.codeSnippet;
     
     // プレビュー用のURL生成
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        if (displayCode) {
-            const blob = new Blob([displayCode], { type: 'text/html' });
+        if (previewCode) {
+            const blob = new Blob([previewCode], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             setPreviewUrl(url);
             return () => URL.revokeObjectURL(url);
         }
-    }, [displayCode]);
+    }, [previewCode]);
 
     // 日付フォーマット
     const date = post.createdAt?.toDate ? post.createdAt.toDate().toLocaleString() : 'Just now';
@@ -57,7 +135,7 @@ const PostCard = ({ post }: { post: PostData }) => {
     return (
         <article className='bg-[#161616] rounded-3xl overflow-hidden mb-8 shadow-xl border border-white/5 hover:border-white/10 transition-colors'>
             
-            {/* 1. Header */}
+            {/* 1. Header: User Info */}
             <div className='px-6 py-4 flex items-center justify-between border-b border-white/5 bg-[#1a1a1a]'>
                 <div className='flex items-center gap-3'>
                     <div className='w-10 h-10 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 p-[1px]'>
@@ -88,20 +166,37 @@ const PostCard = ({ post }: { post: PostData }) => {
                 </button>
             </div>
 
-            {/* 2. Body: Split View */}
+            {/* 2. Body: Split View (Code & Preview) */}
             <div className='flex flex-col md:flex-row h-80 md:h-72 border-b border-white/5'>
                 
                 {/* Left: Code Area */}
                 <div className='w-full md:w-1/2 bg-[#0d0d0d] border-b md:border-b-0 md:border-r border-white/5 relative overflow-hidden group'>
                     <div className="absolute top-3 left-4 text-[10px] font-bold text-gray-600 uppercase tracking-widest flex items-center gap-2 z-10">
-                        <Code2 className="w-3 h-3" />
-                        Code Preview
+                        {post.type === 'text' ? <Code2 className="w-3 h-3" /> : <Layers className="w-3 h-3" />}
+                        {post.type === 'text' ? 'Code Preview' : 'Block Logic'}
                     </div>
                     
                     <div className="p-6 pt-10 h-full overflow-auto custom-scrollbar relative">
-                        <pre className='font-mono text-xs text-gray-400 leading-relaxed whitespace-pre-wrap break-all'>
-                            {displayCode || 'No code content'}
-                        </pre>
+                        {/* Blockモードの場合は背景にグリッドを入れる */}
+                        {post.type === 'block' && (
+                            <div className='absolute inset-0 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:16px_16px] opacity-20 pointer-events-none'></div>
+                        )}
+
+                        {post.type === 'text' ? (
+                            <pre className='font-mono text-xs text-gray-400 leading-relaxed whitespace-pre-wrap break-all'>
+                                {post.code || 'No code content'}
+                            </pre>
+                        ) : (
+                            <div className="pl-2">
+                                {post.blocks && post.blocks.length > 0 ? (
+                                    post.blocks.map((block: any) => (
+                                        <ReadOnlyBlock key={block.id} block={block} />
+                                    ))
+                                ) : (
+                                    <p className="text-gray-500 text-xs italic">No blocks data.</p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -159,7 +254,9 @@ export default function HomePage() {
         const fetchPosts = async () => {
             try {
                 // created_atで降順（新しい順）
-                const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+                // インデックスエラー回避のため、まずはソートなしで取得する安全策をとります
+                // const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+                const q = query(collection(db, "posts"));
                 const querySnapshot = await getDocs(q);
                 
                 const fetchedPosts: PostData[] = [];
@@ -167,19 +264,16 @@ export default function HomePage() {
                     fetchedPosts.push({ id: doc.id, ...doc.data() } as PostData);
                 });
                 
+                // クライアント側でソート（インデックス作成の手間を省くため）
+                fetchedPosts.sort((a, b) => {
+                    const timeA = a.createdAt?.seconds || 0;
+                    const timeB = b.createdAt?.seconds || 0;
+                    return timeB - timeA;
+                });
+
                 setPosts(fetchedPosts);
             } catch (error) {
                 console.error("Error fetching posts:", error);
-                // エラー時のフォールバック
-                try {
-                    const q = query(collection(db, "posts"));
-                    const querySnapshot = await getDocs(q);
-                    const fetchedPosts: PostData[] = [];
-                    querySnapshot.forEach((doc) => fetchedPosts.push({ id: doc.id, ...doc.data() } as PostData));
-                    setPosts(fetchedPosts);
-                } catch(e) {
-                    console.error("Retry failed:", e);
-                }
             } finally {
                 setLoading(false);
             }
