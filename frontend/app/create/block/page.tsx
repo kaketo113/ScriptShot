@@ -191,7 +191,7 @@ export default function BlockCreatePage() {
             <header className='h-16 border-b border-white/10 flex items-center px-6 bg-[#0a0a0a] sticky top-0 z-50 relative'>
                 <div className='flex items-center gap-4 z-10'>
                     <a href='/' className='text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full'><ArrowLeft className='w-5 h-5' /></a>
-                    <h2 className='font-bold text-lg tracking-tight text-gray-200'>Web Builder</h2>
+                    <h2 className='font-bold text-lg tracking-tight text-gray-200'>Create New Post</h2>
                 </div>
                 <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0'>
                     <div className='flex bg-[#161616] p-1 rounded-lg border border-white/5'>

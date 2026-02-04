@@ -4,12 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { 
     Heart, MessageCircle, MoreHorizontal, Code2, Play, Share2, ArrowLeft, Layers, Layout, Type, Image as ImageIcon, MousePointerClick, Square, Box, Loader2
 } from 'lucide-react';
+// Sidebarの読み込み (2つ上の階層)
 import { Sidebar } from '../../../components/Sidebar';
-// Firebase関連
+// Firebase関連 (2つ上の階層)
 import { db } from '../../../lib/firebase';
 import { doc, getDoc, Timestamp } from 'firebase/firestore';
 
-// --- Block Definitions & Styles ---
+// --- Block Definitions & Styles (読み取り専用用) ---
 type BlockCategory = 'layout' | 'content' | 'component';
 
 const CATEGORY_STYLES = {
@@ -18,7 +19,6 @@ const CATEGORY_STYLES = {
     component: { bg: 'bg-emerald-600', border: 'border-emerald-700' },
 };
 
-// ブロックの凹凸パーツ
 const TopNotch = ({ className }: { className?: string }) => (
     <svg className={`absolute -top-[4px] left-4 w-4 h-[5px] z-10 ${className}`} viewBox="0 0 16 5" fill="currentColor">
         <path d="M0 5h2l1-1 1-2 2-2h4l2 2 1 2 1 1h2v5H0z" />
@@ -30,7 +30,6 @@ const BottomNotch = ({ className }: { className?: string }) => (
     </svg>
 );
 
-// 読み取り専用ブロックコンポーネント
 const ReadOnlyBlock = ({ block }: { block: any }) => {
     const styles = CATEGORY_STYLES[block.category as BlockCategory] || CATEGORY_STYLES.content;
     let Icon = Box;
@@ -152,7 +151,6 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
             <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
                 <h1 className="text-2xl font-bold">Post not found</h1>
                 <p className="text-gray-500">The post you are looking for does not exist.</p>
-                {/* Link -> a に変更 */}
                 <a href="/" className="text-blue-400 hover:underline flex items-center gap-2">
                     <ArrowLeft className="w-4 h-4" /> Back to Home
                 </a>
@@ -172,7 +170,6 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
                 {/* Header */}
                 <header className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#0a0a0a] sticky top-0 z-50">
                     <div className="flex items-center gap-4">
-                        {/* Link -> a に変更 */}
                         <a href="/" className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
                             <ArrowLeft className="w-5 h-5" />
                         </a>
