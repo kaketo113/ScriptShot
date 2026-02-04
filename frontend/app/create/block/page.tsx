@@ -42,7 +42,7 @@ const CATEGORY_STYLES = {
     content: { bg: 'bg-slate-600', border: 'border-slate-700', shadow: 'shadow-slate-900/20' },
     component: { bg: 'bg-emerald-600', border: 'border-emerald-700', shadow: 'shadow-emerald-900/20' },
 };
-//ここがツールボックス
+// ツールボックス
 const TOOLBOX_BLOCKS: BlockDefinition[] = [
     { type: 'section', label: '項', category: 'layout', icon: Layout, isWrapper: true },
     { type: 'container', label: '容器', category: 'layout', icon: Box, isWrapper: true },
@@ -109,7 +109,7 @@ const ToolboxBlock = ({ def, onClick }: { def: BlockDefinition, onClick: () => v
 
 export default function BlockCreatePage() {
     const [blocks, setBlocks] = useState<BlockInstance[]>([
-        { id: '1', type: 'heading', content: 'ようこそ！', category: 'content' },
+        { id: '1', type: 'heading', content: 'ようこそ', category: 'content' },
         { id: '2', type: 'button', content: '押してみて！', category: 'component' },
     ]);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -236,6 +236,7 @@ export default function BlockCreatePage() {
                     <div className='flex-1 bg-white relative'>
                          {previewUrl ? (<iframe src={previewUrl} className="w-full h-full border-none" title="Live Preview" sandbox="allow-scripts" />) : (<div className="flex items-center justify-center h-full text-gray-400 text-sm">Loading...</div>)}
                     </div>
+                    {/* 保存ボタン */}
                     <div className='h-16 border-t border-white/10 flex items-center justify-center px-6 bg-[#161616]'>
                         <button
                             onClick={handlePost}

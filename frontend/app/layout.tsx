@@ -15,7 +15,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased bg-black text-white">
-        {/* アプリ全体を認証機能で包む */}
         <AuthProvider>
           {children}
         </AuthProvider>

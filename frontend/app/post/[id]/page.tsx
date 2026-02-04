@@ -4,13 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { 
     Heart, MessageCircle, MoreHorizontal, Code2, Play, Share2, ArrowLeft, Layers, Layout, Type, Image as ImageIcon, MousePointerClick, Square, Box, Loader2
 } from 'lucide-react';
-// Sidebarの読み込み (2つ上の階層)
 import { Sidebar } from '../../../components/Sidebar';
-// Firebase関連 (2つ上の階層)
 import { db } from '../../../lib/firebase';
 import { doc, getDoc, Timestamp } from 'firebase/firestore';
 
-// --- Block Definitions & Styles (読み取り専用用) ---
+// --- Block Definitions & Styles ---
 type BlockCategory = 'layout' | 'content' | 'component';
 
 const CATEGORY_STYLES = {

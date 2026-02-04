@@ -2,14 +2,11 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { Play, Image as ImageIcon, Loader2, Code2, Box, ArrowLeft, Save } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { db } from '../../lib/firebase'; 
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; 
 import { useAuth } from '../../context/AuthContext';
+import { motion } from 'framer-motion';
 
-// ------------------------------------------------------------------
-// 簡易シンタックスハイライター
-// ------------------------------------------------------------------
 const highlightHTML = (code: string) => {
     if (!code) return [];
     const regex = /(<!--[\s\S]*?-->)|(<style>[\s\S]*?<\/style>)|(<\/?[a-z0-9-]+)|("[^"]*")|(>)|([^<]+)/gi;
@@ -62,7 +59,7 @@ export default function CreatePage() {
     const [isRunning, setIsRunning] = useState(false);
     const [isSaving, setIsSaving] = useState(false); 
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const { user } = useAuth(); // ログインユーザー取得
+    const { user } = useAuth(); 
 
     const runCode = useCallback(() => {
         if (!code) return;
@@ -81,13 +78,10 @@ export default function CreatePage() {
         }, 600);
     }, [code, previewUrl]);
 
-    // ★ 保存処理
     const handlePost = async () => {
         if (!code) return;
-
         setIsSaving(true);
         try {
-            // Firestoreの 'posts' コレクションにデータを追加
             await addDoc(collection(db, "posts"), {
                 userId: user?.uid || "guest_user", 
                 userName: user?.displayName || "Guest User",
@@ -98,9 +92,8 @@ export default function CreatePage() {
                 comments: 0,
                 createdAt: serverTimestamp(),
             });
-
             alert("投稿しました！");
-            window.location.href = '/'; // トップへ戻る
+            window.location.href = '/'; 
         } catch (error) {
             console.error("Error adding document: ", error);
             alert("保存に失敗しました...");
@@ -115,33 +108,18 @@ export default function CreatePage() {
     return (
         <div className='min-h-screen bg-black text-white flex flex-col font-sans'>
             <main className='flex-1 min-h-screen flex flex-col'>
-                
                 <header className='h-16 border-b border-white/10 flex items-center px-6 bg-[#0a0a0a] sticky top-0 z-50 relative'>
                     <div className='flex items-center gap-4 z-10'>
-                        <a href='/' className='text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full'>
-                            <ArrowLeft className='w-5 h-5' />
-                        </a>
+                        <a href='/' className='text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full'><ArrowLeft className='w-5 h-5' /></a>
                         <h2 className='font-bold text-lg tracking-tight'>Create New Post</h2>
                     </div>
-
                     <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0'>
                         <div className='flex bg-[#161616] p-1 rounded-lg border border-white/5'>
-                            <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all bg-blue-600 text-white shadow-lg font-medium'>
-                                <Code2 className='w-4 h-4' />
-                                <span>Text</span>
-                            </button>
-                            <a href='/create/block' className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium'>
-                                <Box className='w-4 h-4' />
-                                <span>Block</span>
-                            </a>
+                            <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all bg-blue-600 text-white shadow-lg font-medium'><Code2 className='w-4 h-4' /><span>Text</span></button>
+                            <a href='/create/block' className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium'><Box className='w-4 h-4' /><span>Block</span></a>
                         </div>
                     </div>
-
-                    <div className='ml-auto w-40 flex justify-end items-center gap-3 z-10'>
-                        <div className='text-xs text-gray-500'>
-                            {user ? 'Autosaved' : 'Guest Mode'}
-                        </div>
-                    </div>
+                    <div className='ml-auto w-40 flex justify-end items-center gap-3 z-10'><div className='text-xs text-gray-500'>{user ? 'Autosaved' : 'Guest Mode'}</div></div>
                 </header>
 
                 <div className='flex-1 flex overflow-hidden'>
@@ -153,22 +131,12 @@ export default function CreatePage() {
                             <div className='flex-1 relative overflow-auto custom-scrollbar'>
                                 <div className='absolute top-0 right-4 bg-[#2d2d2d] text-[10px] text-gray-400 px-3 py-1 rounded-b-md z-30 font-mono border-x border-b border-white/5 pointer-events-none'>HTML / CSS</div>
                                 <div className='relative min-h-full font-mono text-sm' style={{ minWidth: '100%' }}>
-                                    <pre aria-hidden="true" className='absolute inset-0 m-0 p-4 pt-4 pointer-events-none whitespace-pre-wrap break-all z-0' style={{ lineHeight: '1.5rem', fontFamily: 'Menlo, Monaco, Consolas, monospace' }}>
-                                        {highlightedCode}<br />
-                                    </pre>
-                                    <textarea
-                                        className='absolute inset-0 w-full h-full bg-transparent text-transparent p-4 pt-4 resize-none focus:outline-none z-10 overflow-hidden'
-                                        value={code}
-                                        onChange={(e) => setCode(e.target.value)}
-                                        spellCheck={false}
-                                        style={{ lineHeight: '1.5rem', caretColor: 'white', fontFamily: 'Menlo, Monaco, Consolas, monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}
-                                    />
+                                    <pre aria-hidden="true" className='absolute inset-0 m-0 p-4 pt-4 pointer-events-none whitespace-pre-wrap break-all z-0' style={{ lineHeight: '1.5rem', fontFamily: 'Menlo, Monaco, Consolas, monospace' }}>{highlightedCode}<br /></pre>
+                                    <textarea className='absolute inset-0 w-full h-full bg-transparent text-transparent p-4 pt-4 resize-none focus:outline-none z-10 overflow-hidden' value={code} onChange={(e) => setCode(e.target.value)} spellCheck={false} style={{ lineHeight: '1.5rem', caretColor: 'white', fontFamily: 'Menlo, Monaco, Consolas, monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }} />
                                 </div>
                             </div>
                         </div>
-                        <div className='h-32 border-t border-white/10 p-4 bg-[#161616] z-20'>
-                            <textarea className='w-full h-full bg-transparent text-sm text-gray-300 placeholder-gray-600 resize-none focus:outline-none leading-relaxed' placeholder='Write a caption...' />
-                        </div>
+                        <div className='h-32 border-t border-white/10 p-4 bg-[#161616] z-20'><textarea className='w-full h-full bg-transparent text-sm text-gray-300 placeholder-gray-600 resize-none focus:outline-none leading-relaxed' placeholder='Write a caption...' /></div>
                     </div>
 
                     <div className='w-1/2 bg-[#050505] flex flex-col'>
@@ -192,20 +160,8 @@ export default function CreatePage() {
                         </div>
 
                         <div className='h-20 border-t border-white/10 flex items-center justify-between px-8 bg-[#111] z-20'>
-                            <button onClick={runCode} disabled={isRunning} className='flex items-center gap-2 px-6 py-2.5 bg-white text-black text-sm font-bold rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 shadow-[0_0_20px_rgba(255,255,255,0.15)] active:scale-95 transform duration-100'>
-                                {isRunning ? <Loader2 className='w-4 h-4 animate-spin' /> : <Play className='w-4 h-4 fill-current' />}
-                                <span>Run Code</span>
-                            </button>
-
-                            {/* 保存ボタン */}
-                            <button
-                                onClick={handlePost}
-                                disabled={!previewUrl || isSaving} // プレビューしてない、または保存中は押せない
-                                className='flex items-center gap-2 px-8 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-md hover:bg-blue-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20 active:scale-95 transform duration-100'
-                            >
-                                {isSaving ? <Loader2 className='w-4 h-4 animate-spin' /> : <Save className='w-4 h-4' />}
-                                <span>{isSaving ? 'Posting...' : 'Post Creation'}</span>
-                            </button>
+                            <button onClick={runCode} disabled={isRunning} className='flex items-center gap-2 px-6 py-2.5 bg-white text-black text-sm font-bold rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 shadow-[0_0_20px_rgba(255,255,255,0.15)] active:scale-95 transform duration-100'>{isRunning ? <Loader2 className='w-4 h-4 animate-spin' /> : <Play className='w-4 h-4 fill-current' />}<span>Run Code</span></button>
+                            <button onClick={handlePost} disabled={!previewUrl || isSaving} className='flex items-center gap-2 px-8 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-md hover:bg-blue-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20 active:scale-95 transform duration-100'>{isSaving ? <Loader2 className='w-4 h-4 animate-spin' /> : <Save className='w-4 h-4' />}<span>{isSaving ? 'Posting...' : 'Post Creation'}</span></button>
                         </div>
                     </div>
                 </div>
