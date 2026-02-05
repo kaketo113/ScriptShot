@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
     Heart, MessageCircle, Code2, Share2, ArrowLeft, Layers, 
     Layout, Type, Image as ImageIcon, MousePointerClick, Box, Loader2,
@@ -11,11 +11,9 @@ import { db } from '../../../lib/firebase';
 import { doc, getDoc, Timestamp } from 'firebase/firestore';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
-// ★修正1: Variants を追加インポート
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 
 // --- Animation Variants ---
-// ★修正2: 型注釈 (: Variants) を追加
 const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -27,7 +25,6 @@ const containerVariants: Variants = {
     }
 };
 
-// ★修正3: 型注釈 (: Variants) を追加
 const itemVariants: Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: { 
@@ -35,6 +32,52 @@ const itemVariants: Variants = {
         opacity: 1,
         transition: { type: "spring", stiffness: 100 }
     }
+};
+
+// --- Custom Hook: High-Speed Typewriter Effect ---
+// 高速化チューニング版
+const useTypewriter = (text: string | undefined) => {
+    const [displayedText, setDisplayedText] = useState('');
+    const [isTyping, setIsTyping] = useState(false);
+
+    useEffect(() => {
+        if (!text) return;
+        
+        setIsTyping(true);
+        setDisplayedText(''); 
+        
+        let currentIndex = 0;
+        const totalLength = text.length;
+
+        // 文字数が多いほど「1フレームに進む文字数」を微増させるが、
+        // あくまで「流れるような文字送り」を維持するバランス設定
+        let charsPerTick = 1;
+        if (totalLength > 100) charsPerTick = 2;
+        if (totalLength > 500) charsPerTick = 3;
+        if (totalLength > 1000) charsPerTick = 5;
+
+        // ブラウザの描画限界に近い速度(5ms)で回す
+        const intervalId = setInterval(() => {
+            if (currentIndex >= totalLength) {
+                clearInterval(intervalId);
+                setIsTyping(false);
+                // 最後に念のため全文をセットしてズレ防止
+                setDisplayedText(text); 
+                return;
+            }
+
+            // 次の文字位置を計算
+            const nextIndex = Math.min(currentIndex + charsPerTick, totalLength);
+            
+            // sliceで切り出してセット（ここが高速描画の肝）
+            setDisplayedText(text.slice(0, nextIndex));
+            currentIndex = nextIndex;
+        }, 5); // 5ミリ秒間隔（ほぼ毎フレーム更新）
+
+        return () => clearInterval(intervalId);
+    }, [text]);
+
+    return { displayedText, isTyping };
 };
 
 // --- Block Definitions ---
@@ -108,6 +151,12 @@ export default function PostDetailPage({
     const [isLiked, setIsLiked] = useState(false);
     const [copied, setCopied] = useState(false);
 
+    // 引数なしで呼び出す（内部で自動最適化）
+    const { displayedText, isTyping } = useTypewriter(post?.code);
+    
+    const codeContainerRef = useRef<HTMLDivElement>(null);
+    const codeEndRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         const fetchPost = async () => {
             try {
@@ -138,10 +187,19 @@ export default function PostDetailPage({
         return () => URL.revokeObjectURL(url);
     }, [post]);
 
+    // タイピング中は自動スクロール（少し余裕を持たせる）
+    useEffect(() => {
+        if (isTyping && codeEndRef.current) {
+            codeEndRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest' });
+        }
+    }, [displayedText, isTyping]);
+
     const highlightedCode = useMemo(() => {
         if (!post?.code) return '';
-        return Prism.highlight(post.code, Prism.languages.markup, 'markup');
-    }, [post?.code]);
+        const textToHighlight = isTyping ? displayedText : post.code;
+        // Prism.jsのハイライト処理
+        return Prism.highlight(textToHighlight, Prism.languages.markup, 'markup');
+    }, [post?.code, displayedText, isTyping]);
 
     const handleCopy = () => {
         if (!post?.code) return;
@@ -180,8 +238,6 @@ export default function PostDetailPage({
                 initial="hidden"
                 animate="visible"
             >
-                
-                {/* Header */}
                 <motion.header variants={itemVariants} className="absolute top-0 left-0 right-0 h-16 px-6 flex items-center justify-between z-50 bg-black/50 backdrop-blur-md border-b border-white/5">
                     <motion.a 
                         href="/" 
@@ -210,10 +266,9 @@ export default function PostDetailPage({
                     </div>
                 </motion.header>
 
-                {/* Main Split Content */}
                 <div className="flex-1 flex flex-col lg:flex-row pt-16 h-full">
 
-                    {/* Left Panel */}
+                    {/* Left Panel (Code Editor) */}
                     <motion.div variants={itemVariants} className="w-full lg:w-1/2 bg-[#1e1e1e] flex flex-col border-r border-black/50 relative z-10">
                         <div className="h-10 bg-[#252526] flex items-center justify-between px-4 border-b border-black">
                             <div className="flex items-center gap-2 text-xs font-mono text-gray-400">
@@ -234,14 +289,25 @@ export default function PostDetailPage({
                             )}
                         </div>
 
-                        <div className="flex-1 overflow-auto custom-scrollbar p-0 bg-[#1e1e1e]">
+                        <div 
+                            ref={codeContainerRef}
+                            className="flex-1 overflow-auto custom-scrollbar p-0 bg-[#1e1e1e]"
+                        >
                             {post.type === 'text' ? (
                                 <div className="relative min-h-full">
                                     <pre 
                                         className="m-0 p-6 font-mono text-sm leading-relaxed text-gray-300 whitespace-pre-wrap break-all"
                                         style={{ fontFamily: '"JetBrains Mono", Menlo, Consolas, monospace' }}
-                                        dangerouslySetInnerHTML={{ __html: highlightedCode || post.code || '' }}
-                                    />
+                                    >
+                                        {/* HTMLとしてレンダリング */}
+                                        <code dangerouslySetInnerHTML={{ __html: highlightedCode || '' }} />
+                                        
+                                        {/* カーソル演出 (タイピング中のみ表示) */}
+                                        {isTyping && (
+                                            <span className="inline-block w-2.5 h-5 bg-blue-500 align-middle ml-0.5 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                                        )}
+                                        <div ref={codeEndRef} />
+                                    </pre>
                                 </div>
                             ) : (
                                 <div className="p-6 space-y-2 bg-[#1e1e1e] min-h-full overflow-hidden">
