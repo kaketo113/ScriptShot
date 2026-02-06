@@ -11,8 +11,8 @@ export default function CreatePage() {
     const { user } = useAuth();
     // デフォルトのコード（日本語テスト用）
     const [code, setCode] = useState(`<div class="container">
-  <h1>こんにちは！</h1>
-  <p>日本語もバッチリ表示されます。</p>
+  <h1>Hello World!</h1>
+  <p>Let's START!!</p>
 </div>
 
 <style>
@@ -144,7 +144,7 @@ export default function CreatePage() {
                                 srcDoc={srcDoc}
                                 title="preview"
                                 className='w-full h-full border-none bg-white'
-                                sandbox="allow-scripts" // セキュリティのためスクリプトのみ許可
+                                sandbox="allow-scripts"
                             />
                         </div>
                     </div>
