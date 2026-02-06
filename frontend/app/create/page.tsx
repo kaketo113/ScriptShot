@@ -10,29 +10,37 @@ import { Play, Save, Code2, Loader2, Monitor } from 'lucide-react';
 export default function CreatePage() {
     const { user } = useAuth();
     // デフォルトのコード（日本語テスト用）
-    const [code, setCode] = useState(`<div class="container">
-  <h1>Hello World!</h1>
-  <p>Let's START!!</p>
-</div>
-
+    const [code, setCode] = useState(`<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>test1</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Hello World!</h1>
+        <p>Let's Start Coding</p>
+    </div>
+</body>
 <style>
-  body {
-    font-family: sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    background: #f0f0f0;
-  }
-  .container {
-    text-align: center;
-    padding: 2rem;
-    background: white;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  }
-  h1 { color: #3b82f6; }
+    body { 
+        font-family: sans-serif;
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        height: 100vh; 
+        margin: 0;
+        background: #f0f0f0;
+    }
+    .container {
+        text-align: center;
+        padding: 2rem;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    h1 { color: #3b82f6; }
 </style>`);
     
     const [srcDoc, setSrcDoc] = useState('');
