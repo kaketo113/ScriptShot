@@ -176,11 +176,57 @@ export default function PostDetailPage({
 
     useEffect(() => {
         if (!post) return;
+
+        // テキストモードなら code を、ブロックモードなら codeSnippet を使う
         const displayCode = post.type === 'text' ? post.code : post.codeSnippet;
+        
         if (!displayCode) return;
-        const blob = new Blob([displayCode], { type: 'text/html' });
+        
+        const secureHtml = `
+            <!DOCTYPE html>
+            <html lang="ja">
+            <head>
+                <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    /* ▼ ブロックモード用のデフォルトCSSをここで注入します ▼ */
+                    body {
+                        margin: 0;
+                        padding: 2rem;
+                        font-family: sans-serif;
+                        background-color: #f0f0f0; /* 背景色 */
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 1rem;
+                    }
+                    /* ボタンや画像などの基本スタイル */
+                    h2 { color: #333; }
+                    p { color: #666; line-height: 1.6; }
+                    button {
+                        background: #2563eb;
+                        color: white;
+                        border: none;
+                        padding: 0.5rem 1rem;
+                        border-radius: 0.25rem;
+                        cursor: pointer;
+                    }
+                    img {
+                        max-width: 100%;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    }
+                </style>
+            </head>
+            <body>
+                ${displayCode}
+            </body>
+            </html>
+        `;
+
+        const blob = new Blob([secureHtml], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         setPreviewUrl(url);
+        
         return () => URL.revokeObjectURL(url);
     }, [post]);
 

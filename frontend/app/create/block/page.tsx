@@ -23,7 +23,8 @@ type BlockType = 'heading' | 'text' | 'image' | 'button' | 'container';
 interface Block {
     id: string;
     type: BlockType;
-    content: string;
+    content: string;     // ボタンの文字
+    linkUrl?: string;    // ボタンの飛び先（オプショナル）
 }
 
 // ブロックの初期データ
@@ -33,13 +34,24 @@ const INITIAL_BLOCKS: Block[] = [
     { id: '3', type: 'button', content: 'ボタン' },
 ];
 
-// Sortable Block Component
+// SortableBlock コンポーネント内の修正案
 const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: (id: string) => void, onChange: (id: string, val: string) => void }) => {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: block.id });
     
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
+    };
+
+    // ブロックタイプに応じたプレースホルダーとラベルを定義
+    const getPlaceholder = () => {
+        switch (block.type) {
+            case 'heading': return '見出しを入力 (例: Hello World)';
+            case 'text': return '本文を入力';
+            case 'button': return 'ボタンの文字 (例: Click Me)';
+            case 'image': return '画像のURL (https://...)';
+            default: return '内容を入力';
+        }
     };
 
     return (
@@ -50,6 +62,7 @@ const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: 
             
             <div className="flex-1 bg-[#222] border border-white/10 rounded-lg p-3 flex items-center gap-3">
                 <div className="p-2 bg-white/5 rounded text-gray-400">
+                    {/* アイコン表示部分はそのまま... */}
                     {block.type === 'heading' && <Type size={16} />}
                     {block.type === 'text' && <Box size={16} />}
                     {block.type === 'image' && <ImageIcon size={16} />}
@@ -57,13 +70,29 @@ const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: 
                     {block.type === 'container' && <Layout size={16} />}
                 </div>
                 
-                <input 
-                    type="text" 
-                    value={block.content}
-                    onChange={(e) => onChange(block.id, e.target.value)}
-                    className="flex-1 bg-transparent border-none focus:outline-none text-white text-sm font-mono"
-                    placeholder='ここに画像のリンクを入力'
-                />
+                {/* テキストの場合は複数行入力できるようにする */}
+                {block.type === 'text' ? (
+                    <textarea 
+                        value={block.content}
+                        onChange={(e) => onChange(block.id, e.target.value)}
+                        className="flex-1 bg-transparent border-none focus:outline-none text-white text-sm font-mono resize-none h-auto min-h-[24px] overflow-hidden"
+                        placeholder={getPlaceholder()}
+                        rows={1}
+                        // 入力に合わせて高さを自動調整する
+                        onInput={(e) => {
+                            e.currentTarget.style.height = 'auto';
+                            e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+                        }}
+                    />
+                ) : (
+                    <input 
+                        type="text" 
+                        value={block.content}
+                        onChange={(e) => onChange(block.id, e.target.value)}
+                        className="flex-1 bg-transparent border-none focus:outline-none text-white text-sm font-mono"
+                        placeholder={getPlaceholder()}
+                    />
+                )}
             </div>
 
             <button onClick={() => onDelete(block.id)} className="text-gray-600 hover:text-red-500 transition-colors p-2">
@@ -90,8 +119,13 @@ const BlockRenderer = ({ block }: { block: Block }) => {
             return (
                 <div className="w-full h-48 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center mb-4 overflow-hidden">
                     {block.content.startsWith('http') ? (
-                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={block.content} alt="Preview" className="w-full h-full object-cover" />
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img 
+                            src={block.content} 
+                            alt="Preview" 
+                            className="w-full h-full object-cover"
+                            crossOrigin="anonymous"
+                        />
                     ) : (
                         <div className="text-gray-400 flex flex-col items-center gap-2">
                             <ImageIcon size={24} />
