@@ -311,17 +311,9 @@ export default function HomePage() {
                         >
                             <h1 className='text-4xl md:text-5xl font-black tracking-tight drop-shadow-2xl'>
                                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-cyan-100 to-blue-200">
-                                    Discover
+                                    Posts
                                 </span>
                             </h1>
-                            <div className="flex gap-2">
-                                <motion.button whileHover={{ scale: 1.05 }} className="bg-white/10 hover:bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 border border-white/10 transition-colors shadow-lg shadow-cyan-900/20">
-                                    <Sparkles size={14} className="text-cyan-300" /> For You
-                                </motion.button>
-                                <motion.button whileHover={{ scale: 1.05 }} className="bg-transparent hover:bg-white/5 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-                                    <TrendingUp size={14} /> Trending
-                                </motion.button>
-                            </div>
                         </motion.div>
                         <motion.p 
                             initial={{ opacity: 0 }}
@@ -329,7 +321,7 @@ export default function HomePage() {
                             transition={{ delay: 0.3 }}
                             className="text-gray-400 text-sm font-medium pl-1"
                         >
-                            Explore the latest snippets from the community.
+                            Post your creation
                         </motion.p>
                     </div>
 
