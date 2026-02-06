@@ -5,11 +5,20 @@ import { Sidebar } from '../../components/Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { Play, Save, Code2, Loader2, Monitor } from 'lucide-react';
+import { Save, Code2, Loader2, Monitor } from 'lucide-react';
+
+// --- エディタ用ライブラリのインポート ---
+import Editor from 'react-simple-code-editor';
+// PrismJS (色付け用エンジン)
+import Prism from 'prismjs';
+import 'prismjs/components/prism-markup'; // HTML用
+import 'prismjs/components/prism-css';    // CSS用
+import 'prismjs/themes/prism-tomorrow.css'; // ダークテーマのスタイル（VS Codeっぽい色）
 
 export default function CreatePage() {
     const { user } = useAuth();
-    // デフォルトのコード（日本語テスト用）
+    
+    // デフォルトコード
     const [code, setCode] = useState(`<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -46,26 +55,23 @@ export default function CreatePage() {
     const [srcDoc, setSrcDoc] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
-    // コードが変わるたびにプレビューを更新
+    // プレビュー更新
     useEffect(() => {
         const timeout = setTimeout(() => {
             setSrcDoc(`
                 <!DOCTYPE html>
                 <html lang="ja">
                 <head>
-                    <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <style>
-                        /* プレビュー内の基本リセット */
-                        body { margin: 0; padding: 0; }
-                    </style>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>body { margin: 0; padding: 0; }</style>
                 </head>
                 <body>
                     ${code}
                 </body>
                 </html>
             `);
-        }, 500); // 0.5秒のデバウンス（入力のたびにチラつかないように）
-
+        }, 500);
         return () => clearTimeout(timeout);
     }, [code]);
 
@@ -119,19 +125,28 @@ export default function CreatePage() {
                     </div>
                 </header>
 
-                {/* メインエリア（2カラム） */}
                 <div className='flex-1 flex overflow-hidden'>
                     
-                    {/* 左：コードエディタ */}
-                    <div className='w-1/2 flex flex-col border-r border-white/10 bg-[#0a0a0a] relative group'>
-                        <div className='absolute top-3 right-4 z-10 text-[10px] font-bold text-gray-600 tracking-widest pointer-events-none group-hover:text-gray-400 transition-colors'>SOURCE CODE</div>
-                        <textarea
-                            value={code}
-                            onChange={(e) => setCode(e.target.value)}
-                            className='flex-1 w-full h-full bg-transparent text-gray-300 font-mono text-sm p-6 focus:outline-none resize-none custom-scrollbar leading-relaxed'
-                            placeholder="Here goes your HTML & CSS..."
-                            spellCheck={false}
-                        />
+                    {/* 左：コードエディタ (VS Code風) */}
+                    <div className='w-1/2 flex flex-col border-r border-white/10 bg-[#1e1e1e] relative group overflow-hidden'>
+                        <div className='absolute top-3 right-4 z-10 text-[10px] font-bold text-gray-500 tracking-widest pointer-events-none'>HTML & CSS</div>
+                        
+                        {/* ここが新しいエディタ部分 */}
+                        <div className="flex-1 overflow-auto custom-scrollbar font-mono text-sm">
+                            <Editor
+                                value={code}
+                                onValueChange={code => setCode(code)}
+                                highlight={code => Prism.highlight(code, Prism.languages.markup, 'html')}
+                                padding={24}
+                                textareaClassName="focus:outline-none"
+                                style={{
+                                    fontFamily: '"Fira Code", "Fira Mono", monospace',
+                                    fontSize: 14,
+                                    backgroundColor: 'transparent',
+                                    minHeight: '100%',
+                                }}
+                            />
+                        </div>
                     </div>
 
                     {/* 右：ライブプレビュー */}
