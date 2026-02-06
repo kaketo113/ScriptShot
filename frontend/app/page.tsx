@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
     Heart, MessageCircle, MoreHorizontal, Code2, Play, Share2, Layers, 
-    Sparkles, TrendingUp, Image as ImageIcon, Loader2
+    Sparkles, TrendingUp, Image as ImageIcon, Loader2, Box, Layout, Type, MousePointerClick
 } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { db } from '../lib/firebase';
@@ -21,7 +21,7 @@ interface PostData {
     code?: string;
     codeSnippet?: string;
     thumbnail?: string; 
-    blocks?: any[];
+    blocks?: any[]; // ブロックデータを追加
     likes: number;
     comments: number;
     createdAt: Timestamp;
@@ -46,6 +46,38 @@ const cardVariants: Variants = {
         scale: 1,
         transition: { type: "spring", stiffness: 50, damping: 15 }
     }
+};
+
+// --- Block Styles & Component ---
+const CATEGORY_STYLES = {
+    layout: { bg: 'bg-blue-600/80', border: 'border-blue-500/50' },
+    content: { bg: 'bg-slate-600/80', border: 'border-slate-500/50' },
+    component: { bg: 'bg-emerald-600/80', border: 'border-emerald-500/50' },
+};
+
+// タイムライン用のミニブロック
+const MiniBlock = ({ block }: { block: any }) => {
+    // block.category が undefined の場合の安全策
+    const category = (block.category as keyof typeof CATEGORY_STYLES) || 'content';
+    const styles = CATEGORY_STYLES[category];
+
+    let Icon = Box;
+    if (block.type === 'heading' || block.type === 'text') Icon = Type;
+    if (block.type === 'image') Icon = ImageIcon;
+    if (block.type === 'button') Icon = MousePointerClick;
+    if (block.type === 'section' || block.type === 'container') Icon = Layout;
+
+    return (
+        <div className={`
+            flex items-center gap-2 px-3 py-1.5 mb-1.5 rounded-md
+            ${styles.bg} backdrop-blur-sm border ${styles.border} text-white
+            text-xs font-bold shadow-sm w-fit max-w-full
+            ${block.isWrapper ? 'ml-0' : 'ml-4'} // インデント
+        `}>
+            <Icon size={12} className="opacity-80" />
+            <span className="truncate">{block.type}</span>
+        </div>
+    );
 };
 
 // --- Components ---
@@ -128,26 +160,50 @@ const PostCard = ({ post }: { post: PostData }) => {
                 </button>
             </div>
 
-            {/* Content */}
+            {/* Content Split View */}
             <div className='flex flex-col md:flex-row h-80 md:h-72 border-b border-white/5'>
-                {/* Code Side */}
+                
+                {/* Left Side: Logic Viewer (Text or Block) */}
                 <div className='w-full md:w-1/2 bg-[#000000]/60 border-b md:border-b-0 md:border-r border-white/5 relative overflow-hidden group'>
                     <div className="absolute top-3 left-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2 z-10">
                         {post.type === 'text' ? <Code2 className="w-3 h-3" /> : <Layers className="w-3 h-3" />}
                         LOGIC
                     </div>
-                    {/* Matrix Grid Decoration */}
+                    
+                    {/* 背景装飾 */}
                     <div className="absolute inset-0 bg-[linear-gradient(0deg,transparent_24%,rgba(255,255,255,.05)_25%,rgba(255,255,255,.05)_26%,transparent_27%,transparent_74%,rgba(255,255,255,.05)_75%,rgba(255,255,255,.05)_76%,transparent_77%,transparent),linear-gradient(90deg,transparent_24%,rgba(255,255,255,.05)_25%,rgba(255,255,255,.05)_26%,transparent_27%,transparent_74%,rgba(255,255,255,.05)_75%,rgba(255,255,255,.05)_76%,transparent_77%,transparent)] bg-[length:30px_30px] opacity-20 pointer-events-none" />
                     
-                    <div className="p-6 pt-10 h-full overflow-hidden relative opacity-80 group-hover:opacity-100 transition-opacity duration-500">
-                        <pre className='font-mono text-xs text-blue-100/90 leading-relaxed whitespace-pre-wrap break-all line-clamp-[12]'>
-                            {post.code || 'No code content'}
-                        </pre>
+                    <div className="p-6 pt-10 h-full overflow-hidden relative opacity-90 group-hover:opacity-100 transition-opacity duration-500">
+                        {/* ★ここが修正ポイント: タイプによって表示を切り替え */}
+                        {post.type === 'text' ? (
+                            <pre className='font-mono text-xs text-blue-100/90 leading-relaxed whitespace-pre-wrap break-all line-clamp-[12]'>
+                                {post.code || 'No code content'}
+                            </pre>
+                        ) : (
+                            // ブロックモードの場合の表示
+                            <div className="flex flex-col gap-1">
+                                {post.blocks && post.blocks.length > 0 ? (
+                                    post.blocks.slice(0, 6).map((block, i) => ( // 最初の6個だけ表示
+                                        <MiniBlock key={i} block={block} />
+                                    ))
+                                ) : (
+                                    <div className="text-gray-500 text-xs mt-2">No blocks data found.</div>
+                                )}
+                                {/* ブロックが多い場合の省略表示 */}
+                                {post.blocks && post.blocks.length > 6 && (
+                                    <div className="text-[10px] text-gray-500 pl-2 mt-1">
+                                        ... and {post.blocks.length - 6} more blocks
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        
+                        {/* 下部のフェードアウト効果 */}
                         <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black to-transparent pointer-events-none" />
                     </div>
                 </div>
 
-                {/* Preview Side */}
+                {/* Right Side: Preview */}
                 <div className='w-full md:w-1/2 bg-[#111]/80 relative overflow-hidden group'>
                     <div className="absolute top-3 right-4 text-[10px] font-bold text-white/90 uppercase tracking-widest bg-black/60 backdrop-blur-md px-2 py-1 rounded border border-white/10 z-10 shadow-lg">
                         Preview
@@ -220,7 +276,12 @@ export default function HomePage() {
                 querySnapshot.forEach((doc) => {
                     fetchedPosts.push({ id: doc.id, ...doc.data() } as PostData);
                 });
-                fetchedPosts.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                // 作成日時順にソート (createdAtがない場合の安全策入り)
+                fetchedPosts.sort((a, b) => {
+                    const timeA = a.createdAt?.seconds || 0;
+                    const timeB = b.createdAt?.seconds || 0;
+                    return timeB - timeA;
+                });
                 setPosts(fetchedPosts);
             } catch (error) {
                 console.error("Error fetching posts:", error);
@@ -237,7 +298,6 @@ export default function HomePage() {
             
             <main className='flex-1 md:ml-64 relative overflow-y-auto custom-scrollbar h-screen'>
                 
-                {/* ★共通背景コンポーネントを使用 */}
                 <AuroraBackground />
 
                 <div className='relative z-10 max-w-3xl mx-auto px-4 pb-20'>
@@ -251,9 +311,17 @@ export default function HomePage() {
                         >
                             <h1 className='text-4xl md:text-5xl font-black tracking-tight drop-shadow-2xl'>
                                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-cyan-100 to-blue-200">
-                                    Posts
+                                    Discover
                                 </span>
                             </h1>
+                            <div className="flex gap-2">
+                                <motion.button whileHover={{ scale: 1.05 }} className="bg-white/10 hover:bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 border border-white/10 transition-colors shadow-lg shadow-cyan-900/20">
+                                    <Sparkles size={14} className="text-cyan-300" /> For You
+                                </motion.button>
+                                <motion.button whileHover={{ scale: 1.05 }} className="bg-transparent hover:bg-white/5 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                                    <TrendingUp size={14} /> Trending
+                                </motion.button>
+                            </div>
                         </motion.div>
                         <motion.p 
                             initial={{ opacity: 0 }}
@@ -261,7 +329,7 @@ export default function HomePage() {
                             transition={{ delay: 0.3 }}
                             className="text-gray-400 text-sm font-medium pl-1"
                         >
-                            Post your creation!
+                            Explore the latest snippets from the community.
                         </motion.p>
                     </div>
 

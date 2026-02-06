@@ -99,11 +99,7 @@ export default function CreatePage() {
 
     const lineNumbers = useMemo(() => code.split('\n').map((_, i) => i + 1), [code]);
 
-    // 【重要】撮影用にコードを書き換えるロジック
-    // CSSの中にある "body {" を ".snapshot-root {" に置換する
-    // これにより、iframeがないdivの中でも bodyスタイルが適用されるようになる
     const snapshotCode = useMemo(() => {
-        // 正規表現で "body {" や "body{" を探し、クラス指定に置換
         return code.replace(/body\s*\{/g, '.snapshot-root {');
     }, [code]);
 
@@ -129,21 +125,30 @@ export default function CreatePage() {
             <div className='flex-1 flex overflow-hidden'>
                 {/* Editor Area */}
                 <div className='w-1/2 border-r border-white/10 flex flex-col bg-[#1e1e1e] overflow-hidden'>
+                    {/* ここがスクロールコンテナ */}
                     <div className='flex-1 relative flex overflow-y-auto custom-scrollbar'>
+                        {/* 行番号 */}
                         <div className='w-12 bg-[#1e1e1e] border-r border-white/5 flex flex-col items-end pt-4 pr-3 text-gray-600 font-mono text-sm select-none leading-relaxed shrink-0'>
                             {lineNumbers.map(num => (<div key={num} className='h-6'>{num}</div>))}
                         </div>
-                        <div className='flex-1 relative font-mono text-sm p-4 pt-4'>
+                        
+                        {/* エディタ部分 */}
+                        <div className='flex-1 relative font-mono text-sm p-4 pt-4 min-h-full'>
                             <div className='absolute top-0 right-4 bg-[#2d2d2d] text-[10px] text-gray-400 px-3 py-1 rounded-b-md z-30 font-mono border-x border-b border-white/5'>HTML / CSS</div>
-                            <div className="relative w-full h-full">
+                            
+                            {/* 修正ポイント: コンテナを h-full ではなく min-h-full にし、pre を relative に変更 */}
+                            <div className="relative w-full min-h-full">
+                                {/* ハイライト用の pre (これが高さを決定する) */}
                                 <pre 
                                     aria-hidden="true" 
-                                    className='m-0 whitespace-pre-wrap break-all pointer-events-none absolute inset-0'
+                                    className='m-0 whitespace-pre-wrap break-all pointer-events-none p-0 border-none bg-transparent'
                                     style={{ lineHeight: '1.5rem', fontFamily: 'Menlo, Monaco, Consolas, monospace' }}
                                     dangerouslySetInnerHTML={{ __html: highlightedCode + '\n' }}
                                 />
+                                
+                                {/* 入力用の textarea (overflow-hidden でスクロールを親に委譲) */}
                                 <textarea 
-                                    className='absolute inset-0 w-full h-full bg-transparent text-transparent p-0 resize-none focus:outline-none z-10 caret-white whitespace-pre-wrap break-all' 
+                                    className='absolute inset-0 w-full h-full bg-transparent text-transparent p-0 resize-none focus:outline-none z-10 caret-white whitespace-pre-wrap break-all overflow-hidden' 
                                     value={code} 
                                     onChange={(e) => setCode(e.target.value)} 
                                     spellCheck={false} 
@@ -152,6 +157,7 @@ export default function CreatePage() {
                             </div>
                         </div>
                     </div>
+                    
                     <div className='h-32 border-t border-white/10 p-4 bg-[#161616] shrink-0'>
                         <textarea 
                             className='w-full h-full bg-transparent text-sm text-gray-300 placeholder-gray-600 resize-none focus:outline-none leading-relaxed' 
@@ -201,23 +207,17 @@ export default function CreatePage() {
                 </div>
             </div>
 
-            {/* 撮影用スタジオ
-               置換済みのコード (snapshotCode) を使い、
-               wrapper に "snapshot-root" クラスを与えることで、
-               擬似的に body に対するスタイルを適用させる。
-            */}
             <div style={{ position: 'fixed', left: '-9999px', top: 0, width: 0, height: 0, overflow: 'hidden' }}>
                 <div 
                     ref={captureRef}
-                    className="snapshot-root" // ここに body の代わりとなるクラスを付与
+                    className="snapshot-root"
                     style={{
                         width: '800px',
                         height: '600px',
                         background: '#ffffff',
-                        position: 'relative' // relativeを追加して安定させる
+                        position: 'relative'
                     }}
                 >
-                    {/* 置換後のコードを展開 */}
                     <div 
                         dangerouslySetInnerHTML={{ __html: snapshotCode }} 
                         style={{ width: '100%', height: '100%' }}

@@ -169,10 +169,10 @@ export default function SearchPage() {
                         </CollapsibleSection>
                     </div>
 
-                    {/* Explore Grid (Real Data) */}
+                    {/* Posts Grid (Real Data) */}
                     <div>
                         <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-cyan-300">Explore</span>
+                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-cyan-300">Posts</span>
                         </h2>
 
                         {loading ? (
