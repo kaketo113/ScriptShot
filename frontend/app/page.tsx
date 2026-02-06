@@ -9,6 +9,7 @@ import { Sidebar } from '../components/Sidebar';
 import { db } from '../lib/firebase';
 import { collection, query, getDocs, Timestamp } from 'firebase/firestore';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { AuroraBackground } from '../components/AuroraBackground';
 
 // --- Types ---
 interface PostData {
@@ -92,7 +93,6 @@ const PostCard = ({ post }: { post: PostData }) => {
             variants={cardVariants}
             whileHover={{ y: -5, transition: { duration: 0.2 } }}
             onClick={handleCardClick}
-            // カードの背景をさらに透明にして、後ろの派手なグラデーションを透かす
             className='bg-[#0a0a0a]/50 backdrop-blur-xl rounded-3xl overflow-hidden mb-8 shadow-2xl border border-white/10 hover:border-blue-500/30 hover:shadow-blue-900/20 transition-all cursor-pointer group/card relative'
         >
             {/* Header */}
@@ -232,44 +232,13 @@ export default function HomePage() {
     }, []);
 
     return (
-        // 親要素の背景色は削除し、下の fixed 要素に任せる
-        <div className='flex min-h-screen font-sans overflow-hidden selection:bg-cyan-500/30 text-white'>
+        <div className='flex min-h-screen font-sans overflow-hidden bg-transparent text-white selection:bg-cyan-500/30'>
             <Sidebar />
             
-            {/* メインエリアは背景透明にする */}
-            <main className='flex-1 md:ml-64 relative overflow-y-auto custom-scrollbar h-screen bg-transparent'>
+            <main className='flex-1 md:ml-64 relative overflow-y-auto custom-scrollbar h-screen'>
                 
-                {/* =================================================================================
-                    ★ 究極進化版：ミッドナイト・オーロラ背景
-                    z-index を -1 にして、コンテンツの裏に強制的に配置
-                   ================================================================================= */}
-                <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
-                    {/* 1. ベースの深い青色（ここが重要：真っ黒にしない） */}
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#000000] to-[#000000]" />
-
-                    {/* 2. 強烈な光の柱（シアン） */}
-                    <motion.div 
-                        animate={{ opacity: [0.4, 0.6, 0.4], scale: [1, 1.1, 1] }}
-                        transition={{ duration: 8, repeat: Infinity }}
-                        className="absolute -top-[300px] left-[20%] w-[500px] h-[500px] bg-cyan-500/20 rounded-full blur-[120px]"
-                    />
-
-                    {/* 3. 漂う光の霧（紫） */}
-                    <motion.div 
-                        animate={{ x: [0, 50, 0], y: [0, -30, 0], opacity: [0.3, 0.5, 0.3] }}
-                        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute top-[20%] right-[10%] w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[100px]"
-                    />
-
-                    {/* 4. 底から湧き上がる光（青） */}
-                    <div className="absolute bottom-[-200px] left-0 right-0 h-[400px] bg-blue-900/20 blur-[100px]" />
-
-                    {/* 5. グリッドパターン（濃くして視認性を上げる） */}
-                    <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
-                    
-                    {/* 6. ノイズ（質感をプラス） */}
-                    <div className="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-                </div>
+                {/* ★共通背景コンポーネントを使用 */}
+                <AuroraBackground />
 
                 <div className='relative z-10 max-w-3xl mx-auto px-4 pb-20'>
                     {/* Hero Section */}
@@ -282,7 +251,7 @@ export default function HomePage() {
                         >
                             <h1 className='text-4xl md:text-5xl font-black tracking-tight drop-shadow-2xl'>
                                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-cyan-100 to-blue-200">
-                                    Discover
+                                    Posts
                                 </span>
                             </h1>
                         </motion.div>
@@ -292,7 +261,7 @@ export default function HomePage() {
                             transition={{ delay: 0.3 }}
                             className="text-gray-400 text-sm font-medium pl-1"
                         >
-                            Explore the latest snippets from the community.
+                            Post your creation!
                         </motion.p>
                     </div>
 

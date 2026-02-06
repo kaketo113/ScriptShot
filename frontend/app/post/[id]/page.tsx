@@ -35,7 +35,6 @@ const itemVariants: Variants = {
 };
 
 // --- Custom Hook: High-Speed Typewriter Effect ---
-// 高速化チューニング版
 const useTypewriter = (text: string | undefined) => {
     const [displayedText, setDisplayedText] = useState('');
     const [isTyping, setIsTyping] = useState(false);
@@ -49,10 +48,8 @@ const useTypewriter = (text: string | undefined) => {
         let currentIndex = 0;
         const totalLength = text.length;
 
-        // 文字数が多いほど「1フレームに進む文字数」を微増させるが、
-        // あくまで「流れるような文字送り」を維持するバランス設定
         let charsPerTick = 1;
-        if (totalLength > 100) charsPerTick = 2;
+        if (totalLength > 100) charsPerTick = 2; //100文字なら1秒に2文字
         if (totalLength > 500) charsPerTick = 3;
         if (totalLength > 1000) charsPerTick = 5;
 
