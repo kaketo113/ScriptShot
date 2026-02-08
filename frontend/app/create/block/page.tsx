@@ -10,7 +10,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { 
     Plus, Type, Image as ImageIcon, MousePointerClick, Layout, Box, 
-    GripVertical, Trash2, Save, Loader2, Code2, Monitor, ArrowLeft 
+    GripVertical, Trash2, Save, Loader2, Code2, Monitor, ArrowLeft, AlignLeft 
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { db } from '../../../lib/firebase';
@@ -51,7 +51,7 @@ const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: 
         }
     };
 
-    // ★ブロックごとの色定義（ここを修正！）
+    // ブロックごとの色定義
     const getBlockStyles = () => {
         switch (block.type) {
             case 'heading': // 青
@@ -60,7 +60,7 @@ const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: 
                     icon: 'bg-blue-500/20 text-blue-400',
                     input: 'text-blue-100 placeholder:text-blue-500/40'
                 };
-            case 'text': // ★緑 (Emerald) に変更！
+            case 'text': // 緑 (Emerald)
                 return {
                     container: 'bg-emerald-900/10 border-emerald-500/30 hover:border-emerald-500/50',
                     icon: 'bg-emerald-500/20 text-emerald-400',
@@ -95,7 +95,6 @@ const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: 
                 <GripVertical size={20} />
             </div>
             
-            {/* ★ここでスタイルを適用 */}
             <div className={`flex-1 border rounded-lg p-3 flex items-center gap-3 transition-colors ${styles.container}`}>
                 <div className={`p-2 rounded ${styles.icon}`}>
                     {block.type === 'heading' && <Type size={16} />}
@@ -169,6 +168,7 @@ const BlockRenderer = ({ block }: { block: Block }) => {
 export default function CreateBlockPage() {
     const { user, markAsPosted } = useAuth();
     const [blocks, setBlocks] = useState<Block[]>(INITIAL_BLOCKS);
+    const [caption, setCaption] = useState(''); // ★追加: Caption用ステート
     const [isSaving, setIsSaving] = useState(false);
     const captureRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
@@ -238,11 +238,12 @@ export default function CreateBlockPage() {
                 blocks: blocks,
                 codeSnippet: generateHTMLPreview(blocks),
                 thumbnail: thumbnailBase64 || null,
+                caption: caption, // ★追加: Captionを保存
                 likes: 0,
                 comments: 0,
                 createdAt: serverTimestamp(),
             });
-            markAsPosted();
+            markAsPosted(); // ★追加: 投稿済みフラグを更新
             router.push('/');
         } catch (error) {
             console.error("Post Error: ", error);
@@ -292,24 +293,20 @@ export default function CreateBlockPage() {
                 {/* Left: Block Editor */}
                 <div className='w-1/2 border-r border-white/10 flex flex-col bg-[#111]'>
                     
-                    {/* ★ボタンエリア：Textを緑(Emerald)に変更！ */}
+                    {/* ボタンエリア */}
                     <div className="p-3 border-b border-white/10 flex gap-2 overflow-x-auto bg-[#0f0f0f]">
-                        {/* Heading: Blue */}
                         <button onClick={() => addBlock('heading')} className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 rounded text-xs font-bold transition-all">
                             <Type size={14}/> Heading
                         </button>
                         
-                        {/* Text: ★Green (Emerald) */}
                         <button onClick={() => addBlock('text')} className="flex items-center gap-2 px-3 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 rounded text-xs font-bold transition-all">
                             <Box size={14}/> Text
                         </button>
                         
-                        {/* Image: Purple */}
                         <button onClick={() => addBlock('image')} className="flex items-center gap-2 px-3 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 rounded text-xs font-bold transition-all">
                             <ImageIcon size={14}/> Image
                         </button>
                         
-                        {/* Button: Orange */}
                         <button onClick={() => addBlock('button')} className="flex items-center gap-2 px-3 py-2 bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 rounded text-xs font-bold transition-all">
                             <MousePointerClick size={14}/> Button
                         </button>
@@ -346,15 +343,30 @@ export default function CreateBlockPage() {
                         </div>
                     </div>
 
-                    <div className='h-20 border-t border-white/10 flex items-center justify-end px-8 bg-[#111] shrink-0'>
-                        <button 
-                            onClick={handlePost} 
-                            disabled={isSaving}
-                            className='flex items-center gap-2 px-8 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-md hover:bg-emerald-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-emerald-900/20 active:scale-95 transform duration-100'
-                        >
-                            {isSaving ? <Loader2 className='w-4 h-4 animate-spin' /> : <Save className='w-4 h-4' />}
-                            <span>{isSaving ? 'Posting...' : 'Block Post'}</span>
-                        </button>
+                    {/* ★修正: FooterエリアにCaption入力を追加 */}
+                    <div className='border-t border-white/10 bg-[#111] p-4 flex flex-col gap-3 shrink-0'>
+                        <div className="relative">
+                            <div className="absolute top-3 left-3 text-gray-500">
+                                <AlignLeft size={16} />
+                            </div>
+                            <textarea
+                                value={caption}
+                                onChange={(e) => setCaption(e.target.value)}
+                                placeholder="Describe your block creation..."
+                                className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 resize-none h-20 custom-scrollbar"
+                            />
+                        </div>
+
+                        <div className="flex justify-end">
+                            <button 
+                                onClick={handlePost} 
+                                disabled={isSaving}
+                                className='flex items-center gap-2 px-8 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-md hover:bg-emerald-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-emerald-900/20 active:scale-95 transform duration-100'
+                            >
+                                {isSaving ? <Loader2 className='w-4 h-4 animate-spin' /> : <Save className='w-4 h-4' />}
+                                <span>{isSaving ? 'Posting...' : 'Block Post'}</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

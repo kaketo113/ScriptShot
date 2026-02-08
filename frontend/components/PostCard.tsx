@@ -19,7 +19,7 @@ export const PostCard = ({ post }: PostCardProps) => {
     const displayCode = post.code || post.codeSnippet || '';
 
     return (
-        <a href={`/post/${post.id}`} className="group relative block h-[320px] bg-[#111] rounded-2xl overflow-hidden border border-white/5 hover:border-white/20 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/10">
+        <a href={`/post/${post.id}`} className="group relative block h-[380px] bg-[#111] rounded-2xl overflow-hidden border border-white/5 hover:border-white/20 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/10">
             
             {/* 上半分：プレビューエリア */}
             <div className="h-1/2 bg-[#0a0a0a] relative overflow-hidden border-b border-white/5 group-hover:bg-[#0f0f0f] transition-colors">
@@ -66,6 +66,11 @@ export const PostCard = ({ post }: PostCardProps) => {
                         <span className="text-xs text-gray-400 truncate max-w-[120px]">{post.userName}</span>
                         <span className="text-[10px] text-gray-600">• {date}</span>
                     </div>
+
+                    {/* Caption表示エリア */}
+                    <p className="text-sm text-gray-300 line-clamp-2 mb-3 min-h-[40px]">
+                        {post.caption || <span className="text-gray-600 italic">No caption provided.</span>}
+                    </p>
 
                     {/* 投稿の種類バッジ */}
                     <div className="flex gap-2 mb-2">

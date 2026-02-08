@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
     Heart, MessageCircle, Code2, Share2, ArrowLeft, Layers, 
     Layout, Type, Image as ImageIcon, MousePointerClick, Box, Loader2,
-    Play, Copy, Check
+    Play, Copy, Check, AlignLeft // ★追加
 } from 'lucide-react';
 import { Sidebar } from '../../../components/Sidebar';
 import { db } from '../../../lib/firebase';
@@ -49,27 +49,22 @@ const useTypewriter = (text: string | undefined) => {
         const totalLength = text.length;
 
         let charsPerTick = 1;
-        if (totalLength > 100) charsPerTick = 2; //100文字なら1秒に2文字
+        if (totalLength > 100) charsPerTick = 2;
         if (totalLength > 500) charsPerTick = 3;
         if (totalLength > 1000) charsPerTick = 5;
 
-        // ブラウザの描画限界に近い速度(5ms)で回す
         const intervalId = setInterval(() => {
             if (currentIndex >= totalLength) {
                 clearInterval(intervalId);
                 setIsTyping(false);
-                // 最後に念のため全文をセットしてズレ防止
                 setDisplayedText(text); 
                 return;
             }
 
-            // 次の文字位置を計算
             const nextIndex = Math.min(currentIndex + charsPerTick, totalLength);
-            
-            // sliceで切り出してセット（ここが高速描画の肝）
             setDisplayedText(text.slice(0, nextIndex));
             currentIndex = nextIndex;
-        }, 5); // 5ミリ秒間隔（ほぼ毎フレーム更新）
+        }, 5);
 
         return () => clearInterval(intervalId);
     }, [text]);
@@ -131,6 +126,7 @@ interface PostData {
     code?: string;
     codeSnippet?: string;
     blocks?: any[];
+    caption?: string; // ★追加
     likes: number;
     comments: number;
     createdAt: Timestamp;
@@ -148,7 +144,6 @@ export default function PostDetailPage({
     const [isLiked, setIsLiked] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    // 引数なしで呼び出す（内部で自動最適化）
     const { displayedText, isTyping } = useTypewriter(post?.code);
     
     const codeContainerRef = useRef<HTMLDivElement>(null);
@@ -177,7 +172,6 @@ export default function PostDetailPage({
     useEffect(() => {
         if (!post) return;
 
-        // テキストモードなら code を、ブロックモードなら codeSnippet を使う
         const displayCode = post.type === 'text' ? post.code : post.codeSnippet;
         
         if (!displayCode) return;
@@ -188,18 +182,16 @@ export default function PostDetailPage({
             <head>
                 <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <style>
-                    /* ▼ ブロックモード用のデフォルトCSSをここで注入します ▼ */
                     body {
                         margin: 0;
                         padding: 2rem;
                         font-family: sans-serif;
-                        background-color: #f0f0f0; /* 背景色 */
+                        background-color: #f0f0f0;
                         display: flex;
                         flex-direction: column;
                         align-items: center;
                         gap: 1rem;
                     }
-                    /* ボタンや画像などの基本スタイル */
                     h2 { color: #333; }
                     p { color: #666; line-height: 1.6; }
                     button {
@@ -230,7 +222,6 @@ export default function PostDetailPage({
         return () => URL.revokeObjectURL(url);
     }, [post]);
 
-    // タイピング中は自動スクロール（少し余裕を持たせる）
     useEffect(() => {
         if (isTyping && codeEndRef.current) {
             codeEndRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest' });
@@ -240,7 +231,6 @@ export default function PostDetailPage({
     const highlightedCode = useMemo(() => {
         if (!post?.code) return '';
         const textToHighlight = isTyping ? displayedText : post.code;
-        // Prism.jsのハイライト処理
         return Prism.highlight(textToHighlight, Prism.languages.markup, 'markup');
     }, [post?.code, displayedText, isTyping]);
 
@@ -311,7 +301,7 @@ export default function PostDetailPage({
 
                 <div className="flex-1 flex flex-col lg:flex-row pt-16 h-full">
 
-                    {/* Left Panel (Code Editor) */}
+                    {/* Left Panel (Code/Blocks + Caption) */}
                     <motion.div variants={itemVariants} className="w-full lg:w-1/2 bg-[#1e1e1e] flex flex-col border-r border-black/50 relative z-10">
                         <div className="h-10 bg-[#252526] flex items-center justify-between px-4 border-b border-black">
                             <div className="flex items-center gap-2 text-xs font-mono text-gray-400">
@@ -336,16 +326,26 @@ export default function PostDetailPage({
                             ref={codeContainerRef}
                             className="flex-1 overflow-auto custom-scrollbar p-0 bg-[#1e1e1e]"
                         >
+                            {/* ★修正ポイント：ここにキャプションを表示 (READMEのような見た目) */}
+                            {post.caption && (
+                                <div className="p-5 border-b border-white/5 bg-[#252526]/50">
+                                    <div className="flex items-center gap-2 mb-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                        <AlignLeft size={12} />
+                                        <span>Description</span>
+                                    </div>
+                                    <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap font-sans">
+                                        {post.caption}
+                                    </p>
+                                </div>
+                            )}
+
                             {post.type === 'text' ? (
                                 <div className="relative min-h-full">
                                     <pre 
                                         className="m-0 p-6 font-mono text-sm leading-relaxed text-gray-300 whitespace-pre-wrap break-all"
                                         style={{ fontFamily: '"JetBrains Mono", Menlo, Consolas, monospace' }}
                                     >
-                                        {/* HTMLとしてレンダリング */}
                                         <code dangerouslySetInnerHTML={{ __html: highlightedCode || '' }} />
-                                        
-                                        {/* カーソル演出 (タイピング中のみ表示) */}
                                         {isTyping && (
                                             <span className="inline-block w-2.5 h-5 bg-blue-500 align-middle ml-0.5 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
                                         )}
