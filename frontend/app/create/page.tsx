@@ -17,7 +17,7 @@ export default function CreatePage() {
     const { user, markAsPosted } = useAuth();
     const router = useRouter();
     
-    // 初期値 (ここですでに完全なHTMLになっている)
+    // 初期値
     const [code, setCode] = useState(`<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -51,16 +51,12 @@ export default function CreatePage() {
     h1 { color: #3b82f6; }
 </style>`);
     
-    // srcDoc ではなく previewUrl に変更 (Blob URLを使うため)
     const [previewUrl, setPreviewUrl] = useState('');
     const [caption, setCaption] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
-    // ★修正ポイント：HTMLで包まず、書かれたコードをそのままBlobにする
     useEffect(() => {
         const timeout = setTimeout(() => {
-            // ここで余計なタグで包んでいたのを削除しました。
-            // code をそのまま Blob に変換します。
             const blob = new Blob([code], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             setPreviewUrl(url);
@@ -105,7 +101,6 @@ export default function CreatePage() {
                         <ArrowLeft className='w-5 h-5' />
                     </a>
                     <div className='flex items-center gap-2'>
-                        <Code2 size={18} className="text-blue-500" />
                         <h2 className='font-bold text-lg tracking-tight'>Create New Snippet</h2>
                     </div>
                 </div>
@@ -159,7 +154,6 @@ export default function CreatePage() {
                     </div>
                     
                     <div className='flex-1 relative bg-[url("https://grainy-gradients.vercel.app/noise.svg")] opacity-100'>
-                        {/* ★修正ポイント: srcDoc ではなく src={previewUrl} を使う */}
                         <iframe
                             src={previewUrl}
                             title="preview"

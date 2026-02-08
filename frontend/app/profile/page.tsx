@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Sidebar } from '../../components/Sidebar';
-import { AuroraBackground } from '../../components/AuroraBackground'; // 背景コンポーネント
+import { AuroraBackground } from '../../components/AuroraBackground';
 import { PostCard } from '../../components/PostCard';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/firebase';
@@ -57,7 +57,6 @@ export default function ProfilePage() {
             <Sidebar />
 
             <main className='flex-1 md:ml-64 h-full relative'>
-                {/* ★修正ポイント：AuroraBackground で中身全体を包む！ */}
                 <AuroraBackground className="w-full h-full">
                     
                     <div className="relative z-10 w-full h-full overflow-y-auto custom-scrollbar">

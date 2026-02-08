@@ -25,7 +25,7 @@ export const PostCard = ({ post }: PostCardProps) => {
             <div className="h-1/2 bg-[#0a0a0a] relative overflow-hidden border-b border-white/5 group-hover:bg-[#0f0f0f] transition-colors">
                 
                 {post.thumbnail ? (
-                    // ★パターンA: サムネイル画像がある場合 (主にブロックモード)
+                    // パターンA: サムネイル画像がある場合 (主にブロックモード)
                     // eslint-disable-next-line @next/next/no-img-element
                     <img 
                         src={post.thumbnail} 
@@ -33,8 +33,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                         className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
                     />
                 ) : (
-                    // ★パターンB: サムネイルがない場合 (テキストモードなど)
-                    // ここを <pre> から <iframe> に変更して実行画面を表示！
+                    // パターンB: サムネイルがない場合 (テキストモードなど)
                     <div className="relative w-full h-full bg-white">
                         <iframe
                             srcDoc={displayCode}
@@ -45,7 +44,6 @@ export const PostCard = ({ post }: PostCardProps) => {
                             scrolling="no"
                             tabIndex={-1}
                         />
-                        {/* クリックをiframeに奪われないように透明なカバーをかける */}
                         <div className="absolute inset-0 z-10 bg-transparent" />
                     </div>
                 )}

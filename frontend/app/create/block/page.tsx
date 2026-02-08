@@ -168,7 +168,7 @@ const BlockRenderer = ({ block }: { block: Block }) => {
 export default function CreateBlockPage() {
     const { user, markAsPosted } = useAuth();
     const [blocks, setBlocks] = useState<Block[]>(INITIAL_BLOCKS);
-    const [caption, setCaption] = useState(''); // ★追加: Caption用ステート
+    const [caption, setCaption] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const captureRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
@@ -238,12 +238,12 @@ export default function CreateBlockPage() {
                 blocks: blocks,
                 codeSnippet: generateHTMLPreview(blocks),
                 thumbnail: thumbnailBase64 || null,
-                caption: caption, // ★追加: Captionを保存
+                caption: caption,
                 likes: 0,
                 comments: 0,
                 createdAt: serverTimestamp(),
             });
-            markAsPosted(); // ★追加: 投稿済みフラグを更新
+            markAsPosted();
             router.push('/');
         } catch (error) {
             console.error("Post Error: ", error);
@@ -290,7 +290,7 @@ export default function CreateBlockPage() {
             </header>
 
             <div className='flex-1 flex overflow-hidden'>
-                {/* Left: Block Editor */}
+                {/* 左: ブロックエディタ */}
                 <div className='w-1/2 border-r border-white/10 flex flex-col bg-[#111]'>
                     
                     {/* ボタンエリア */}
@@ -323,7 +323,7 @@ export default function CreateBlockPage() {
                     </div>
                 </div>
 
-                {/* Right: Live Preview & Save Button */}
+                {/* 右: プレビュー */}
                 <div className='w-1/2 flex flex-col bg-[#050505]'>
                     <div className='h-10 border-b border-white/5 flex items-center px-4 justify-between bg-[#161616]'>
                         <div className='flex items-center gap-2 text-[10px] font-bold text-green-500 uppercase tracking-widest'>
@@ -343,7 +343,7 @@ export default function CreateBlockPage() {
                         </div>
                     </div>
 
-                    {/* ★修正: FooterエリアにCaption入力を追加 */}
+                    {/* Footerエリア */}
                     <div className='border-t border-white/10 bg-[#111] p-4 flex flex-col gap-3 shrink-0'>
                         <div className="relative">
                             <div className="absolute top-3 left-3 text-gray-500">

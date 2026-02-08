@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
     Heart, MessageCircle, Code2, Share2, ArrowLeft, Layers, 
     Layout, Type, Image as ImageIcon, MousePointerClick, Box, Loader2,
-    Play, Copy, Check, AlignLeft // ★追加
+    Play, Copy, Check, AlignLeft
 } from 'lucide-react';
 import { Sidebar } from '../../../components/Sidebar';
 import { db } from '../../../lib/firebase';
@@ -126,7 +126,7 @@ interface PostData {
     code?: string;
     codeSnippet?: string;
     blocks?: any[];
-    caption?: string; // ★追加
+    caption?: string;
     likes: number;
     comments: number;
     createdAt: Timestamp;
@@ -301,7 +301,7 @@ export default function PostDetailPage({
 
                 <div className="flex-1 flex flex-col lg:flex-row pt-16 h-full">
 
-                    {/* Left Panel (Code/Blocks + Caption) */}
+                    {/* 左：コード/ブロック＋キャプション */}
                     <motion.div variants={itemVariants} className="w-full lg:w-1/2 bg-[#1e1e1e] flex flex-col border-r border-black/50 relative z-10">
                         <div className="h-10 bg-[#252526] flex items-center justify-between px-4 border-b border-black">
                             <div className="flex items-center gap-2 text-xs font-mono text-gray-400">
@@ -326,7 +326,6 @@ export default function PostDetailPage({
                             ref={codeContainerRef}
                             className="flex-1 overflow-auto custom-scrollbar p-0 bg-[#1e1e1e]"
                         >
-                            {/* ★修正ポイント：ここにキャプションを表示 (READMEのような見た目) */}
                             {post.caption && (
                                 <div className="p-5 border-b border-white/5 bg-[#252526]/50">
                                     <div className="flex items-center gap-2 mb-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
@@ -362,7 +361,7 @@ export default function PostDetailPage({
                         </div>
                     </motion.div>
 
-                    {/* Right Panel (Preview) */}
+                    {/* 右：プレビュー */}
                     <motion.div variants={itemVariants} className="w-full lg:w-1/2 bg-[#0d0d0d] flex flex-col relative overflow-hidden">
                         
                         <motion.div 

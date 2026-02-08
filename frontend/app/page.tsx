@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 export default function Home() {
-    const { user, login, hasPosted } = useAuth(); // ★hasPostedを受け取る
+    const { user, login, hasPosted } = useAuth();
     const [posts, setPosts] = useState<any[]>([]);
 
     useEffect(() => {
@@ -29,11 +29,8 @@ export default function Home() {
 
             <main className='flex-1 md:ml-64'>
                 
-                {/* --- 🚀 ヒーローセクション --- */}
-                {/* ★条件追加: 未ログイン、または まだ投稿していない時だけ表示 */}
                 {(!user || !hasPosted) && (
                     <div className="relative w-full border-b border-white/10 overflow-hidden">
-                         {/* ... (中身のデザインコードは以前のまま変更なし) ... */}
                         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
                         <div className="absolute left-0 top-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
                         <div className="absolute right-0 bottom-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[100px] translate-x-1/2 translate-y-1/2"></div>
@@ -82,12 +79,10 @@ export default function Home() {
                         </div>
                     </div>
                 )}
-                {/* --- ヒーローセクション終わり --- */}
 
-                {/* --- 使い方ガイド (ここも投稿後は邪魔なら隠してOK。今回は残します) --- */}
+                {/* 使い方ガイド */}
                 {(!user || !hasPosted) && (
                     <div className="border-b border-white/5 bg-[#0a0a0a]">
-                         {/* ... (How It Worksの中身は変更なし) ... */}
                         <div className="max-w-6xl mx-auto px-6 py-16">
                             <h2 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-10 text-center">How It Works</h2>
                             
@@ -129,7 +124,7 @@ export default function Home() {
                     </div>
                 )}
 
-                {/* --- 📝 タイムライン (常に表示) --- */}
+                {/* タイムライン (常に表示) */}
                 <div className="max-w-5xl mx-auto px-6 py-12">
                     <div className="flex items-center gap-3 mb-8">
                         <div className="w-1 h-6 bg-blue-500 rounded-full"></div>

@@ -56,10 +56,8 @@ export default function SearchPage() {
         <div className='flex h-screen bg-black text-white font-sans overflow-hidden'>
             <Sidebar />
 
-            {/* Mainエリア: サイドバーの分(md:ml-64)だけ右にずらす */}
             <main className='flex-1 md:ml-64 h-full relative'>
-                
-                {/* ★修正ポイント: !fixed を削除し、w-full h-full で親要素に合わせる */}
+
                 <AuroraBackground className="w-full h-full">
                     
                     {/* コンテンツエリア */}
