@@ -10,13 +10,12 @@ interface PostCardProps {
 }
 
 export const PostCard = ({ post }: PostCardProps) => {
-    // 日付のフォーマット（エラー回避のため）
+    // 日付のフォーマット
     const date = post.createdAt?.toDate 
         ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true, locale: ja })
         : 'たった今';
 
-    // ★修正ポイント：表示するコードが存在しない場合の対策
-    // post.code がなければ post.codeSnippet を使い、それもなければ空文字にする
+    // 表示するコード（テキストモードなら code, ブロックモードなら codeSnippet）
     const displayCode = post.code || post.codeSnippet || '';
 
     return (
@@ -25,32 +24,34 @@ export const PostCard = ({ post }: PostCardProps) => {
             {/* 上半分：プレビューエリア */}
             <div className="h-1/2 bg-[#0a0a0a] relative overflow-hidden border-b border-white/5 group-hover:bg-[#0f0f0f] transition-colors">
                 
-                {/* サムネイルがある場合は画像を表示 (ブロックモード用) */}
                 {post.thumbnail ? (
+                    // ★パターンA: サムネイル画像がある場合 (主にブロックモード)
                     // eslint-disable-next-line @next/next/no-img-element
                     <img 
                         src={post.thumbnail} 
                         alt="Preview" 
-                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                        className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
                     />
                 ) : (
-                    // サムネイルがない場合はコードを表示 (テキストモード用)
-                    <div className="p-4 relative h-full">
-                        <div className="absolute top-2 left-3 text-[10px] text-gray-500 font-mono flex items-center gap-1">
-                            {post.type === 'block' ? <Layers size={10} /> : <Code2 size={10} />}
-                            {post.type === 'block' ? 'BLOCK PREVIEW' : 'CODE PREVIEW'}
-                        </div>
-                        {/* ★ここで安全な displayCode を使う */}
-                        <pre className="text-[10px] font-mono text-gray-400 leading-relaxed opacity-70 mt-4 overflow-hidden h-full break-all whitespace-pre-wrap">
-                            {displayCode.slice(0, 300)}...
-                        </pre>
-                        {/* グラデーションで消す演出 */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-transparent to-transparent pointer-events-none" />
+                    // ★パターンB: サムネイルがない場合 (テキストモードなど)
+                    // ここを <pre> から <iframe> に変更して実行画面を表示！
+                    <div className="relative w-full h-full bg-white">
+                        <iframe
+                            srcDoc={displayCode}
+                            title="preview"
+                            // 2倍の大きさで作って0.5倍に縮小することで、デスクトップ表示っぽく見せる
+                            className="w-[200%] h-[200%] transform scale-50 origin-top-left border-none pointer-events-none select-none"
+                            sandbox="allow-scripts" // スクリプト実行を許可（デザイン崩れ防止）
+                            scrolling="no"
+                            tabIndex={-1}
+                        />
+                        {/* クリックをiframeに奪われないように透明なカバーをかける */}
+                        <div className="absolute inset-0 z-10 bg-transparent" />
                     </div>
                 )}
             </div>
 
-            {/* 下半分：情報エリア */}
+            {/* 下半分：情報エリア (変更なし) */}
             <div className="h-1/2 p-5 flex flex-col justify-between">
                 <div>
                     <div className="flex items-center gap-2 mb-3">
@@ -80,7 +81,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                     </div>
                 </div>
 
-                {/* アクションボタン（いいね、コメント） */}
+                {/* アクションボタン */}
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
                     <div className="flex items-center gap-4 text-gray-500">
                         <div className="flex items-center gap-1.5 text-xs group-hover:text-pink-500 transition-colors">
