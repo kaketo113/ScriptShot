@@ -92,7 +92,7 @@ export function Sidebar() {
                 ) : (
                     <button onClick={handleLogin} className='flex items-center justify-center gap-3 w-full p-3 rounded-xl bg-blue-600 hover:bg-blue-500 transition-colors text-white font-bold shadow-lg active:scale-95'>
                         <LogIn className='w-5 h-5' />
-                        <span>Sign In</span>
+                        <span>Googleと連携</span>
                     </button>
                 )}
             </div>
