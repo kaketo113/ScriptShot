@@ -4,14 +4,14 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-    Home, Search, Plus, User, LogOut, 
+    Home, Search, Plus, User, LogOut, LogIn,
     Code2, Box, ChevronDown 
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Sidebar = () => {
     const pathname = usePathname();
-    const { user, logout } = useAuth();
+    const { user, login, logout } = useAuth();
 
     // リンクがアクティブかどうか判定するヘルパー関数
     const isActive = (path: string) => pathname === path;
@@ -121,27 +121,38 @@ export const Sidebar = () => {
 
             </nav>
 
-            {/* 下部エリア（ユーザーアイコン + ログアウト） */}
-            {user && (
-                <div className='p-4 border-t border-white/10 mt-auto flex items-center gap-3'>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img 
-                        src={user.photoURL || "https://api.dicebear.com/7.x/avataaars/svg?seed=Guest"} 
-                        alt={user.displayName || "User"}
-                        className="w-10 h-10 rounded-full border border-white/10 object-cover shrink-0"
-                    />
+            {/* 下部エリア（ログイン状態によって分岐） */}
+            <div className='p-4 border-t border-white/10 mt-auto'>
+                {user ? (
+                    // ログイン中: アイコン + サインアウトボタン
+                    <div className='flex items-center gap-3'>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                            src={user.photoURL || "https://api.dicebear.com/7.x/avataaars/svg?seed=Guest"} 
+                            alt={user.displayName || "User"}
+                            className="w-10 h-10 rounded-full border border-white/10 object-cover shrink-0"
+                        />
 
-                    {/* ログアウトボタン */}
+                        <button 
+                            onClick={logout}
+                            className='flex-1 flex items-center gap-2 px-3 py-2 rounded-xl text-left text-gray-500 hover:bg-red-500/10 hover:text-red-500 transition-colors'
+                            title="Sign Out"
+                        >
+                            <LogOut size={18} />
+                            <span className="text-sm font-bold">Sign Out</span>
+                        </button>
+                    </div>
+                ) : (
+                    // 未ログイン: サインインボタン
                     <button 
-                        onClick={logout}
-                        className='flex-1 flex items-center gap-2 px-3 py-2 rounded-xl text-left text-gray-500 hover:bg-red-500/10 hover:text-red-500 transition-colors'
-                        title="Sign Out"
+                        onClick={login}
+                        className='w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20 transition-all active:scale-95'
                     >
-                        <LogOut size={18} />
-                        <span className="text-sm font-bold">Sign Out</span>
+                        <LogIn size={20} />
+                        <span className="font-bold">Sign In</span>
                     </button>
-                </div>
-            )}
+                )}
+            </div>
         </aside>
     );
 };
