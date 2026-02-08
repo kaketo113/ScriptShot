@@ -101,7 +101,7 @@ export default function CreatePage() {
                         <ArrowLeft className='w-5 h-5' />
                     </a>
                     <div className='flex items-center gap-2'>
-                        <h2 className='font-bold text-lg tracking-tight'>Create New Snippet</h2>
+                        <h2 className='font-bold text-lg tracking-tight'>Create New Post</h2>
                     </div>
                 </div>
 
@@ -182,7 +182,7 @@ export default function CreatePage() {
                                 className='flex items-center gap-2 px-8 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-md hover:bg-blue-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20 active:scale-95 transform duration-100'
                             >
                                 {isSaving ? <Loader2 className='w-4 h-4 animate-spin' /> : <Save className='w-4 h-4' />}
-                                <span>{isSaving ? 'Saving...' : 'Save Snippet'}</span>
+                                <span>{isSaving ? 'Saving...' : 'text Post'}</span>
                             </button>
                         </div>
                     </div>
