@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Save, Code2, Loader2, Box, ArrowLeft } from 'lucide-react'; // ArrowLeftを追加
+import { useRouter } from 'next/navigation';
 
 // --- エディタ用ライブラリ ---
 import Editor from 'react-simple-code-editor';
@@ -15,7 +16,8 @@ import 'prismjs/components/prism-css';
 import 'prismjs/themes/prism-tomorrow.css';
 
 export default function CreatePage() {
-    const { user } = useAuth();
+    const { user, markAsPosted } = useAuth();
+    const router = useRouter();
     
     const [code, setCode] = useState(`<!DOCTYPE html>
 <html lang="ja">
@@ -86,7 +88,8 @@ export default function CreatePage() {
                 comments: 0,
                 createdAt: serverTimestamp(),
             });
-            window.location.href = '/';
+            markAsPosted();
+            router.push('/')
         } catch (error) {
             console.error("Error saving post:", error);
             alert("投稿に失敗しました。");

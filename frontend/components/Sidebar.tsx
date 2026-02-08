@@ -1,101 +1,138 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { 
-    Home, 
-    Search, 
-    PlusSquare, 
-    User, 
-    LogOut, 
-    Code2,
-    LogIn 
+    Home, Search, Plus, User, LogOut, 
+    Code2, Box, ChevronDown 
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const MENU_ITEMS = [
-    { icon: Home, label: 'Home', href: '/' },
-    { icon: Search, label: 'Search', href: '/search' },
-    { icon: PlusSquare, label: 'Create', href: '/create' },
-    { icon: User, label: 'Profile', href: '/profile' },
-];
+export const Sidebar = () => {
+    const pathname = usePathname();
+    const { user, logout } = useAuth();
 
-export function Sidebar() {
-    const [pathname, setPathname] = useState('/');
-    const { user, login, logout } = useAuth(); 
+    // リンクがアクティブかどうか判定するヘルパー関数
+    const isActive = (path: string) => pathname === path;
 
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            setPathname(window.location.pathname);
-        }
-    }, [user]);
-
-    const handleLogin = async () => {
-        try {
-            await login();
-        } catch (e) {
-            console.error("Login error:", e);
-        }
-    };
+    // Create関連のパスかどうか
+    const isCreateActive = pathname.startsWith('/create');
 
     return (
-        <aside className='hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 border-r border-white/10 bg-black z-50'>
-            <div className='p-6 mb-4'>
-                <a href="/" className='flex items-center gap-2 group'>
-                    <div className='w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300'>
-                        <Code2 className='w-5 h-5 text-white' />
+        <aside className='w-64 bg-[#0a0a0a] border-r border-white/10 flex flex-col h-screen fixed left-0 top-0 z-40 hidden md:flex'>
+            {/* ロゴエリア */}
+            <div className='h-16 flex items-center px-6 border-b border-white/10 shrink-0'>
+                <div className='flex items-center gap-2 font-bold text-xl tracking-tighter'>
+                    <div className='w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white'>
+                        <Code2 size={20} />
                     </div>
-                    <span className='text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent'>
-                        ScriptShot
-                    </span>
-                </a>
+                    <span>ScriptShot</span>
+                </div>
             </div>
 
-            <nav className='flex-1 px-4 space-y-2'>
-                {MENU_ITEMS.map((item) => {
-                    const isActive = pathname === item.href;
-                    return (
-                        <a 
-                            key={item.label} 
-                            href={item.href}
-                            className={`
-                                flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 group
-                                ${isActive 
-                                    ? 'bg-blue-600/10 text-blue-400 font-bold' 
-                                    : 'text-gray-400 hover:bg-[#1a1a1a] hover:text-white'
-                                }
-                            `}
-                        >
-                            <item.icon className={`w-6 h-6 ${isActive ? 'fill-current' : ''} group-hover:scale-110 transition-transform`} />
-                            <span className="text-sm">{item.label}</span>
-                        </a>
-                    );
-                })}
+            {/* ナビゲーション */}
+            <nav className='flex-1 py-6 px-3 flex flex-col gap-1 overflow-y-auto custom-scrollbar'>
+                
+                {/* Home */}
+                <Link 
+                    href="/" 
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                        isActive('/') ? 'bg-white/10 text-white font-bold' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                >
+                    <Home size={20} />
+                    <span>Home</span>
+                </Link>
+
+                {/* Search */}
+                <Link 
+                    href="/search" 
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                        isActive('/search') ? 'bg-white/10 text-white font-bold' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                >
+                    <Search size={20} />
+                    <span>Search</span>
+                </Link>
+
+                {/* --- Create (アコーディオンメニュー) --- */}
+                <div className="group flex flex-col">
+                    
+                    {/* 親ボタン */}
+                    <button className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${
+                        isCreateActive ? 'bg-white/5 text-white font-bold' : 'text-gray-400 group-hover:bg-white/5 group-hover:text-white'
+                    }`}>
+                        <div className="flex items-center gap-3">
+                            <div className={`p-1 rounded transition-colors ${isCreateActive ? 'bg-blue-600 text-white' : 'bg-white/10 group-hover:bg-white/20'}`}>
+                                <Plus size={16} />
+                            </div>
+                            <span>Create</span>
+                        </div>
+                        <ChevronDown size={14} className="transition-transform duration-300 group-hover:rotate-180 opacity-50 group-hover:opacity-100" />
+                    </button>
+
+                    {/* アコーディオンの中身 */}
+                    <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-out">
+                        <div className="overflow-hidden">
+                            <div className="flex flex-col gap-1 pt-1 pb-2 pl-4">
+                                
+                                {/* Text Mode Link (青く光らせる) */}
+                                <Link 
+                                    href="/create" 
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ml-4 border-l-2 ${
+                                        isActive('/create') 
+                                        ? 'border-blue-500 bg-blue-500/10 text-blue-400 font-bold' // アクティブ時
+                                        : 'border-white/10 text-gray-500 hover:text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/10' // ★ホバー時：青系に変更
+                                    }`}
+                                >
+                                    <Code2 size={16} className={isActive('/create') ? 'text-blue-500' : ''} />
+                                    <span className="text-sm">Text Mode</span>
+                                </Link>
+
+                                {/* Block Mode Link (緑に光らせる) */}
+                                <Link 
+                                    href="/create/block" 
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ml-4 border-l-2 ${
+                                        isActive('/create/block') 
+                                        ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-bold' // アクティブ時
+                                        : 'border-white/10 text-gray-500 hover:text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-500/10' // ★ホバー時：緑系に変更
+                                    }`}
+                                >
+                                    <Box size={16} className={isActive('/create/block') ? 'text-emerald-500' : ''} />
+                                    <span className="text-sm">Block Mode</span>
+                                </Link>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Profile */}
+                <Link 
+                    href="/profile" 
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                        isActive('/profile') ? 'bg-white/10 text-white font-bold' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                >
+                    <User size={20} />
+                    <span>Profile</span>
+                </Link>
+
             </nav>
 
-            <div className='p-4 mt-auto border-t border-white/10'>
-                {user ? (
-                    <div className='flex items-center gap-3 w-full p-3 rounded-xl hover:bg-[#1a1a1a] transition-colors text-left group cursor-default bg-[#1a1a1a]/50 border border-blue-500/20'>
-                        {user.photoURL ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={user.photoURL} alt="User" className='w-10 h-10 rounded-full border border-white/10' />
-                        ) : (
-                            <div className='w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 border border-white/10'></div>
-                        )}
-                        <div className='flex-1 min-w-0'>
-                            <p className='text-sm font-bold text-white truncate'>{user.displayName || 'User'}</p>
-                            <p className='text-xs text-green-400 truncate'>● Online</p>
-                        </div>
-                        <button onClick={() => logout()} className='p-2 hover:bg-white/10 rounded-full transition-colors' title="Logout">
-                            <LogOut className='w-5 h-5 text-gray-500 group-hover:text-red-400 transition-colors' />
-                        </button>
-                    </div>
-                ) : (
-                    <button onClick={handleLogin} className='flex items-center justify-center gap-3 w-full p-3 rounded-xl bg-blue-600 hover:bg-blue-500 transition-colors text-white font-bold shadow-lg active:scale-95'>
-                        <LogIn className='w-5 h-5' />
-                        <span>Googleと連携</span>
+            {/* 下部エリア */}
+            {user && (
+                <div className='p-4 border-t border-white/10 mt-auto'>
+                    <button 
+                        onClick={logout}
+                        className='flex items-center gap-3 px-4 py-3 rounded-xl w-full text-left text-gray-500 hover:bg-red-500/10 hover:text-red-500 transition-colors'
+                    >
+                        <LogOut size={20} />
+                        <span>Sign Out</span>
                     </button>
-                )}
-            </div>
+                </div>
+            )}
         </aside>
     );
-}
+};
