@@ -4,10 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { Save, Code2, Loader2, Monitor, ArrowLeft, AlignLeft } from 'lucide-react'; // AlignLeft追加
+import { Save, Code2, Loader2, Monitor, ArrowLeft, AlignLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-// --- エディタ用ライブラリ ---
 import Editor from 'react-simple-code-editor';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-markup';
@@ -18,13 +17,57 @@ export default function CreatePage() {
     const { user, markAsPosted } = useAuth();
     const router = useRouter();
     
-    const [code, setCode] = useState(`<!DOCTYPE html>...`); // 初期値は省略
-    const [srcDoc, setSrcDoc] = useState('');
-    const [caption, setCaption] = useState(''); // ★追加: Caption用ステート
+    // 初期値 (ここですでに完全なHTMLになっている)
+    const [code, setCode] = useState(`<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>test1</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Hello World!</h1>
+        <p>Let's Start Coding</p>
+    </div>
+</body>
+<style>
+    body { 
+        font-family: sans-serif;
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        height: 100vh; 
+        margin: 0;
+        background: #f0f0f0;
+    }
+    .container {
+        text-align: center;
+        padding: 2rem;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    h1 { color: #3b82f6; }
+</style>`);
+    
+    // srcDoc ではなく previewUrl に変更 (Blob URLを使うため)
+    const [previewUrl, setPreviewUrl] = useState('');
+    const [caption, setCaption] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
-    // ... (useEffect部分はそのまま) ...
-    // 初期値のセット部分は省略しますが、元のコードを維持してください
+    // ★修正ポイント：HTMLで包まず、書かれたコードをそのままBlobにする
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            // ここで余計なタグで包んでいたのを削除しました。
+            // code をそのまま Blob に変換します。
+            const blob = new Blob([code], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            setPreviewUrl(url);
+        }, 500); // 0.5秒後に反映（連打対策）
+
+        return () => clearTimeout(timeout);
+    }, [code]);
 
     const handleSave = async () => {
         if (!code.trim()) return;
@@ -36,7 +79,7 @@ export default function CreatePage() {
                 userAvatar: user?.photoURL || "https://api.dicebear.com/7.x/avataaars/svg?seed=Guest",
                 type: 'text',
                 code: code,
-                caption: caption, // ★追加: 保存データに含める
+                caption: caption,
                 likes: 0,
                 comments: 0,
                 createdAt: serverTimestamp(),
@@ -55,9 +98,8 @@ export default function CreatePage() {
     return (
         <div className='h-screen w-full bg-black text-white flex flex-col font-sans overflow-hidden relative'>
             
-            {/* ... (Header部分はそのまま) ... */}
+            {/* Header */}
             <header className='h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#0a0a0a] shrink-0 z-50 relative'>
-                {/* ... (Headerの中身は変更なし) ... */}
                 <div className='flex items-center gap-4 z-10'>
                     <a href='/' className='text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full'>
                         <ArrowLeft className='w-5 h-5' />
@@ -67,13 +109,14 @@ export default function CreatePage() {
                         <h2 className='font-bold text-lg tracking-tight'>Create New Snippet</h2>
                     </div>
                 </div>
-                 {/* ... (モード切替ボタンなどはそのまま) ... */}
-                 <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0'>
+
+                <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0'>
                     <div className="flex bg-[#161616] p-1 rounded-lg border border-white/5">
                         <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all bg-blue-600 text-white shadow-lg font-medium'><Code2 className='w-4 h-4' /><span>Text</span></button>
                         <a href='/create/block' className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium'><Monitor className='w-4 h-4' /><span>Block</span></a>
                     </div>
                 </div>
+                
                 <div className='ml-auto w-40 flex justify-end items-center gap-3 z-10'>
                     <div className='text-xs text-gray-500'>{user ? 'Autosaved' : 'Guest Mode'}</div>
                 </div>
@@ -81,10 +124,10 @@ export default function CreatePage() {
 
             <div className='flex-1 flex overflow-hidden'>
                 
-                {/* 左：コードエディタ (変更なし) */}
+                {/* 左：コードエディタ */}
                 <div className='w-1/2 flex flex-col border-r border-white/10 bg-[#1e1e1e] relative group overflow-hidden'>
-                   {/* ... (Editor部分はそのまま) ... */}
-                   <div className='absolute top-3 right-4 z-10 text-[10px] font-bold text-gray-500 tracking-widest pointer-events-none'>HTML & CSS</div>
+                    <div className='absolute top-3 right-4 z-10 text-[10px] font-bold text-gray-500 tracking-widest pointer-events-none'>HTML & CSS</div>
+                    
                     <div className="flex-1 overflow-auto custom-scrollbar font-mono text-sm">
                         <Editor
                             value={code}
@@ -104,8 +147,7 @@ export default function CreatePage() {
 
                 {/* 右：ライブプレビュー & 保存ボタンエリア */}
                 <div className='w-1/2 flex flex-col bg-[#050505]'>
-                    {/* ... (Preview Headerとiframe部分はそのまま) ... */}
-                     <div className='h-10 border-b border-white/5 flex items-center px-4 justify-between bg-[#161616]'>
+                    <div className='h-10 border-b border-white/5 flex items-center px-4 justify-between bg-[#161616]'>
                         <div className='flex items-center gap-2 text-[10px] font-bold text-green-500 uppercase tracking-widest'>
                             <span className="relative flex h-2 w-2">
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -117,15 +159,15 @@ export default function CreatePage() {
                     </div>
                     
                     <div className='flex-1 relative bg-[url("https://grainy-gradients.vercel.app/noise.svg")] opacity-100'>
+                        {/* ★修正ポイント: srcDoc ではなく src={previewUrl} を使う */}
                         <iframe
-                            srcDoc={srcDoc}
+                            src={previewUrl}
                             title="preview"
                             className='w-full h-full border-none bg-white'
                             sandbox="allow-scripts"
                         />
                     </div>
 
-                    {/* ★修正: 保存エリアにCaption入力を追加 */}
                     <div className='border-t border-white/10 bg-[#111] p-4 flex flex-col gap-3 shrink-0'>
                         <div className="relative">
                             <div className="absolute top-3 left-3 text-gray-500">
