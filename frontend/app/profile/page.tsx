@@ -73,7 +73,7 @@ export default function ProfilePage() {
                             <div className="relative -mt-16 mb-8 flex flex-col md:flex-row items-end md:items-center gap-6">
                                 {/* アバター画像 */}
                                 <div className="relative group">
-                                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full opacity-75 blur group-hover:opacity-100 transition duration-200"></div>
+                                    <div className="absolute -inset-0.5 bg-gradient-to-r rounded-full opacity-75 blur group-hover:opacity-100 transition duration-200"></div>
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img 
                                         src={user?.photoURL || "https://api.dicebear.com/7.x/avataaars/svg?seed=Guest"} 
