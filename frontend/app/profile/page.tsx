@@ -104,7 +104,7 @@ export default function ProfilePage() {
                                     <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                                         <div className="flex items-center gap-1.5">
                                             <MapPin size={14} />
-                                            <span>Tokyo, Japan</span>
+                                            <span>Nagoya, Japan</span>
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <Calendar size={14} />
