@@ -99,8 +99,7 @@ export default function ProfilePage() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                                 <div className="md:col-span-2 space-y-4">
                                     <p className="text-gray-300 leading-relaxed">
-                                        Frontend Developer & UI Designer. Creating awesome snippets with ScriptShot.
-                                        Love React, Next.js, and Tailwind CSS. 🚀
+                                        Hello!
                                     </p>
                                     <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                                         <div className="flex items-center gap-1.5">
