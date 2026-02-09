@@ -4,7 +4,7 @@ import { AuthProvider } from "../context/AuthContext";
 
 export const metadata = {
   title: "ScriptShot",
-  description: "Share your code snippets visually.",
+  description: "Share your code Posts visually.",
 };
 
 export default function RootLayout({

@@ -66,7 +66,7 @@ export default function SearchPage() {
                         {/* 検索バーエリア */}
                         <div className="max-w-3xl mx-auto mb-12 mt-4">
                             <h1 className="text-4xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
-                                Explore Snippets
+                                Explore Posts
                             </h1>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-blue-500 transition-colors">
