@@ -137,7 +137,7 @@ export default function ProfilePage() {
                             {/* 投稿一覧 */}
                             <div className="mb-6 flex items-center gap-3">
                                 <div className="w-1 h-6 bg-emerald-500 rounded-full"></div>
-                                <h2 className="text-xl font-bold">Your Snippets</h2>
+                                <h2 className="text-xl font-bold">Your Posts</h2>
                             </div>
 
                             {loading ? (
@@ -154,8 +154,8 @@ export default function ProfilePage() {
                                 </div>
                             ) : (
                                 <div className="text-center py-20 bg-white/5 rounded-2xl border border-white/5 border-dashed">
-                                    <p className="text-gray-400 mb-4">No snippets created yet.</p>
-                                    <a href="/create" className="text-blue-400 hover:text-blue-300 font-bold">Create your first snippet &rarr;</a>
+                                    <p className="text-gray-400 mb-4">You haven't posted anything yet.</p>
+                                    <a href="/create" className="text-blue-400 hover:text-blue-300 font-bold">Create your first Post &rarr;</a>
                                 </div>
                             )}
 
