@@ -28,9 +28,9 @@ interface Block {
 }
 
 const INITIAL_BLOCKS: Block[] = [
-    { id: '1', type: 'heading', content: 'ここに見出しを入力' },
-    { id: '2', type: 'text', content: 'ここにテキストを入力' },
-    { id: '3', type: 'button', content: 'ボタン' },
+    { id: '1', type: 'heading', content: 'ようこそ！これは見出しです' },
+    { id: '2', type: 'text', content: 'このブロックをクリックして文字を書き換えてみてください。左の「ゴミ箱」アイコンで削除もできます。' },
+    { id: '3', type: 'button', content: 'ボタンも作れます' },
 ];
 
 const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: (id: string) => void, onChange: (id: string, val: string) => void }) => {

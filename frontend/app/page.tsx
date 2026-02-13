@@ -8,7 +8,7 @@ import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { 
     Code2, Box, ArrowRight, Sparkles, Layers, Share2, Zap, 
-    Type, Image as ImageIcon, MousePointerClick, Layout, Keyboard 
+    MousePointerClick 
 } from 'lucide-react';
 
 export default function Home() {
@@ -30,13 +30,17 @@ export default function Home() {
 
             <main className='flex-1 md:ml-64'>
                 
+                {/* ヒーローセクション */}
                 {(!user || !hasPosted) && (
-                    <div className="relative w-full border-b border-white/10 overflow-hidden">
+                    <div className="relative w-full border-b border-white/10 overflow-hidden min-h-[600px] flex items-center justify-center bg-[#0a0a0a]">
+                        
+                        {/* 背景 */}
                         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
                         <div className="absolute left-0 top-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
                         <div className="absolute right-0 bottom-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[100px] translate-x-1/2 translate-y-1/2"></div>
 
-                        <div className="relative max-w-5xl mx-auto px-6 py-20 md:py-32 flex flex-col items-center text-center">
+                        {/* コンテンツ */}
+                        <div className="relative z-10 w-full max-w-5xl mx-auto px-6 py-20 md:py-32 flex flex-col items-center text-center">
                             
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-blue-400 mb-6 animate-pulse">
                                 <Sparkles size={12} />
@@ -47,71 +51,72 @@ export default function Home() {
                                 コードを書いて、<br className="md:hidden" />世界に共有しよう。
                             </h1>
                             
-                            <p className="text-gray-400 text-lg md:text-xl max-w-2xl mb-10 leading-relaxed">
-                                ScriptShotは、あなたのコードやアイデアを美しく共有するプラットフォームです。<br />  
+                            <p className="text-gray-400 text-lg md:text-xl max-w-2xl mb-12 leading-relaxed">
+                                ScriptShotは、あなたのコードやアイデアを美しく共有するプラットフォームです。<br />
                                 <a href='/create'><span className="text-white font-bold"> プログラミング</span></a> も 
-                                <a href='/create/block'><span className="text-white font-bold"> ノーコード制作</span></a> も、これ一つで。
+                                <a href='/create/block'><span className="text-white font-bold"> ノーコード制作</span></a>も、これ一つで。
                             </p>
 
-                            <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl justify-center mt-8">
+                            {/* モード選択エリア */}
+                            <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl justify-center">
                                 {!user ? (
+                                    // 未ログイン時：Googleボタン
                                     <button 
                                         onClick={login}
-                                        className="group relative px-8 py-6 bg-white text-black font-bold rounded-2xl text-xl hover:bg-gray-200 transition-all flex items-center justify-center gap-4 shadow-[0_0_30px_rgba(255,255,255,0.4)] w-full md:w-auto"
+                                        className="group relative px-10 py-5 bg-white text-black font-bold rounded-2xl text-xl hover:bg-gray-200 transition-all flex items-center justify-center gap-4 shadow-[0_0_30px_rgba(255,255,255,0.4)] w-full md:w-auto"
                                     >
                                         <img src="https://www.google.com/favicon.ico" alt="G" className="w-6 h-6" />
                                         <span>Googleで始める</span>
                                         <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                                     </button>
                                 ) : (
+                                    // ログイン済：2つの選択カード
                                     <>
-                                        {/* テキストモード */}
-                                        <a href="/create" className="group flex-1 flex flex-col items-center p-6 rounded-2xl bg-[#111] border border-white/10 hover:border-blue-500/50 hover:bg-blue-900/10 transition-all text-left relative overflow-hidden">
+
+                                        {/* Text Mode（経験者向け） */}
+                                        <a href="/create" className="group flex-1 flex flex-col items-center p-6 rounded-2xl bg-[#111] border border-white/10 hover:border-blue-500/50 hover:bg-blue-900/10 transition-all text-left relative overflow-hidden hover:-translate-y-1">
                                             <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                            <div className="relative z-10 flex flex-col items-center text-center gap-3">
-                                                <div className="p-3 rounded-full bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                                                    <Code2 size={28} />
+                                            <div className="relative z-10 flex flex-col items-center text-center gap-4 py-2">
+                                                <div className="p-4 rounded-full bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                                    <Code2 size={32} />
                                                 </div>
                                                 <div>
-                                                    <div className="font-bold text-lg text-white mb-1">コードを書く</div>
-                                                    <div className="text-xs text-gray-500">HTML/CSSを直接編集</div>
+                                                    <div className="font-bold text-xl text-white mb-1">コードを書く</div>
+                                                    <div className="text-sm text-gray-500">HTML/CSSを直接編集</div>
                                                 </div>
-                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded border border-gray-700 text-gray-500 mt-2">
-                                                    経験者向け
-                                                </span>
                                             </div>
                                         </a>
 
-                                        {/* ブロックモード */}
-                                        <a href="/create/block" className="group flex-1 flex flex-col items-center p-6 rounded-2xl bg-[#111] border-2 border-emerald-500/30 hover:border-emerald-500 hover:bg-emerald-900/10 transition-all text-left relative overflow-hidden shadow-[0_0_20px_rgba(16,185,129,0.1)] hover:shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+                                        {/* Block Mode (初心者向け・強調！) */}
+                                        <a href="/create/block" className="group flex-1 flex flex-col items-center p-6 rounded-2xl bg-[#111] border-2 border-emerald-500/40 hover:border-emerald-500 hover:bg-emerald-900/10 transition-all text-left relative overflow-hidden shadow-[0_0_20px_rgba(16,185,129,0.1)] hover:shadow-[0_0_40px_rgba(16,185,129,0.2)] hover:-translate-y-1">
                                             <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                             
                                             {/* 初心者マークバッジ */}
-                                            <div className="absolute top-3 right-3 bg-emerald-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                <span>🔰 おすすめ</span>
+                                            <div className="absolute top-3 right-3 bg-emerald-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
+                                                <span>🔰 初心者おすすめ</span>
                                             </div>
 
-                                            <div className="relative z-10 flex flex-col items-center text-center gap-3">
-                                                <div className="p-3 rounded-full bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                                                    <MousePointerClick size={28} />
+                                            <div className="relative z-10 flex flex-col items-center text-center gap-4 py-2">
+                                                <div className="p-4 rounded-full bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                                                    <MousePointerClick size={32} />
                                                 </div>
                                                 <div>
-                                                    <div className="font-bold text-lg text-white mb-1">ブロックで作る</div>
-                                                    <div className="text-xs text-emerald-100/70">簡単な操作でWEBサイトが作れる！</div>
+                                                    <div className="font-bold text-xl text-white mb-1">ブロックで作る</div>
+                                                    <div className="text-sm text-emerald-100/70">直感的なドラッグ＆ドロップ</div>
                                                 </div>
-                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 mt-2 border border-emerald-500/30">
-                                                    No-Code
-                                                </span>
                                             </div>
                                         </a>
                                     </>
                                 )}
                             </div>
+                            {/* ▲▲▲ 修正ここまで ▲▲▲ */}
+
                         </div>
                     </div>
                 )}
+                {/* --- ヒーローセクション終わり --- */}
 
-                {/* 使い方ガイド */}
+                {/* --- 使い方ガイド --- */}
                 {(!user || !hasPosted) && (
                     <div className="border-b border-white/5 bg-[#0a0a0a]">
                         <div className="max-w-6xl mx-auto px-6 py-16">
@@ -124,7 +129,7 @@ export default function Home() {
                                     </div>
                                     <h3 className="text-xl font-bold mb-2">1. Choose Mode</h3>
                                     <p className="text-gray-400 text-sm">
-                                        ガッツリ書きたい人は「テキストモード」、<br />
+                                        ガッツリ書きたい人は「テキストモード」、
                                         手軽に作りたい人は直感的な「ブロックモード」を選択。
                                     </p>
                                 </div>
@@ -155,11 +160,11 @@ export default function Home() {
                     </div>
                 )}
 
-                {/* タイムライン (常に表示) */}
+                {/* --- 📝 タイムライン (常に表示) --- */}
                 <div className="max-w-5xl mx-auto px-6 py-12">
                     <div className="flex items-center gap-3 mb-8">
                         <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-                        <h2 className="text-xl font-bold text-white">Latest Posts</h2>
+                        <h2 className="text-xl font-bold text-white">Latest Snippets</h2>
                     </div>
 
                     <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>

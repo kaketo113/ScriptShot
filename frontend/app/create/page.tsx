@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { Save, Code2, Loader2, Monitor, ArrowLeft, AlignLeft } from 'lucide-react';
+import { Save, Code2, Loader2, Monitor, ArrowLeft, AlignLeft, HelpCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import Editor from 'react-simple-code-editor';
@@ -111,6 +111,10 @@ export default function CreatePage() {
                         <a href='/create/block' className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium'><Monitor className='w-4 h-4' /><span>Block</span></a>
                     </div>
                 </div>
+                <div className="hidden md:flex items-center gap-2 bg-[#161616] px-3 py-1.5 rounded-full border border-white/5 text-xs text-gray-400">
+                    <HelpCircle size={14} className="text-blue-500" />
+                    <span>左側でコードを編集すると、右側にリアルタイムで反映されます</span>
+                </div>
                 
                 <div className='ml-auto w-40 flex justify-end items-center gap-3 z-10'>
                     <div className='text-xs text-gray-500'>{user ? 'Autosaved' : 'Guest Mode'}</div>
@@ -153,15 +157,13 @@ export default function CreatePage() {
                         <div className='text-[10px] text-gray-600 font-mono'>1920 x 1080</div>
                     </div>
                     
-                    <div className='flex-1 relative bg-[url("https://grainy-gradients.vercel.app/noise.svg")] opacity-100'>
-                        {previewUrl && (
-                            <iframe
-                                src={previewUrl}
-                                title="preview"
-                                className="w-full h-full border-none bg-white"
-                            />
-                        )}
-                    </div>
+                    {previewUrl && (
+                        <iframe
+                            src={previewUrl}
+                            title="preview"
+                            className="w-full h-full border-none bg-white"
+                        />
+                    )}
 
                     <div className='border-t border-white/10 bg-[#111] p-4 flex flex-col gap-3 shrink-0'>
                         <div className="relative">
