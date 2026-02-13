@@ -252,10 +252,10 @@ export default function CreateBlockPage() {
         let initialContent = '';
         if (type === 'card') {
             initialContent = JSON.stringify({ 
-                title: 'New Card', desc: 'Description', btn: 'Button', img: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80' 
+                title: '新しいカード', desc: '説明文', btn: 'ボタン', img: 'https://img.freepik.com/free-photo/fuji-mountain-kawaguchiko-lake-morning-autumn-seasons-fuji-mountain-yamanachi-japan_335224-102.jpg?semt=ais_wordcount_boost&w=740&q=80' 
             });
-        } else if (type === 'button') initialContent = 'Click Me';
-        else if (type === 'input') initialContent = 'Enter text...';
+        } else if (type === 'button') initialContent = '押してみて！';
+        else if (type === 'input') initialContent = '文章を入力しよう！';
 
         const newBlock: Block = {
             id: Math.random().toString(36).substr(2, 9),
@@ -324,7 +324,7 @@ export default function CreateBlockPage() {
                     </a>
                     <div className='flex items-center gap-2'>
                         <LayoutTemplate size={20} className="text-emerald-500" />
-                        <span className='font-bold text-lg tracking-tight'>Block Builder</span>
+                        <span className='font-bold text-lg tracking-tight'>Create New Post</span>
                     </div>
                 </div>
 
@@ -333,6 +333,10 @@ export default function CreateBlockPage() {
                         <a href='/create' className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium'><Code2 className='w-4 h-4' /><span>Text</span></a>
                         <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all bg-emerald-600 text-white shadow-lg font-medium'><Monitor className='w-4 h-4' /><span>Block</span></button>
                     </div>
+                </div>
+                <div className="hidden md:flex items-center gap-2 bg-[#161616] px-3 py-1.5 rounded-full border border-white/5 text-xs text-gray-400">
+                    <HelpCircle size={14} className="text-blue-500" />
+                    <span>左側でブロックを置いていくと、右側にリアルタイムで反映されます</span>
                 </div>
                 
                 <div className='ml-auto w-40 flex justify-end items-center gap-3 z-10'>
