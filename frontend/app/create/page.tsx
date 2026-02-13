@@ -101,10 +101,12 @@ export default function CreatePage() {
                         <ArrowLeft className='w-5 h-5' />
                     </a>
                     <div className='flex items-center gap-2'>
+                        <Code2 size={20} className='text-blue-500'/>
                         <h2 className='font-bold text-lg tracking-tight'>Create New Post</h2>
                     </div>
                 </div>
 
+                {/* モード切替ボタン */}
                 <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0'>
                     <div className="flex bg-[#161616] p-1 rounded-lg border border-white/5">
                         <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all bg-blue-600 text-white shadow-lg font-medium'><Code2 className='w-4 h-4' /><span>Text</span></button>
@@ -123,7 +125,7 @@ export default function CreatePage() {
 
             <div className='flex-1 flex overflow-hidden'>
                 
-                {/* 左：コードエディタ */}
+                {/* 左側 */}
                 <div className='w-1/2 flex flex-col border-r border-white/10 bg-[#1e1e1e] relative group overflow-hidden'>
                     <div className='absolute top-3 right-4 z-10 text-[10px] font-bold text-gray-500 tracking-widest pointer-events-none'>HTML & CSS</div>
                     
@@ -144,7 +146,7 @@ export default function CreatePage() {
                     </div>
                 </div>
 
-                {/* 右：ライブプレビュー & 保存ボタンエリア */}
+                {/* 右側 */}
                 <div className='w-1/2 flex flex-col bg-[#050505]'>
                     <div className='h-10 border-b border-white/5 flex items-center px-4 justify-between bg-[#161616]'>
                         <div className='flex items-center gap-2 text-[10px] font-bold text-green-500 uppercase tracking-widest'>
