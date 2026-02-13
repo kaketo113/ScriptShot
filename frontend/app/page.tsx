@@ -48,8 +48,8 @@ export default function Home() {
                             
                             <p className="text-gray-400 text-lg md:text-xl max-w-2xl mb-10 leading-relaxed">
                                 ScriptShotは、あなたのコードやアイデアを美しく共有するプラットフォームです。<br />  
-                                <span className="text-white font-bold"> プログラミング</span> も 
-                                <span className="text-white font-bold"> ノーコード制作</span> も、これ一つで。
+                                <a href='/create'><span className="text-white font-bold"> プログラミング</span></a> も 
+                                <a href='/create/block'><span className="text-white font-bold"> ノーコード制作</span></a> も、これ一つで。
                             </p>
 
                             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
