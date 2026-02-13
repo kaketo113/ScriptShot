@@ -7,7 +7,8 @@ import { db } from '../lib/firebase';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { 
-    Code2, Box, ArrowRight, Sparkles, Layers, Share2, Zap 
+    Code2, Box, ArrowRight, Sparkles, Layers, Share2, Zap, 
+    Type, Image as ImageIcon, MousePointerClick, Layout, Keyboard 
 } from 'lucide-react';
 
 export default function Home() {
@@ -52,26 +53,56 @@ export default function Home() {
                                 <a href='/create/block'><span className="text-white font-bold"> ノーコード制作</span></a> も、これ一つで。
                             </p>
 
-                            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                            <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl justify-center mt-8">
                                 {!user ? (
                                     <button 
                                         onClick={login}
-                                        className="group relative px-8 py-4 bg-white text-black font-bold rounded-xl text-lg hover:bg-gray-200 transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                                        className="group relative px-8 py-6 bg-white text-black font-bold rounded-2xl text-xl hover:bg-gray-200 transition-all flex items-center justify-center gap-4 shadow-[0_0_30px_rgba(255,255,255,0.4)] w-full md:w-auto"
                                     >
-                                        <img src="https://www.google.com/favicon.ico" alt="G" className="w-5 h-5" />
-                                        Googleで始める
-                                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                        <img src="https://www.google.com/favicon.ico" alt="G" className="w-6 h-6" />
+                                        <span>Googleで始める</span>
+                                        <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                                     </button>
                                 ) : (
                                     <>
-                                        <a href="/create" className="group px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-lg transition-all flex items-center justify-center gap-3 shadow-lg shadow-blue-900/20">
-                                            <Code2 className="w-5 h-5" />
-                                            コードを書く
+                                        {/* テキストモード */}
+                                        <a href="/create" className="group flex-1 flex flex-col items-center p-6 rounded-2xl bg-[#111] border border-white/10 hover:border-blue-500/50 hover:bg-blue-900/10 transition-all text-left relative overflow-hidden">
+                                            <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                            <div className="relative z-10 flex flex-col items-center text-center gap-3">
+                                                <div className="p-3 rounded-full bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                                    <Code2 size={28} />
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-lg text-white mb-1">コードを書く</div>
+                                                    <div className="text-xs text-gray-500">HTML/CSSを直接編集</div>
+                                                </div>
+                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded border border-gray-700 text-gray-500 mt-2">
+                                                    経験者向け
+                                                </span>
+                                            </div>
                                         </a>
-                                        <a href="/create/block" className="group px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-lg transition-all flex items-center justify-center gap-3 shadow-lg shadow-emerald-900/20">
-                                            <Box className="w-5 h-5" />
-                                            ブロックで作る
-                                            <span className="bg-emerald-800 text-emerald-100 text-[10px] px-2 py-0.5 rounded-full ml-1">No-Code</span>
+
+                                        {/* ブロックモード */}
+                                        <a href="/create/block" className="group flex-1 flex flex-col items-center p-6 rounded-2xl bg-[#111] border-2 border-emerald-500/30 hover:border-emerald-500 hover:bg-emerald-900/10 transition-all text-left relative overflow-hidden shadow-[0_0_20px_rgba(16,185,129,0.1)] hover:shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+                                            <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                            
+                                            {/* 初心者マークバッジ */}
+                                            <div className="absolute top-3 right-3 bg-emerald-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                <span>🔰 おすすめ</span>
+                                            </div>
+
+                                            <div className="relative z-10 flex flex-col items-center text-center gap-3">
+                                                <div className="p-3 rounded-full bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                                                    <MousePointerClick size={28} />
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-lg text-white mb-1">ブロックで作る</div>
+                                                    <div className="text-xs text-emerald-100/70">簡単な操作でWEBサイトが作れる！</div>
+                                                </div>
+                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 mt-2 border border-emerald-500/30">
+                                                    No-Code
+                                                </span>
+                                            </div>
                                         </a>
                                     </>
                                 )}
