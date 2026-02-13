@@ -252,7 +252,7 @@ export default function CreateBlockPage() {
         let initialContent = '';
         if (type === 'card') {
             initialContent = JSON.stringify({ 
-                title: '新しいカード', desc: '説明文', btn: 'ボタン', img: 'https://img.freepik.com/free-photo/fuji-mountain-kawaguchiko-lake-morning-autumn-seasons-fuji-mountain-yamanachi-japan_335224-102.jpg?semt=ais_wordcount_boost&w=740&q=80' 
+                title: '新しいカード', desc: '説明文', btn: 'ボタン', img: 'https://baseec-img-mng.akamaized.net/images/item/origin/ccab8aa4eadceab2a05bbbd8f6b4a757.jpg?imformat=generic' 
             });
         } else if (type === 'button') initialContent = '押してみて！';
         else if (type === 'input') initialContent = '文章を入力しよう！';
