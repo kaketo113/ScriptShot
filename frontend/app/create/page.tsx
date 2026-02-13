@@ -154,12 +154,13 @@ export default function CreatePage() {
                     </div>
                     
                     <div className='flex-1 relative bg-[url("https://grainy-gradients.vercel.app/noise.svg")] opacity-100'>
-                        <iframe
-                            src={previewUrl}
-                            title="preview"
-                            className='w-full h-full border-none bg-white'
-                            sandbox="allow-scripts"
-                        />
+                        {previewUrl && (
+                            <iframe
+                                src={previewUrl}
+                                title="preview"
+                                className="w-full h-full border-none bg-white"
+                            />
+                        )}
                     </div>
 
                     <div className='border-t border-white/10 bg-[#111] p-4 flex flex-col gap-3 shrink-0'>
