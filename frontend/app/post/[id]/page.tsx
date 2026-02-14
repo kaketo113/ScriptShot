@@ -5,7 +5,8 @@ import {
     Heart, MessageCircle, Code2, Share2, ArrowLeft, Layers, 
     Layout, Type, Image as ImageIcon, MousePointerClick, Box, Loader2,
     Play, Copy, Check, AlignLeft,
-    Minus, FileInput, CreditCard, Youtube
+    Minus, FileInput, CreditCard, Youtube,
+    ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Sidebar } from '../../../components/Sidebar';
 import { db } from '../../../lib/firebase';
@@ -13,6 +14,7 @@ import { collection, getDocs, query, orderBy, Timestamp } from 'firebase/firesto
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 // --- 型定義 ---
 interface PostData {
@@ -37,11 +39,10 @@ const useTypewriter = (text: string | undefined, isActive: boolean) => {
     const [isTyping, setIsTyping] = useState(false);
 
     useEffect(() => {
-        if (!text || !isActive) {
-            if (!isActive) {
-                setDisplayedText(text || '');
-                setIsTyping(false);
-            }
+        if (!text) return;
+        if (!isActive) {
+            setDisplayedText(text);
+            setIsTyping(false);
             return;
         }
         
@@ -124,7 +125,7 @@ const BlockRenderer = ({ block }: { block: any }) => {
         case 'heading': return <h2 className="text-2xl font-bold mb-4 text-gray-900 pb-2 border-b-2 border-blue-500 inline-block">{block.content}</h2>;
         case 'text': return <p className="text-gray-700 mb-4 leading-relaxed whitespace-pre-wrap">{block.content}</p>;
         case 'button': return <button className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-bold shadow-md hover:bg-blue-700 transition-all mb-4">{block.content || 'ボタン'}</button>;
-        case 'image': return block.content ? (/* eslint-disable-next-line @next/next/no-img-element */<img src={block.content} alt="プレビュー" className="w-full mb-4 rounded-xl shadow-sm h-auto object-cover" />) : null;
+        case 'image': return block.content ? (/* eslint-disable-next-line @next/next/no-img-element */<img src={block.content} alt="プレビュー" className="w-full mb-4 rounded-xl shadow-sm h-auto object-cover" crossOrigin="anonymous" />) : null;
         case 'divider': return <hr className="my-6 border-t-2 border-dashed border-gray-300" />;
         case 'input': return <input type="text" placeholder={block.content} disabled className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-500 mb-4" />;
         case 'youtube': { const vId = getYouTubeId(block.content); return vId ? (<div className="w-full aspect-video bg-black rounded-xl overflow-hidden mb-4 shadow-lg"><iframe src={`https://www.youtube.com/embed/${vId}`} className="w-full h-full" allowFullScreen title="動画" /></div>) : null; }
@@ -132,7 +133,7 @@ const BlockRenderer = ({ block }: { block: any }) => {
             let d = { title: '', desc: '', btn: '', img: '' }; try { d = JSON.parse(block.content); } catch {}
             return (
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 border border-gray-200">
-                    {d.img && (/* eslint-disable-next-line @next/next/no-img-element */<img src={d.img} alt={d.title} className="w-full h-40 object-cover" />)}
+                    {d.img && (/* eslint-disable-next-line @next/next/no-img-element */<img src={d.img} alt={d.title} className="w-full h-40 object-cover" crossOrigin="anonymous" />)}
                     <div className="p-5"><h3 className="font-bold text-lg mb-2 text-gray-900">{d.title}</h3><p className="text-gray-600 text-sm mb-4 leading-relaxed">{d.desc}</p>{d.btn && (<button className="w-full py-2 bg-gray-900 text-white rounded-lg text-sm font-bold hover:bg-black transition-colors">{d.btn}</button>)}</div>
                 </div>
             );
@@ -141,13 +142,14 @@ const BlockRenderer = ({ block }: { block: any }) => {
     }
 };
 
-const PostSlide = ({ post, isActive }: { post: PostData, isActive: boolean }) => {
+// --- 個別投稿表示コンポーネント ---
+const PostView = ({ post }: { post: PostData }) => {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isLiked, setIsLiked] = useState(false);
     const [copied, setCopied] = useState(false);
     
-    // タイピングエフェクト（テキストモード用）
-    const { displayedText, isTyping } = useTypewriter(post?.code, isActive && post.type === 'text');
+    // 画面表示時は常にアニメーションを有効にする
+    const { displayedText, isTyping } = useTypewriter(post?.code, post.type === 'text');
     const codeEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -160,10 +162,10 @@ const PostSlide = ({ post, isActive }: { post: PostData, isActive: boolean }) =>
     }, [post]);
 
     useEffect(() => {
-        if (isTyping && isActive && codeEndRef.current) {
+        if (isTyping && codeEndRef.current) {
             codeEndRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest' });
         }
-    }, [displayedText, isTyping, isActive]);
+    }, [displayedText, isTyping]);
 
     const highlightedCode = useMemo(() => {
         if (!post?.code) return '';
@@ -181,9 +183,9 @@ const PostSlide = ({ post, isActive }: { post: PostData, isActive: boolean }) =>
     const date = post.createdAt?.toDate ? post.createdAt.toDate().toLocaleDateString() : 'たった今';
 
     return (
-        <div className="h-full w-full flex flex-col lg:flex-row pt-16 snap-start overflow-hidden relative">
+        <div className="h-full w-full flex flex-col lg:flex-row relative">
             
-            {/* 左パネル: type によって出し分け */}
+            {/* 左パネル */}
             <div className="w-full lg:w-1/2 bg-white flex flex-col border-r border-gray-200 relative z-10">
                 <div className="h-10 bg-gray-50 flex items-center justify-between px-4 border-b border-gray-200 shrink-0">
                     <div className="flex items-center gap-2 text-xs font-mono text-gray-500">
@@ -236,6 +238,7 @@ const PostSlide = ({ post, isActive }: { post: PostData, isActive: boolean }) =>
                         <span className="tracking-wider font-bold">プレビュー</span>
                     </div>
                     <div className="flex items-center gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={post.userAvatar} alt={post.userName} className="w-6 h-6 rounded-full border border-gray-200" onError={(e) => { (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest'; }} />
                         <span className="text-xs font-bold text-gray-800">{post.userName}</span>
                         <span className="text-[10px] text-gray-400 font-mono">{date}</span>
@@ -285,19 +288,17 @@ const PostSlide = ({ post, isActive }: { post: PostData, isActive: boolean }) =>
     );
 };
 
-// --- ★ここが最重要：Next.jsのページとして正常に動作させるために必要です ---
+// --- メインページコンポーネント ---
 export default function PostDetailPage({ params }: { params: Promise<{ id: string }>; }) {
     const { id: initialId } = React.use(params);
     const [posts, setPosts] = useState<PostData[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activePostId, setActivePostId] = useState(initialId);
-    
-    const containerRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
 
-    // データ取得
     useEffect(() => {
         const fetchPosts = async () => {
             try {
+                // 最新順に全件取得
                 const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
                 const snapshot = await getDocs(q);
                 const fetchedPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PostData));
@@ -311,39 +312,15 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         fetchPosts();
     }, []);
 
-    // 初期スクロール位置
-    useEffect(() => {
-        if (!loading && posts.length > 0 && containerRef.current) {
-            const targetElement = document.getElementById(`post-${initialId}`);
-            if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'auto' });
-            }
-        }
-    }, [loading, posts, initialId]);
-
-    // スクロール検知 & URL更新
-    useEffect(() => {
-        const container = containerRef.current;
-        if (!container || loading) return;
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const postId = entry.target.id.replace('post-', '');
-                    setActivePostId(postId);
-                    window.history.replaceState(null, '', `/post/${postId}`);
-                }
-            });
-        }, {
-            root: container,
-            threshold: 0.6
-        });
-
-        const sections = document.querySelectorAll('.post-section');
-        sections.forEach(section => observer.observe(section));
-
-        return () => observer.disconnect();
-    }, [loading, posts]);
+    // 現在の投稿データと前後の投稿IDを特定
+    const currentIndex = posts.findIndex(p => p.id === initialId);
+    const currentPost = posts[currentIndex];
+    
+    // リストは新しい順(desc)なので、indexが小さい方が新しい投稿、大きい方が古い投稿
+    // 「前の投稿」= より新しい投稿 (Index - 1)
+    // 「次の投稿」= より古い投稿 (Index + 1)
+    const prevPostId = currentIndex > 0 ? posts[currentIndex - 1].id : null;
+    const nextPostId = currentIndex < posts.length - 1 ? posts[currentIndex + 1].id : null;
 
     if (loading) {
         return (
@@ -353,11 +330,19 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         );
     }
 
+    if (!currentPost) {
+        return (
+            <div className="h-screen bg-[#F9FAFB] flex items-center justify-center text-gray-500">
+                <p>投稿が見つかりませんでした。</p>
+            </div>
+        );
+    }
+
     return (
         <div className="flex h-screen bg-[#F9FAFB] text-gray-900 font-sans overflow-hidden">
             <Sidebar />
 
-            <main className="flex-1 md:ml-64 relative h-full">
+            <main className="flex-1 md:ml-64 relative h-full flex flex-col">
                 <header className="absolute top-0 left-0 right-0 h-16 px-6 flex items-center justify-between z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 pointer-events-none">
                     <a href="/" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors pointer-events-auto p-2 rounded-full hover:bg-gray-100">
                         <ArrowLeft className="w-5 h-5" />
@@ -365,19 +350,30 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                     </a>
                 </header>
 
-                <div 
-                    ref={containerRef}
-                    className="h-full w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth no-scrollbar"
-                >
-                    {posts.map((post) => (
-                        <section 
-                            key={post.id} 
-                            id={`post-${post.id}`} 
-                            className="post-section h-full w-full snap-start relative"
+                <div className="flex-1 relative pt-16 h-full overflow-hidden">
+                    <PostView post={currentPost} />
+
+                    {/* ナビゲーションボタン (前の投稿へ = 新しい投稿へ) */}
+                    {prevPostId && (
+                        <Link 
+                            href={`/post/${prevPostId}`}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-white border border-gray-200 rounded-full shadow-lg text-gray-500 hover:text-blue-600 hover:border-blue-300 transition-all hover:scale-110"
+                            title="前の投稿"
                         >
-                            <PostSlide post={post} isActive={post.id === activePostId} />
-                        </section>
-                    ))}
+                            <ChevronLeft size={24} />
+                        </Link>
+                    )}
+
+                    {/* ナビゲーションボタン (次の投稿へ = 古い投稿へ) */}
+                    {nextPostId && (
+                        <Link 
+                            href={`/post/${nextPostId}`}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-white border border-gray-200 rounded-full shadow-lg text-gray-500 hover:text-blue-600 hover:border-blue-300 transition-all hover:scale-110"
+                            title="次の投稿"
+                        >
+                            <ChevronRight size={24} />
+                        </Link>
+                    )}
                 </div>
             </main>
         </div>
