@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '../../components/Sidebar';
-import { AuroraBackground } from '../../components/AuroraBackground';
 import { PostCard } from '../../components/PostCard';
 import { Search as SearchIcon, Loader2 } from 'lucide-react';
 import { db } from '../../lib/firebase';
@@ -53,59 +52,60 @@ export default function SearchPage() {
     }, [searchTerm, posts]);
 
     return (
-        <div className='flex h-screen bg-black text-white font-sans overflow-hidden'>
+        // ★修正: 白背景のテーマに変更
+        <div className='flex h-screen bg-[#F9FAFB] text-gray-900 font-sans overflow-hidden'>
             <Sidebar />
 
             <main className='flex-1 md:ml-64 h-full relative'>
 
-                <AuroraBackground className="w-full h-full">
+                {/* 背景装飾 (薄いグラデーション) */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-emerald-50 opacity-80 pointer-events-none"></div>
+                
+                {/* コンテンツエリア */}
+                <div className="relative z-10 w-full h-full p-8 md:p-12 overflow-y-auto custom-scrollbar">
                     
-                    {/* コンテンツエリア */}
-                    <div className="relative z-10 w-full h-full p-8 md:p-12 overflow-y-auto custom-scrollbar">
-                        
-                        {/* 検索バーエリア */}
-                        <div className="max-w-3xl mx-auto mb-12 mt-4">
-                            <h1 className="text-4xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
-                                Explore Posts
-                            </h1>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-blue-500 transition-colors">
-                                    <SearchIcon size={20} />
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="Search code, users, or keywords..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full bg-white/10 border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-black/50 backdrop-blur-md transition-all shadow-xl"
-                                />
+                    {/* 検索バーエリア */}
+                    <div className="max-w-3xl mx-auto mb-12 mt-4">
+                        <h1 className="text-4xl font-bold text-center mb-8 text-gray-900">
+                            投稿を探す
+                        </h1>
+                        <div className="relative group">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-600 transition-colors">
+                                <SearchIcon size={20} />
                             </div>
-                        </div>
-
-                        {/* 結果表示エリア */}
-                        <div className="max-w-6xl mx-auto pb-20">
-                            {loading ? (
-                                <div className="flex justify-center py-20 text-blue-500">
-                                    <Loader2 className="animate-spin w-8 h-8" />
-                                </div>
-                            ) : filteredPosts.length > 0 ? (
-                                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-                                    {filteredPosts.map(post => (
-                                        <div key={post.id} className="backdrop-blur-sm">
-                                            <PostCard post={post} />
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-20 text-gray-400">
-                                    <p className="text-xl">No results found for "{searchTerm}"</p>
-                                    <p className="text-sm mt-2 opacity-60">Try searching for something else.</p>
-                                </div>
-                            )}
+                            <input
+                                type="text"
+                                placeholder="コード、ユーザー、キーワードで検索..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full bg-white border border-gray-200 rounded-2xl py-4 pl-12 pr-6 text-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all shadow-lg shadow-gray-200/50"
+                            />
                         </div>
                     </div>
 
-                </AuroraBackground>
+                    {/* 結果表示エリア */}
+                    <div className="max-w-6xl mx-auto pb-20">
+                        {loading ? (
+                            <div className="flex justify-center py-20 text-blue-600">
+                                <Loader2 className="animate-spin w-8 h-8" />
+                            </div>
+                        ) : filteredPosts.length > 0 ? (
+                            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                                {filteredPosts.map(post => (
+                                    <div key={post.id}>
+                                        <PostCard post={post} />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-20 text-gray-500">
+                                <p className="text-xl font-bold text-gray-400 mb-2">"{searchTerm}" に一致する投稿はありません</p>
+                                <p className="text-sm opacity-80">別のキーワードで検索してみてください。</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
             </main>
         </div>
     );

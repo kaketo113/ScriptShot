@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useId } from 'react';
+import React, { useState, useRef, useId, useEffect } from 'react';
 import { 
     DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay 
 } from '@dnd-kit/core';
@@ -13,7 +13,7 @@ import {
     GripVertical, Trash2, Save, Loader2, ArrowLeft, AlignLeft,
     PlusCircle, LayoutTemplate, Code2, Monitor, HelpCircle,
     Minus, FileInput, CreditCard, Youtube, 
-    ChevronLeft, ChevronRight
+    ChevronLeft, ChevronRight, AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { db } from '../../../lib/firebase';
@@ -21,7 +21,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { toJpeg } from 'html-to-image';
 import { useRouter } from 'next/navigation';
 
-// Types
+// --- Types ---
 type BlockType = 'heading' | 'text' | 'image' | 'button' | 'divider' | 'input' | 'card' | 'youtube';
 
 interface Block {
@@ -35,21 +35,21 @@ const INITIAL_BLOCKS: Block[] = [
     { id: '2', type: 'text', content: 'これはサンプルテキストです。ここをクリックして自由に編集してください。' },
 ];
 
-// Components
+// --- Components ---
 
 // 1. ブロック追加ボタン
 const ToolButton = ({ type, icon: Icon, label, colorClass, onClick }: any) => (
     <button 
         onClick={() => onClick(type)}
         className={`
-            flex-shrink-0 w-24 flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all duration-200 group snap-start relative
-            ${colorClass} hover:scale-110 hover:z-50 active:scale-95 shadow-md bg-[#161616]
+            flex-shrink-0 w-24 flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all duration-200 group snap-start relative
+            ${colorClass} hover:scale-105 hover:z-50 active:scale-95 shadow-sm hover:shadow-md
         `}
     >
-        <div className="p-2 rounded-full bg-white/5 group-hover:bg-white/20 transition-colors">
+        <div className="p-2 rounded-full bg-white/80 group-hover:bg-white transition-colors border border-black/5 shadow-sm">
             <Icon size={20} />
         </div>
-        <span className="text-[10px] font-bold tracking-wide truncate w-full text-center">{label}</span>
+        <span className="text-xs font-bold tracking-wide truncate w-full text-center">{label}</span>
     </button>
 );
 
@@ -61,7 +61,7 @@ const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: 
         transform: CSS.Transform.toString(transform),
         transition,
         zIndex: isDragging ? 50 : 'auto',
-        opacity: isDragging ? 0.5 : 1,
+        opacity: isDragging ? 0.8 : 1,
     };
 
     const parseCardData = (json: string) => {
@@ -77,15 +77,51 @@ const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: 
 
     const getConfig = () => {
         switch (block.type) {
-            case 'heading': return { label: '見出し', icon: Type, color: 'border-blue-500/50 bg-blue-900/10', textClass: 'text-blue-100 font-bold text-lg', placeholder: 'タイトルを入力...' };
-            case 'text': return { label: '本文', icon: Box, color: 'border-emerald-500/50 bg-emerald-900/10', textClass: 'text-emerald-100 text-sm', placeholder: '文章を入力...' };
-            case 'image': return { label: '画像', icon: ImageIcon, color: 'border-purple-500/50 bg-purple-900/10', textClass: 'text-purple-100 font-mono text-xs', placeholder: '画像URL (https://...)' };
-            case 'button': return { label: 'ボタン', icon: MousePointerClick, color: 'border-orange-500/50 bg-orange-900/10', textClass: 'text-orange-100 font-bold text-center', placeholder: 'ボタンの文字' };
-            case 'divider': return { label: '区切り線', icon: Minus, color: 'border-gray-500/50 bg-gray-900/10', textClass: 'hidden', placeholder: '' };
-            case 'input': return { label: '入力フォーム', icon: FileInput, color: 'border-cyan-500/50 bg-cyan-900/10', textClass: 'text-cyan-100 font-mono text-sm', placeholder: 'プレースホルダー' };
-            case 'youtube': return { label: 'YouTube', icon: Youtube, color: 'border-red-500/50 bg-red-900/10', textClass: 'text-red-100 font-mono text-xs', placeholder: 'YouTube URL' };
-            case 'card': return { label: 'カード', icon: CreditCard, color: 'border-yellow-500/50 bg-yellow-900/10', textClass: '', placeholder: '' };
-            default: return { label: 'Unknown', icon: Box, color: 'border-white/10', textClass: '', placeholder: '' };
+            case 'heading': return { 
+                label: '見出し', icon: Type, 
+                color: 'border-blue-300 bg-blue-100', 
+                textClass: 'text-blue-900 font-bold text-lg', placeholder: '見出しを入力...' 
+            };
+            case 'text': return { 
+                label: '本文', icon: Box, 
+                color: 'border-emerald-300 bg-emerald-100', 
+                textClass: 'text-emerald-900 text-sm', placeholder: 'ここに文章を入力...' 
+            };
+            case 'image': return { 
+                label: '画像', icon: ImageIcon, 
+                color: 'border-purple-300 bg-purple-100', 
+                textClass: 'text-purple-900 font-mono text-xs', placeholder: '画像URL (https://...)' 
+            };
+            case 'button': return { 
+                label: 'ボタン', icon: MousePointerClick, 
+                color: 'border-orange-300 bg-orange-100', 
+                textClass: 'text-orange-900 font-bold text-center', placeholder: 'ボタンの文字' 
+            };
+            case 'divider': return { 
+                label: '区切り線', icon: Minus, 
+                color: 'border-gray-300 bg-gray-100', 
+                textClass: 'hidden', placeholder: '' 
+            };
+            case 'input': return { 
+                label: '入力欄', icon: FileInput, 
+                color: 'border-cyan-300 bg-cyan-100', 
+                textClass: 'text-cyan-900 font-mono text-sm', placeholder: 'プレースホルダー' 
+            };
+            case 'youtube': return { 
+                label: '動画', icon: Youtube, 
+                color: 'border-red-300 bg-red-100', 
+                textClass: 'text-red-900 font-mono text-xs', placeholder: 'YouTube URL' 
+            };
+            case 'card': return { 
+                label: 'カード', icon: CreditCard, 
+                color: 'border-yellow-300 bg-yellow-100', 
+                textClass: '', placeholder: '' 
+            };
+            default: return { 
+                label: '不明', icon: Box, 
+                color: 'border-gray-300 bg-gray-100', 
+                textClass: '', placeholder: '' 
+            };
         }
     };
 
@@ -94,38 +130,40 @@ const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: 
 
     return (
         <div ref={setNodeRef} style={style} className="relative mb-4 pl-8 group">
-            <div className="absolute left-[19px] -top-6 bottom-0 w-0.5 bg-white/10 group-last:bottom-auto group-last:h-1/2 -z-10"></div>
+            <div className="absolute left-[19px] -top-6 bottom-0 w-0.5 bg-gray-300 group-last:bottom-auto group-last:h-1/2 -z-10"></div>
             
-            <div {...attributes} {...listeners} className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-white/5 rounded-full transition-colors z-10 text-gray-500 hover:text-white">
+            <div {...attributes} {...listeners} className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-gray-200 rounded-full transition-colors z-10 text-gray-400 hover:text-gray-700" title="ドラッグして移動">
                 <GripVertical size={20} />
             </div>
 
-            <div className={`relative flex items-stretch gap-0 rounded-xl border overflow-hidden transition-all ${config.color} hover:border-opacity-100 border-opacity-40`}>
-                <div className="w-12 flex items-center justify-center bg-black/20 border-r border-white/5 shrink-0">
-                    <Icon size={18} className="opacity-70" />
+            <div className={`relative flex items-stretch gap-0 rounded-xl border overflow-hidden transition-all ${config.color} shadow-sm hover:shadow-md`}>
+                <div className="w-12 flex items-center justify-center bg-white/40 border-r border-black/5 shrink-0">
+                    <Icon size={18} className="opacity-80 text-black" />
                 </div>
 
                 <div className="flex-1 p-3 min-w-0">
-                    <div className="text-[10px] uppercase font-bold tracking-wider opacity-50 mb-1">{config.label}</div>
+                    <div className="text-[10px] text-black/50 font-bold tracking-wider mb-1 flex items-center gap-1 uppercase">
+                        {config.label}
+                    </div>
                     
                     {block.type === 'card' ? (
                         <div className="space-y-2">
-                            <input type="text" placeholder="画像URL" className="w-full bg-black/20 rounded px-2 py-1 text-xs text-yellow-100 border border-white/10 focus:border-yellow-500/50 outline-none" 
+                            <input type="text" placeholder="画像URL" className="w-full bg-white/70 rounded px-2 py-1 text-xs text-gray-800 border border-black/10 focus:border-yellow-500 focus:bg-white outline-none" 
                                 value={parseCardData(block.content).img} onChange={(e) => updateCardData('img', e.target.value)} />
-                            <input type="text" placeholder="タイトル" className="w-full bg-black/20 rounded px-2 py-1 text-sm font-bold text-yellow-100 border border-white/10 focus:border-yellow-500/50 outline-none" 
+                            <input type="text" placeholder="タイトル" className="w-full bg-white/70 rounded px-2 py-1 text-sm font-bold text-gray-900 border border-black/10 focus:border-yellow-500 focus:bg-white outline-none" 
                                 value={parseCardData(block.content).title} onChange={(e) => updateCardData('title', e.target.value)} />
-                            <textarea placeholder="説明文" rows={2} className="w-full bg-black/20 rounded px-2 py-1 text-xs text-yellow-100/80 border border-white/10 focus:border-yellow-500/50 outline-none resize-none" 
+                            <textarea placeholder="説明文" rows={2} className="w-full bg-white/70 rounded px-2 py-1 text-xs text-gray-700 border border-black/10 focus:border-yellow-500 focus:bg-white outline-none resize-none" 
                                 value={parseCardData(block.content).desc} onChange={(e) => updateCardData('desc', e.target.value)} />
-                            <input type="text" placeholder="ボタンの文字" className="w-full bg-black/20 rounded px-2 py-1 text-xs text-yellow-100 border border-white/10 focus:border-yellow-500/50 outline-none" 
+                            <input type="text" placeholder="ボタンの文字" className="w-full bg-white/70 rounded px-2 py-1 text-xs text-gray-800 border border-black/10 focus:border-yellow-500 focus:bg-white outline-none" 
                                 value={parseCardData(block.content).btn} onChange={(e) => updateCardData('btn', e.target.value)} />
                         </div>
                     ) : block.type === 'divider' ? (
-                        <div className="h-6 flex items-center"><div className="w-full h-px bg-white/20 border-t border-dashed border-white/20"></div></div>
+                        <div className="h-6 flex items-center"><div className="w-full h-px bg-gray-400 border-t border-dashed border-gray-400 opacity-50"></div></div>
                     ) : block.type === 'text' ? (
                         <textarea 
                             value={block.content}
                             onChange={(e) => onChange(block.id, e.target.value)}
-                            className={`w-full bg-transparent border-none focus:outline-none resize-none h-auto min-h-[24px] ${config.textClass}`}
+                            className={`w-full bg-transparent border-none focus:outline-none resize-none h-auto min-h-[24px] ${config.textClass} placeholder:text-black/30`}
                             placeholder={config.placeholder}
                             rows={2}
                             onInput={(e) => { e.currentTarget.style.height = 'auto'; e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px'; }}
@@ -135,13 +173,13 @@ const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: 
                             type="text" 
                             value={block.content}
                             onChange={(e) => onChange(block.id, e.target.value)}
-                            className={`w-full bg-transparent border-none focus:outline-none ${config.textClass}`}
+                            className={`w-full bg-transparent border-none focus:outline-none ${config.textClass} placeholder:text-black/30`}
                             placeholder={config.placeholder}
                         />
                     )}
                 </div>
 
-                <button onClick={() => onDelete(block.id)} className="w-12 flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors border-l border-white/5 shrink-0">
+                <button onClick={() => onDelete(block.id)} className="w-12 flex items-center justify-center text-black/40 hover:text-red-600 hover:bg-red-500/10 transition-colors border-l border-black/5 shrink-0" title="削除">
                     <Trash2 size={18} />
                 </button>
             </div>
@@ -149,7 +187,7 @@ const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: 
     );
 };
 
-// 3. プレビューレンダラー
+// 3. プレビューレンダラー（CORS対策版）
 const BlockRenderer = ({ block }: { block: Block }) => {
     const getYouTubeId = (url: string) => {
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -159,32 +197,41 @@ const BlockRenderer = ({ block }: { block: Block }) => {
 
     switch (block.type) {
         case 'heading':
-            return <h2 className="text-2xl font-bold mb-4 text-gray-800 pb-2 border-b-2 border-blue-500 inline-block">{block.content}</h2>;
+            return <h2 className="text-2xl font-bold mb-4 text-gray-900 pb-2 border-b-2 border-blue-500 inline-block">{block.content}</h2>;
         case 'text':
-            return <p className="text-gray-600 mb-4 leading-relaxed whitespace-pre-wrap">{block.content}</p>;
+            return <p className="text-gray-700 mb-4 leading-relaxed whitespace-pre-wrap">{block.content}</p>;
         case 'button':
             return (
                 <button className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-bold shadow-md hover:bg-blue-700 transition-all mb-4">
-                    {block.content || 'Button'}
+                    {block.content || 'ボタン'}
                 </button>
             );
         case 'image':
             return (
-                <div className="w-full mb-4 rounded-xl overflow-hidden shadow-sm bg-gray-100">
+                <div className="w-full mb-4 rounded-xl overflow-hidden shadow-sm bg-gray-50">
                     {block.content ? (
+                        // ★修正: crossOrigin追加
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={block.content} alt="Preview" className="w-full h-auto object-cover" />
+                        <img 
+                            src={block.content} 
+                            alt="Preview" 
+                            className="w-full h-auto object-cover" 
+                            crossOrigin="anonymous" 
+                        />
                     ) : (
-                        <div className="h-32 flex items-center justify-center text-gray-400"><ImageIcon size={32}/></div>
+                        <div className="h-32 flex items-center justify-center text-gray-400 gap-2">
+                            <ImageIcon size={24}/>
+                            <span className="text-sm">画像プレビュー</span>
+                        </div>
                     )}
                 </div>
             );
         case 'divider':
-            return <hr className="my-6 border-t-2 border-dashed border-gray-200" />;
+            return <hr className="my-6 border-t-2 border-dashed border-gray-300" />;
         case 'input':
             return (
                 <div className="mb-4">
-                    <input type="text" placeholder={block.content} disabled className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-500" />
+                    <input type="text" placeholder={block.content || '入力欄'} disabled className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-500" />
                 </div>
             );
         case 'youtube':
@@ -194,22 +241,31 @@ const BlockRenderer = ({ block }: { block: Block }) => {
                     {videoId ? (
                         <iframe src={`https://www.youtube.com/embed/${videoId}`} className="w-full h-full" allowFullScreen title="YouTube video" />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-100"><Youtube size={32}/></div>
+                        <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-100 gap-2">
+                            <Youtube size={24}/>
+                            <span className="text-sm">動画プレビュー</span>
+                        </div>
                     )}
                 </div>
             );
         case 'card':
-            let cardData = { title: 'No Title', desc: '', btn: 'Action', img: '' };
+            let cardData = { title: 'タイトル', desc: '説明文', btn: 'ボタン', img: '' };
             try { cardData = JSON.parse(block.content); } catch {}
             return (
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 border border-gray-100">
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 border border-gray-200">
                     {cardData.img && (
+                        // ★修正: crossOrigin追加
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={cardData.img} alt={cardData.title} className="w-full h-40 object-cover" />
+                        <img 
+                            src={cardData.img} 
+                            alt={cardData.title} 
+                            className="w-full h-40 object-cover" 
+                            crossOrigin="anonymous" 
+                        />
                     )}
                     <div className="p-5">
-                        <h3 className="font-bold text-lg mb-2 text-gray-800">{cardData.title || 'Card Title'}</h3>
-                        <p className="text-gray-600 text-sm mb-4 leading-relaxed">{cardData.desc || 'Card description goes here.'}</p>
+                        <h3 className="font-bold text-lg mb-2 text-gray-900">{cardData.title || 'カードタイトル'}</h3>
+                        <p className="text-gray-600 text-sm mb-4 leading-relaxed">{cardData.desc || 'ここに説明文が入ります。'}</p>
                         {cardData.btn && (
                             <button className="w-full py-2 bg-gray-900 text-white rounded-lg text-sm font-bold hover:bg-black transition-colors">
                                 {cardData.btn}
@@ -222,14 +278,19 @@ const BlockRenderer = ({ block }: { block: Block }) => {
     }
 };
 
-// Main Page Component
+// --- Main Page Component ---
 export default function CreateBlockPage() {
     const { user, markAsPosted } = useAuth();
     const [blocks, setBlocks] = useState<Block[]>(INITIAL_BLOCKS);
     const [caption, setCaption] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [isDirty, setIsDirty] = useState(false);
+
     const captureRef = useRef<HTMLDivElement>(null);
     const toolboxRef = useRef<HTMLDivElement>(null);
+    const bottomRef = useRef<HTMLDivElement>(null);
+    const previewBottomRef = useRef<HTMLDivElement>(null);
+    
     const router = useRouter();
     const dndContextId = useId();
 
@@ -237,6 +298,27 @@ export default function CreateBlockPage() {
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
+
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [isDirty]);
+
+    // 両方のパネルを自動スクロール
+    useEffect(() => {
+        if (bottomRef.current) {
+            bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+        if (previewBottomRef.current) {
+            previewBottomRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [blocks.length]);
 
     const scrollToolbox = (direction: 'left' | 'right') => {
         if (toolboxRef.current) {
@@ -252,10 +334,10 @@ export default function CreateBlockPage() {
         let initialContent = '';
         if (type === 'card') {
             initialContent = JSON.stringify({ 
-                title: '新しいカード', desc: '説明文', btn: 'ボタン', img: 'https://baseec-img-mng.akamaized.net/images/item/origin/ccab8aa4eadceab2a05bbbd8f6b4a757.jpg?imformat=generic' 
+                title: '新しいカード', desc: '説明文を入力してください', btn: '詳しく見る', img: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80' 
             });
-        } else if (type === 'button') initialContent = '押してみて！';
-        else if (type === 'input') initialContent = '文章を入力しよう！';
+        } else if (type === 'button') initialContent = 'ここをクリック';
+        else if (type === 'input') initialContent = '入力してください...';
 
         const newBlock: Block = {
             id: Math.random().toString(36).substr(2, 9),
@@ -263,10 +345,18 @@ export default function CreateBlockPage() {
             content: initialContent
         };
         setBlocks([...blocks, newBlock]);
+        setIsDirty(true);
     };
 
-    const removeBlock = (id: string) => setBlocks(blocks.filter(b => b.id !== id));
-    const updateBlock = (id: string, content: string) => setBlocks(blocks.map(b => b.id === id ? { ...b, content } : b));
+    const removeBlock = (id: string) => {
+        setBlocks(blocks.filter(b => b.id !== id));
+        setIsDirty(true);
+    };
+
+    const updateBlock = (id: string, content: string) => {
+        setBlocks(blocks.map(b => b.id === id ? { ...b, content } : b));
+        setIsDirty(true);
+    };
 
     const handleDragEnd = (event: any) => {
         const { active, over } = event;
@@ -276,15 +366,29 @@ export default function CreateBlockPage() {
                 const newIndex = items.findIndex((item) => item.id === over.id);
                 return arrayMove(items, oldIndex, newIndex);
             });
+            setIsDirty(true);
         }
     };
 
+    // ★修正: 待機時間延長とキャッシュ対策を追加
     const generateThumbnail = async () => {
         if (!captureRef.current) return null;
         try {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            return await toJpeg(captureRef.current, { quality: 0.8, width: 800, height: 600, backgroundColor: '#ffffff', style: { background: 'white' } });
-        } catch (err) { return null; }
+            // レンダリング完了を待つために長めに待機 (800ms)
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            return await toJpeg(captureRef.current, { 
+                quality: 0.8, 
+                width: 800, 
+                height: 600, 
+                backgroundColor: '#ffffff', 
+                style: { background: 'white' },
+                cacheBust: true // キャッシュの影響を受けないように
+            });
+        } catch (err) { 
+            console.error("Thumbnail generation failed:", err);
+            return null; 
+        }
     };
 
     const handlePost = async () => {
@@ -306,6 +410,7 @@ export default function CreateBlockPage() {
                 createdAt: serverTimestamp(),
             });
             markAsPosted();
+            setIsDirty(false);
             router.push('/');
         } catch (error) {
             alert("投稿に失敗しました。");
@@ -315,50 +420,53 @@ export default function CreateBlockPage() {
     };
 
     return (
-        <div className='h-screen w-full bg-[#050505] text-white flex flex-col font-sans overflow-hidden relative'>
+        <div className='h-screen w-full bg-[#F9FAFB] text-gray-900 flex flex-col font-sans overflow-hidden'>
             
-            <header className='h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#0a0a0a] shrink-0 z-50 relative'>
-                <div className='flex items-center gap-4 z-10'>
-                     <a href='/' className='text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full'>
+            {/* Header (すりガラス効果追加) */}
+            <header className='h-16 px-6 flex items-center justify-between bg-white/80 backdrop-blur-sm z-50 shrink-0 border-b border-gray-100'>
+                <div className='flex items-center gap-4'>
+                     <a href='/' className='text-gray-500 hover:text-gray-900 transition-colors p-2 hover:bg-gray-100 rounded-full'>
                         <ArrowLeft className='w-5 h-5' />
                     </a>
                     <div className='flex items-center gap-2'>
-                        <LayoutTemplate size={20} className="text-emerald-500" />
-                        <span className='font-bold text-lg tracking-tight'>Create New Post</span>
+                        <LayoutTemplate size={20} className="text-emerald-600" />
+                        <span className='font-bold text-lg tracking-tight'>ブロックエディタ</span>
                     </div>
                 </div>
 
-                 <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0'>
-                    <div className="flex bg-[#161616] p-1 rounded-lg border border-white/5">
-                        <a href='/create' className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5 font-medium'><Code2 className='w-4 h-4' /><span>Text</span></a>
-                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-md text-sm transition-all bg-emerald-600 text-white shadow-lg font-medium'><Monitor className='w-4 h-4' /><span>Block</span></button>
+                 <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'>
+                    <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
+                        <a href='/create' className='flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all text-gray-500 hover:text-gray-900 hover:bg-white/50 font-medium'><Code2 className='w-4 h-4' /><span>コード</span></a>
+                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all bg-white text-emerald-600 shadow-sm font-bold border border-gray-100'><Monitor className='w-4 h-4' /><span>ブロック</span></button>
                     </div>
                 </div>
-                <div className="hidden md:flex items-center gap-2 bg-[#161616] px-3 py-1.5 rounded-full border border-white/5 text-xs text-gray-400">
-                    <HelpCircle size={14} className="text-blue-500" />
-                    <span>左側でブロックを置いていくと、右側にリアルタイムで反映されます</span>
-                </div>
                 
-                <div className='ml-auto w-40 flex justify-end items-center gap-3 z-10'>
-                    <div className='text-xs text-gray-500'>{user ? 'Autosaved' : 'Guest Mode'}</div>
+                <div className='flex items-center gap-3'>
+                    <div className="hidden md:flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100 text-xs text-emerald-600 font-medium">
+                        <HelpCircle size={14} />
+                        <span>リアルタイムプレビュー</span>
+                    </div>
+                    <div className='text-xs text-gray-400 font-medium'>{user ? '自動保存なし' : 'ゲストモード'}</div>
                 </div>
             </header>
 
-            <div className='flex-1 flex overflow-hidden'>
+            {/* Main Content (カード風レイアウト) */}
+            <div className='flex-1 flex overflow-hidden p-4 md:p-6 gap-4 md:gap-6'>
                 
-                {/* 左側 */}
-                <div className='w-1/2 border-r border-white/10 flex flex-col bg-[#0a0a0a] relative z-10'>
+                {/* 左側：編集エリア (丸角カード) */}
+                <div className='w-1/2 flex flex-col bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden relative z-10'>
                     
-                    <div className="py-6 px-4 border-b border-white/5 bg-[#111] relative group/toolbox z-20">
+                    {/* ツールボックス */}
+                    <div className="py-6 px-4 border-b border-gray-100 bg-white relative group/toolbox z-20">
                         <div className="flex items-center justify-between mb-6 px-2">
                             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                                <PlusCircle size={14} /> Add Block
+                                <PlusCircle size={14} /> 追加したいブロックを選択
                             </h3>
                             <div className="flex gap-1">
-                                <button onClick={() => scrollToolbox('left')} className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+                                <button onClick={() => scrollToolbox('left')} className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-colors">
                                     <ChevronLeft size={16} />
                                 </button>
-                                <button onClick={() => scrollToolbox('right')} className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+                                <button onClick={() => scrollToolbox('right')} className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-colors">
                                     <ChevronRight size={16} />
                                 </button>
                             </div>
@@ -366,29 +474,30 @@ export default function CreateBlockPage() {
 
                         <div 
                             ref={toolboxRef}
-                            className="flex overflow-x-auto gap-3 p-2 scrollbar-hide snap-x scroll-smooth relative z-20"
+                            className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide snap-x scroll-smooth relative z-20"
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         >
-                            <ToolButton type="heading" icon={Type} label="見出し" colorClass="bg-blue-500/10 text-blue-400 border-blue-500/20 hover:border-blue-500" onClick={addBlock} />
-                            <ToolButton type="text" icon={Box} label="本文" colorClass="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:border-emerald-500" onClick={addBlock} />
-                            <ToolButton type="image" icon={ImageIcon} label="画像" colorClass="bg-purple-500/10 text-purple-400 border-purple-500/20 hover:border-purple-500" onClick={addBlock} />
-                            <ToolButton type="button" icon={MousePointerClick} label="ボタン" colorClass="bg-orange-500/10 text-orange-400 border-orange-500/20 hover:border-orange-500" onClick={addBlock} />
-                            <ToolButton type="card" icon={CreditCard} label="カード" colorClass="bg-yellow-500/10 text-yellow-400 border-yellow-500/20 hover:border-yellow-500" onClick={addBlock} />
-                            <ToolButton type="youtube" icon={Youtube} label="YouTube" colorClass="bg-red-500/10 text-red-400 border-red-500/20 hover:border-red-500" onClick={addBlock} />
-                            <ToolButton type="input" icon={FileInput} label="フォーム" colorClass="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 hover:border-cyan-500" onClick={addBlock} />
-                            <ToolButton type="divider" icon={Minus} label="境界線" colorClass="bg-gray-500/10 text-gray-400 border-gray-500/20 hover:border-gray-500" onClick={addBlock} />
+                            {/* 色を濃くして白飛び防止 */}
+                            <ToolButton type="heading" icon={Type} label="見出し" colorClass="border-blue-300 hover:border-blue-400 text-blue-700 bg-blue-100" onClick={addBlock} />
+                            <ToolButton type="text" icon={Box} label="本文" colorClass="border-emerald-300 hover:border-emerald-400 text-emerald-700 bg-emerald-100" onClick={addBlock} />
+                            <ToolButton type="image" icon={ImageIcon} label="画像" colorClass="border-purple-300 hover:border-purple-400 text-purple-700 bg-purple-100" onClick={addBlock} />
+                            <ToolButton type="button" icon={MousePointerClick} label="ボタン" colorClass="border-orange-300 hover:border-orange-400 text-orange-700 bg-orange-100" onClick={addBlock} />
+                            <ToolButton type="card" icon={CreditCard} label="カード" colorClass="border-yellow-300 hover:border-yellow-400 text-yellow-700 bg-yellow-100" onClick={addBlock} />
+                            <ToolButton type="youtube" icon={Youtube} label="動画" colorClass="border-red-300 hover:border-red-400 text-red-700 bg-red-100" onClick={addBlock} />
+                            <ToolButton type="input" icon={FileInput} label="入力欄" colorClass="border-cyan-300 hover:border-cyan-400 text-cyan-700 bg-cyan-100" onClick={addBlock} />
+                            <ToolButton type="divider" icon={Minus} label="区切り線" colorClass="border-gray-300 hover:border-gray-400 text-gray-700 bg-gray-100" onClick={addBlock} />
                         </div>
                         
-                        <div className="absolute right-0 top-12 bottom-0 w-12 bg-gradient-to-l from-[#111] to-transparent pointer-events-none md:hidden z-20"></div>
+                        <div className="absolute right-0 top-12 bottom-0 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none md:hidden z-20"></div>
                     </div>
 
-                    {/* Timeline */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-[#0a0a0a] relative z-10">
-                        <div className="max-w-xl mx-auto">
+                    {/* タイムライン */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-white relative z-10">
+                        <div className="max-w-xl mx-auto pb-20">
                             {blocks.length === 0 ? (
-                                <div className="text-center py-20 opacity-50 border-2 border-dashed border-white/10 rounded-2xl">
+                                <div className="text-center py-20 opacity-50 border-2 border-dashed border-gray-200 rounded-2xl">
                                     <p className="text-gray-400 mb-2">まだブロックがありません</p>
-                                    <p className="text-sm text-gray-600">上のボタンを押して追加してください</p>
+                                    <p className="text-sm text-gray-500">上のボタンを押して追加してください</p>
                                 </div>
                             ) : (
                                 <DndContext id={dndContextId} sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -400,59 +509,59 @@ export default function CreateBlockPage() {
                                 </DndContext>
                             )}
                             
-                            {blocks.length > 0 && (
-                                <div className="flex justify-center mt-4 opacity-30">
-                                    <div className="w-2 h-2 rounded-full bg-white"></div>
-                                </div>
-                            )}
+                            <div ref={bottomRef}></div>
                         </div>
                     </div>
                 </div>
 
-                {/* 右側 */}
-                <div className='w-1/2 flex flex-col bg-[#050505]'>
-                    <div className='h-10 border-b border-white/5 flex items-center justify-between px-4 bg-[#111]'>
-                        <div className='flex items-center gap-2 text-[10px] font-bold text-emerald-500 uppercase tracking-widest'>
+                {/* 右側：プレビュー (丸角カード) */}
+                <div className='w-1/2 flex flex-col bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden'>
+                    <div className='h-12 border-b border-gray-100 flex items-center justify-between px-6 bg-white'>
+                        <div className='flex items-center gap-2 text-[10px] font-bold text-emerald-600 uppercase tracking-widest'>
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            Live Preview
+                            プレビュー
                         </div>
-                        <div className="text-[10px] text-gray-600">Mobile / Desktop</div>
+                        <div className="text-[10px] text-gray-500">Mobile / Desktop</div>
                     </div>
 
-                    <div className='flex-1 flex items-center justify-center relative bg-[#0e0e0e] p-8 overflow-hidden'>
-                        <div className="w-full h-full max-w-[480px] max-h-[700px] bg-white rounded-3xl shadow-2xl overflow-y-auto relative ring-8 ring-[#1a1a1a]">
-                            <div className="sticky top-0 left-0 right-0 h-8 bg-gray-50 border-b flex items-center justify-center z-10">
-                                <div className="w-16 h-1 bg-gray-200 rounded-full"></div>
+                    <div className='flex-1 flex items-center justify-center relative bg-[#F3F4F6] p-8 overflow-hidden'>
+                        <div className="w-full h-full max-w-[480px] max-h-[700px] bg-white rounded-3xl shadow-xl overflow-y-auto relative ring-4 ring-gray-200 border border-gray-100">
+                            <div className="sticky top-0 left-0 right-0 h-8 bg-gray-50 border-b border-gray-100 flex items-center justify-center z-10">
+                                <div className="w-16 h-1 bg-gray-300 rounded-full"></div>
                             </div>
                             <div className="p-8 min-h-full">
                                 {blocks.map(block => (
                                     <BlockRenderer key={block.id} block={block} />
                                 ))}
+                                {/* 自動スクロール用アンカー */}
+                                <div ref={previewBottomRef}></div>
                             </div>
                         </div>
                     </div>
 
-                    <div className='border-t border-white/10 bg-[#111] p-4 flex gap-4 shrink-0 items-end'>
-                        <div className="relative flex-1">
-                            <div className="absolute top-3 left-3 text-gray-500">
+                    <div className='border-t border-gray-100 bg-white p-5 flex flex-col gap-4 shrink-0'>
+                        <div className="relative">
+                            <div className="absolute top-3 left-3 text-gray-400">
                                 <AlignLeft size={16} />
                             </div>
                             <textarea
                                 value={caption}
                                 onChange={(e) => setCaption(e.target.value)}
-                                placeholder="作品の説明を入力..."
-                                className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 resize-none h-12 custom-scrollbar focus:h-24 transition-all"
+                                placeholder="作品の説明を入力してください..."
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-emerald-500/50 resize-none h-16 custom-scrollbar transition-all focus:bg-white focus:shadow-sm"
                             />
                         </div>
 
-                        <button 
-                            onClick={handlePost} 
-                            disabled={isSaving}
-                            className='h-12 px-6 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-500 transition-colors disabled:opacity-50 shadow-lg shadow-emerald-900/20 flex items-center gap-2 shrink-0'
-                        >
-                            {isSaving ? <Loader2 className='animate-spin' /> : <Save size={20} />}
-                            <span>Post</span>
-                        </button>
+                        <div className="flex justify-end">
+                            <button 
+                                onClick={handlePost} 
+                                disabled={isSaving}
+                                className='flex items-center gap-2 px-8 py-3 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/30 active:scale-95 hover:shadow-emerald-500/40'
+                            >
+                                {isSaving ? <Loader2 className='w-4 h-4 animate-spin' /> : <Save size={20} />}
+                                <span>{isSaving ? '保存中...' : '投稿する'}</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

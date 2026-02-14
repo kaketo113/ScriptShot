@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-    Home, Search, Plus, User, LogOut, LogIn,
+    Home, Search, Plus, User, LogOut,
     Code2, Box, ChevronDown 
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -13,18 +13,17 @@ export const Sidebar = () => {
     const pathname = usePathname();
     const { user, login, logout } = useAuth();
 
-    // リンクがアクティブかどうか判定するヘルパー関数
     const isActive = (path: string) => pathname === path;
-
-    // Create関連のパスかどうか
     const isCreateActive = pathname.startsWith('/create');
 
     return (
-        <aside className='w-64 bg-[#0a0a0a] border-r border-white/10 flex flex-col h-screen fixed left-0 top-0 z-40 hidden md:flex'>
+        // ★修正: 境界線を削除し、角丸と深い影を追加して浮遊感を出す
+        <aside className='w-64 bg-white flex flex-col h-screen fixed left-0 top-0 z-50 hidden md:flex shadow-2xl rounded-r-3xl'>
+            
             {/* ロゴエリア */}
-            <div className='h-16 flex items-center px-6 border-b border-white/10 shrink-0'>
-                <div className='flex items-center gap-2 font-bold text-xl tracking-tighter'>
-                    <div className='w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white'>
+            <div className='h-16 flex items-center px-6 shrink-0'>
+                <div className='flex items-center gap-2 font-bold text-xl tracking-tighter text-gray-900'>
+                    <div className='w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-sm'>
                         <Code2 size={20} />
                     </div>
                     <span>ScriptShot</span>
@@ -32,42 +31,48 @@ export const Sidebar = () => {
             </div>
 
             {/* ナビゲーション */}
-            <nav className='flex-1 py-6 px-3 flex flex-col gap-1 overflow-y-auto custom-scrollbar'>
+            <nav className='flex-1 py-6 px-4 flex flex-col gap-1 overflow-y-auto custom-scrollbar'>
                 
                 {/* Home */}
                 <Link 
                     href="/" 
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                        isActive('/') ? 'bg-white/10 text-white font-bold' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+                        isActive('/') 
+                        ? 'bg-blue-50 text-blue-700 font-bold shadow-sm' 
+                        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                 >
                     <Home size={20} />
-                    <span>Home</span>
+                    <span>ホーム</span>
                 </Link>
 
                 {/* Search */}
                 <Link 
                     href="/search" 
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                        isActive('/search') ? 'bg-white/10 text-white font-bold' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+                        isActive('/search') 
+                        ? 'bg-blue-50 text-blue-700 font-bold shadow-sm' 
+                        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                 >
                     <Search size={20} />
-                    <span>Search</span>
+                    <span>検索</span>
                 </Link>
 
-                {/* Create (アコーディオンメニュー) */}
+                {/* Create (アコーディオン) */}
                 <div className="group flex flex-col">
                     
                     {/* 親ボタン */}
-                    <button className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${
-                        isCreateActive ? 'bg-white/5 text-white font-bold' : 'text-gray-400 group-hover:bg-white/5 group-hover:text-white'
+                    <button className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all ${
+                        isCreateActive 
+                        ? 'bg-blue-50 text-blue-700 font-bold shadow-sm' 
+                        : 'text-gray-500 group-hover:bg-gray-100 group-hover:text-gray-900'
                     }`}>
                         <div className="flex items-center gap-3">
-                            <div className={`p-1 rounded transition-colors ${isCreateActive ? 'bg-blue-600 text-white' : 'bg-white/10 group-hover:bg-white/20'}`}>
+                            <div className={`p-1 rounded-lg transition-colors ${isCreateActive ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-200 text-gray-500 group-hover:bg-gray-300'}`}>
                                 <Plus size={16} />
                             </div>
-                            <span>Create</span>
+                            <span>作成</span>
                         </div>
                         <ChevronDown size={14} className="transition-transform duration-300 group-hover:rotate-180 opacity-50 group-hover:opacity-100" />
                     </button>
@@ -77,30 +82,30 @@ export const Sidebar = () => {
                         <div className="overflow-hidden">
                             <div className="flex flex-col gap-1 pt-1 pb-2 pl-4">
                                 
-                                {/* Text Mode Link */}
+                                {/* コードモード */}
                                 <Link 
                                     href="/create" 
-                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ml-4 border-l-2 ${
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ml-2 ${
                                         isActive('/create') 
-                                        ? 'border-blue-500 bg-blue-500/10 text-blue-400 font-bold' 
-                                        : 'border-white/10 text-gray-500 hover:text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/10' 
+                                        ? 'bg-blue-100 text-blue-700 font-bold shadow-sm' 
+                                        : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50' 
                                     }`}
                                 >
-                                    <Code2 size={16} className={isActive('/create') ? 'text-blue-500' : ''} />
-                                    <span className="text-sm">Text Mode</span>
+                                    <Code2 size={16} className={isActive('/create') ? 'text-blue-600' : ''} />
+                                    <span className="text-sm">コードモード</span>
                                 </Link>
 
-                                {/* Block Mode Link */}
+                                {/* ブロックモード */}
                                 <Link 
                                     href="/create/block" 
-                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ml-4 border-l-2 ${
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ml-2 ${
                                         isActive('/create/block') 
-                                        ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-bold' 
-                                        : 'border-white/10 text-gray-500 hover:text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-500/10' 
+                                        ? 'bg-emerald-100 text-emerald-700 font-bold shadow-sm' 
+                                        : 'text-gray-500 hover:text-emerald-600 hover:bg-emerald-50' 
                                     }`}
                                 >
-                                    <Box size={16} className={isActive('/create/block') ? 'text-emerald-500' : ''} />
-                                    <span className="text-sm">Block Mode</span>
+                                    <Box size={16} className={isActive('/create/block') ? 'text-emerald-600' : ''} />
+                                    <span className="text-sm">ブロックモード</span>
                                 </Link>
 
                             </div>
@@ -111,45 +116,45 @@ export const Sidebar = () => {
                 {/* Profile */}
                 <Link 
                     href="/profile" 
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                        isActive('/profile') ? 'bg-white/10 text-white font-bold' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+                        isActive('/profile') 
+                        ? 'bg-blue-50 text-blue-700 font-bold shadow-sm' 
+                        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                 >
                     <User size={20} />
-                    <span>Profile</span>
+                    <span>プロフィール</span>
                 </Link>
 
             </nav>
 
-            {/* 下部エリア（ログイン状態によって分岐） */}
-            <div className='p-4 border-t border-white/10 mt-auto'>
+            {/* 下部エリア */}
+            <div className='p-4 mt-auto bg-white rounded-br-3xl'>
                 {user ? (
-                    // ログイン中: アイコン + サインアウトボタン
-                    <div className='flex items-center gap-3'>
+                    <div className='flex items-center gap-3 p-2 rounded-2xl border border-gray-100 shadow-sm'>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
                             src={user.photoURL || "https://api.dicebear.com/7.x/avataaars/svg?seed=Guest"} 
                             alt={user.displayName || "User"}
-                            className="w-10 h-10 rounded-full border border-white/10 object-cover shrink-0"
+                            className="w-10 h-10 rounded-full border border-gray-200 object-cover shrink-0"
                         />
 
                         <button 
                             onClick={logout}
-                            className='flex-1 flex items-center gap-2 px-3 py-2 rounded-xl text-left text-gray-500 hover:bg-red-500/10 hover:text-red-500 transition-colors'
-                            title="Sign Out"
+                            className='flex-1 flex items-center gap-2 px-3 py-2 rounded-xl text-left text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors'
+                            title="サインアウト"
                         >
                             <LogOut size={18} />
-                            <span className="text-sm font-bold">Sign Out</span>
+                            <span className="text-sm font-bold">サインアウト</span>
                         </button>
                     </div>
                 ) : (
-                    // 未ログイン: サインインボタン
                     <button 
                         onClick={login}
-                        className='w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20 transition-all active:scale-95'
+                        className='w-full flex items-center justify-center gap-3 px-4 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 transition-all active:scale-95'
                     >
-                        <LogIn size={20} />
-                        <span className="font-bold">Sign In</span>
+                        <img src="https://www.google.com/favicon.ico" alt="G" className="w-6 h-6" />
+                        <span className="font-bold">Googleで始める</span>
                     </button>
                 )}
             </div>
