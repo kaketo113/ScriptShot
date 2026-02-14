@@ -238,7 +238,6 @@ const PostView = ({ post }: { post: PostData }) => {
                         <span className="tracking-wider font-bold">プレビュー</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={post.userAvatar} alt={post.userName} className="w-6 h-6 rounded-full border border-gray-200" onError={(e) => { (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest'; }} />
                         <span className="text-xs font-bold text-gray-800">{post.userName}</span>
                         <span className="text-[10px] text-gray-400 font-mono">{date}</span>
@@ -316,9 +315,6 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
     const currentIndex = posts.findIndex(p => p.id === initialId);
     const currentPost = posts[currentIndex];
     
-    // リストは新しい順(desc)なので、indexが小さい方が新しい投稿、大きい方が古い投稿
-    // 「前の投稿」= より新しい投稿 (Index - 1)
-    // 「次の投稿」= より古い投稿 (Index + 1)
     const prevPostId = currentIndex > 0 ? posts[currentIndex - 1].id : null;
     const nextPostId = currentIndex < posts.length - 1 ? posts[currentIndex + 1].id : null;
 
@@ -353,26 +349,37 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                 <div className="flex-1 relative pt-16 h-full overflow-hidden">
                     <PostView post={currentPost} />
 
-                    {/* ナビゲーションボタン (前の投稿へ = 新しい投稿へ) */}
+                    {/* ★修正: 左右のホバーエリアによるナビゲーション */}
+                    
+                    {/* 左側: 前の投稿 (新しい投稿) */}
                     {prevPostId && (
-                        <Link 
-                            href={`/post/${prevPostId}`}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-white border border-gray-200 rounded-full shadow-lg text-gray-500 hover:text-blue-600 hover:border-blue-300 transition-all hover:scale-110"
-                            title="前の投稿"
-                        >
-                            <ChevronLeft size={24} />
-                        </Link>
+                        <div className="absolute top-0 left-0 bottom-0 w-24 z-50 flex items-center justify-start pl-6 group pointer-events-none">
+                            {/* ホバー時に背景を少し暗くする効果（任意） */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                            
+                            <Link 
+                                href={`/post/${prevPostId}`}
+                                className="pointer-events-auto p-4 bg-white border border-gray-200 rounded-full shadow-xl text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-all transform scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100"
+                                title="前の投稿"
+                            >
+                                <ChevronLeft size={28} />
+                            </Link>
+                        </div>
                     )}
 
-                    {/* ナビゲーションボタン (次の投稿へ = 古い投稿へ) */}
+                    {/* 右側: 次の投稿 (古い投稿) */}
                     {nextPostId && (
-                        <Link 
-                            href={`/post/${nextPostId}`}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-white border border-gray-200 rounded-full shadow-lg text-gray-500 hover:text-blue-600 hover:border-blue-300 transition-all hover:scale-110"
-                            title="次の投稿"
-                        >
-                            <ChevronRight size={24} />
-                        </Link>
+                        <div className="absolute top-0 right-0 bottom-0 w-24 z-50 flex items-center justify-end pr-6 group pointer-events-none">
+                            <div className="absolute inset-0 bg-gradient-to-l from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                            
+                            <Link 
+                                href={`/post/${nextPostId}`}
+                                className="pointer-events-auto p-4 bg-white border border-gray-200 rounded-full shadow-xl text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-all transform scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100"
+                                title="次の投稿"
+                            >
+                                <ChevronRight size={28} />
+                            </Link>
+                        </div>
                     )}
                 </div>
             </main>
