@@ -342,7 +342,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                 <header className="absolute top-0 left-0 right-0 h-16 px-6 flex items-center justify-between z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 pointer-events-none">
                     <a href="/" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors pointer-events-auto p-2 rounded-full hover:bg-gray-100">
                         <ArrowLeft className="w-5 h-5" />
-                        <span className="text-sm font-bold tracking-tight">フィードに戻る</span>
+                        <span className="text-sm font-bold tracking-tight">ホームに戻る</span>
                     </a>
                 </header>
 

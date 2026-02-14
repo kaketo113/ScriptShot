@@ -52,13 +52,13 @@ export default function SearchPage() {
     }, [searchTerm, posts]);
 
     return (
-        // ★修正: 白背景のテーマに変更
+        // 白背景のテーマ
         <div className='flex h-screen bg-[#F9FAFB] text-gray-900 font-sans overflow-hidden'>
             <Sidebar />
 
             <main className='flex-1 md:ml-64 h-full relative'>
 
-                {/* 背景装飾 (薄いグラデーション) */}
+                {/* 背景装飾 */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-emerald-50 opacity-80 pointer-events-none"></div>
                 
                 {/* コンテンツエリア */}

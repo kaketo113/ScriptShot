@@ -21,11 +21,11 @@ export const PostCard = ({ post }: PostCardProps) => {
     return (
         <a href={`/post/${post.id}`} className="group relative block h-[380px] bg-[#111] rounded-2xl overflow-hidden border border-white/5 hover:border-white/20 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/10">
             
-            {/* 上半分：プレビューエリア */}
+            {/* 上半分 */}
             <div className="h-1/2 bg-[#0a0a0a] relative overflow-hidden border-b border-white/5 group-hover:bg-[#0f0f0f] transition-colors">
                 
                 {post.thumbnail ? (
-                    // パターンA: サムネイル画像がある場合 (主にブロックモード)
+                    // パターンA: サムネイル画像がある場合
                     // eslint-disable-next-line @next/next/no-img-element
                     <img 
                         src={post.thumbnail} 
@@ -33,12 +33,11 @@ export const PostCard = ({ post }: PostCardProps) => {
                         className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
                     />
                 ) : (
-                    // パターンB: サムネイルがない場合 (テキストモードなど)
+                    // パターンB: サムネイルがない場合
                     <div className="relative w-full h-full bg-white">
                         <iframe
                             srcDoc={displayCode}
                             title="preview"
-                            // 2倍の大きさで作って0.5倍に縮小することで、デスクトップ表示っぽく見せる
                             className="w-[200%] h-[200%] transform scale-50 origin-top-left border-none pointer-events-none select-none"
                             sandbox="allow-scripts" // スクリプト実行を許可（デザイン崩れ防止）
                             scrolling="no"
@@ -49,7 +48,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                 )}
             </div>
 
-            {/* 下半分：情報エリア (変更なし) */}
+            {/* 下半分 */}
             <div className="h-1/2 p-5 flex flex-col justify-between">
                 <div>
                     <div className="flex items-center gap-2 mb-3">
@@ -67,7 +66,7 @@ export const PostCard = ({ post }: PostCardProps) => {
 
                     {/* Caption表示エリア */}
                     <p className="text-sm text-gray-300 line-clamp-2 mb-3 min-h-[40px]">
-                        {post.caption || <span className="text-gray-600 italic">No caption provided.</span>}
+                        {post.caption || <span className="text-gray-600 italic">タイトルなし</span>}
                     </p>
 
                     {/* 投稿の種類バッジ */}

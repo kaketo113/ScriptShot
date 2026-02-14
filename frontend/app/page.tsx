@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// --- 漂う要素のデータ定義 ---
+// 漂う要素のデータ定義
 const FLOATING_ITEMS = [
     // Tags (Code Mode)
     { type: 'tag', label: '<div>', top: '10%', left: '10%', delay: 0 },
@@ -33,7 +33,7 @@ const FLOATING_ITEMS = [
     { type: 'block', icon: FileInput, label: 'Input', top: '10%', left: '35%', delay: 1.0 },
 ];
 
-// --- 漂うアニメーションコンポーネント ---
+// 漂うアニメーションコンポーネント
 const FloatingElement = ({ item }: { item: any }) => {
     const isTag = item.type === 'tag';
     const Icon = item.icon;
@@ -77,11 +77,11 @@ export default function Home() {
     const { user, login } = useAuth();
     const [posts, setPosts] = useState<any[]>([]);
     
-    // ★変更点1: ヒーローセクションの表示状態管理
+    // ヒーローセクションの表示状態管理
     const [showHero, setShowHero] = useState(false);
 
     useEffect(() => {
-        // ★変更点2: ローカルストレージをチェック
+        // ローカルストレージをチェック
         // 'hide_hero_section' が 'true' でなければ表示する
         const isHidden = localStorage.getItem('hide_hero_section');
         if (!isHidden) {
@@ -96,7 +96,7 @@ export default function Home() {
         fetchPosts();
     }, []);
 
-    // ★変更点3: 「今後表示しない」処理
+    //「今後表示しない」処理
     const handleCloseHero = () => {
         localStorage.setItem('hide_hero_section', 'true');
         setShowHero(false);
@@ -114,7 +114,7 @@ export default function Home() {
 
             <main className='flex-1 md:ml-64'>
                 
-                {/* --- 🚀 ヒーローセクション --- */}
+                {/* ヒーローセクション */}
                 {/* AnimatePresenceで消えるときもアニメーションさせる */}
                 <AnimatePresence>
                     {showHero && (
@@ -139,10 +139,8 @@ export default function Home() {
                             <div className="absolute left-0 top-0 w-[600px] h-[600px] bg-blue-100 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 opacity-60"></div>
                             <div className="absolute right-0 bottom-0 w-[600px] h-[600px] bg-emerald-100 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2 opacity-60"></div>
 
-                            {/* 白いグラデーションマスク */}
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#ffffff_80%)] z-0 pointer-events-none"></div>
 
-                            {/* ★変更点4: 閉じるボタンの追加 */}
                             <button 
                                 onClick={handleCloseHero}
                                 className="absolute top-6 right-6 z-50 flex items-center gap-2 px-3 py-1.5 bg-white/50 hover:bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-500 hover:text-red-500 transition-all shadow-sm backdrop-blur-sm group"
@@ -216,9 +214,8 @@ export default function Home() {
                         </motion.div>
                     )}
                 </AnimatePresence>
-                {/* --- ヒーローセクション終わり --- */}
 
-                {/* --- 使い方ガイド (ヒーローセクションが表示されている時だけ出す) --- */}
+                {/* 使い方ガイド (ヒーローセクションが表示されている時だけ出す) */}
                 <AnimatePresence>
                     {showHero && (
                         <motion.div 
@@ -250,7 +247,7 @@ export default function Home() {
                     )}
                 </AnimatePresence>
 
-                {/* --- 📝 タイムライン --- */}
+                {/* タイムライン */}
                 <div className="max-w-5xl mx-auto px-6 py-12">
                     {!showHero && (
                         <button 

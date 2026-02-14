@@ -39,7 +39,7 @@ export default function ProfilePage() {
         fetchUserPosts();
     }, [user]);
 
-    // 未ログイン時の表示 (白背景)
+    // 未ログイン時の表示
     if (!user && !loading) {
         return (
             <div className='flex min-h-screen bg-[#F9FAFB] text-gray-900 font-sans'>
@@ -59,7 +59,7 @@ export default function ProfilePage() {
                 
                 <div className="relative z-10 w-full h-full overflow-y-auto custom-scrollbar">
                     
-                    {/* ヘッダーバナー画像 (明るいグラデーション) */}
+                    {/* ヘッダーバナー画像 */}
                     <div className="h-48 w-full bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 border-b border-gray-200 relative">
                         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div>
                     </div>
@@ -69,7 +69,7 @@ export default function ProfilePage() {
                         
                         {/* アイコンと基本情報 */}
                         <div className="relative -mt-16 mb-8 flex flex-col md:flex-row items-end md:items-center gap-6">
-                            {/* アバター画像 (枠線を白に) */}
+                            {/* アバター画像 */}
                             <div className="relative group">
                                 <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-300 to-purple-300 rounded-full opacity-50 blur group-hover:opacity-75 transition duration-200"></div>
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -86,7 +86,7 @@ export default function ProfilePage() {
                                 <p className="text-gray-500">@{user?.email?.split('@')[0] || "guest"}</p>
                             </div>
 
-                            {/* 編集ボタン (白背景スタイル) */}
+                            {/* 編集ボタン */}
                             <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-bold text-gray-700 shadow-sm mb-4 md:mb-0">
                                 <Settings size={16} />
                                 <span>プロフィール編集</span>
@@ -111,7 +111,7 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                             
-                            {/* スタッツカード (白カードスタイル) */}
+                            {/* スタッツカード */}
                             <div className="bg-white border border-gray-200 rounded-2xl p-6 flex justify-around items-center shadow-sm">
                                 <div className="text-center">
                                     <div className="text-2xl font-bold text-gray-900">{posts.length}</div>
@@ -145,8 +145,6 @@ export default function ProfilePage() {
                         ) : posts.length > 0 ? (
                             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                                 {posts.map(post => (
-                                    // PostCardも背景色に応じて微調整が必要かもしれませんが、
-                                    // 基本的にカードスタイルなら白背景でも馴染みます
                                     <div key={post.id}>
                                         <PostCard post={post} />
                                     </div>

@@ -280,7 +280,7 @@ const BlockRenderer = ({ block }: { block: Block }) => {
 
 // --- Main Page Component ---
 export default function CreateBlockPage() {
-    const { user, markAsPosted } = useAuth();
+    const { user } = useAuth();
     const [blocks, setBlocks] = useState<Block[]>(INITIAL_BLOCKS);
     const [caption, setCaption] = useState('');
     const [isSaving, setIsSaving] = useState(false);
@@ -409,7 +409,6 @@ export default function CreateBlockPage() {
                 comments: 0,
                 createdAt: serverTimestamp(),
             });
-            markAsPosted();
             setIsDirty(false);
             router.push('/');
         } catch (error) {
@@ -442,10 +441,6 @@ export default function CreateBlockPage() {
                 </div>
                 
                 <div className='flex items-center gap-3'>
-                    <div className="hidden md:flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100 text-xs text-emerald-600 font-medium">
-                        <HelpCircle size={14} />
-                        <span>リアルタイムプレビュー</span>
-                    </div>
                     <div className='text-xs text-gray-400 font-medium'>{user ? '自動保存なし' : 'ゲストモード'}</div>
                 </div>
             </header>
@@ -521,7 +516,6 @@ export default function CreateBlockPage() {
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                             プレビュー
                         </div>
-                        <div className="text-[10px] text-gray-500">Mobile / Desktop</div>
                     </div>
 
                     <div className='flex-1 flex items-center justify-center relative bg-[#F3F4F6] p-8 overflow-hidden'>

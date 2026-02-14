@@ -17,7 +17,7 @@ export const Sidebar = () => {
     const isCreateActive = pathname.startsWith('/create');
 
     return (
-        // ★修正: 境界線を削除し、角丸と深い影を追加して浮遊感を出す
+        // 境界線を削除し、角丸と深い影を追加して浮遊感を出す
         <aside className='w-64 bg-white flex flex-col h-screen fixed left-0 top-0 z-50 hidden md:flex shadow-2xl rounded-r-3xl'>
             
             {/* ロゴエリア */}
@@ -59,7 +59,7 @@ export const Sidebar = () => {
                     <span>検索</span>
                 </Link>
 
-                {/* Create (アコーディオン) */}
+                {/* Create */}
                 <div className="group flex flex-col">
                     
                     {/* 親ボタン */}

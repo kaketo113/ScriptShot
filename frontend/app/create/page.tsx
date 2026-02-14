@@ -14,7 +14,7 @@ import 'prismjs/components/prism-css';
 import 'prismjs/themes/prism-tomorrow.css'; // エディタは見やすさ重視でダークテーマ
 
 export default function CreatePage() {
-    const { user, markAsPosted } = useAuth();
+    const { user } = useAuth();
     const router = useRouter();
     
     // 初期値
@@ -108,8 +108,7 @@ export default function CreatePage() {
                 comments: 0,
                 createdAt: serverTimestamp(),
             });
-            
-            markAsPosted();
+
             setIsDirty(false);
             router.push('/');
         } catch (error) {
