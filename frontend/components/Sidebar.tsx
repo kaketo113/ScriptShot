@@ -17,8 +17,7 @@ export const Sidebar = () => {
     const isCreateActive = pathname.startsWith('/create');
 
     return (
-        // 境界線を削除し、角丸と深い影を追加して浮遊感を出す
-        <aside className='w-64 bg-white flex flex-col h-screen fixed left-0 top-0 z-50 hidden md:flex shadow-2xl rounded-r-3xl'>
+        <aside className='w-64 bg-[#e3f0fc] flex flex-col h-screen fixed left-0 top-0 z-50 hidden md:flex shadow-2xl rounded-r-3xl'>
             
             {/* ロゴエリア */}
             <div className='h-16 flex items-center px-6 shrink-0'>
@@ -39,7 +38,7 @@ export const Sidebar = () => {
                     className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
                         isActive('/') 
                         ? 'bg-blue-50 text-blue-700 font-bold shadow-sm' 
-                        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                        : 'text-gray-500 hover:bg-blue-50 hover:text-gray-900'
                     }`}
                 >
                     <Home size={20} />
@@ -52,7 +51,7 @@ export const Sidebar = () => {
                     className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
                         isActive('/search') 
                         ? 'bg-blue-50 text-blue-700 font-bold shadow-sm' 
-                        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                        : 'text-gray-500 hover:bg-blue-50 hover:text-gray-900'
                     }`}
                 >
                     <Search size={20} />
@@ -66,10 +65,10 @@ export const Sidebar = () => {
                     <button className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all ${
                         isCreateActive 
                         ? 'bg-blue-50 text-blue-700 font-bold shadow-sm' 
-                        : 'text-gray-500 group-hover:bg-gray-100 group-hover:text-gray-900'
+                        : 'text-gray-500 group-hover:bg-blue-50 group-hover:text-gray-900'
                     }`}>
                         <div className="flex items-center gap-3">
-                            <div className={`p-1 rounded-lg transition-colors ${isCreateActive ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-200 text-gray-500 group-hover:bg-gray-300'}`}>
+                            <div className={`p-1 rounded-lg transition-colors ${isCreateActive ? 'bg-blue-600 text-white shadow-sm' : 'bg-white-200 text-gray-500 group-hover:bg-gray-200'}`}>
                                 <Plus size={16} />
                             </div>
                             <span>作成</span>
@@ -88,7 +87,7 @@ export const Sidebar = () => {
                                     className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ml-2 ${
                                         isActive('/create') 
                                         ? 'bg-blue-100 text-blue-700 font-bold shadow-sm' 
-                                        : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50' 
+                                        : 'text-gray-500 hover:text-blue-600 hover:bg-blue-200' 
                                     }`}
                                 >
                                     <Code2 size={16} className={isActive('/create') ? 'text-blue-600' : ''} />
@@ -119,7 +118,7 @@ export const Sidebar = () => {
                     className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
                         isActive('/profile') 
                         ? 'bg-blue-50 text-blue-700 font-bold shadow-sm' 
-                        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                        : 'text-gray-500 hover:bg-blue-50 hover:text-gray-900'
                     }`}
                 >
                     <User size={20} />
@@ -129,9 +128,9 @@ export const Sidebar = () => {
             </nav>
 
             {/* 下部エリア */}
-            <div className='p-4 mt-auto bg-white rounded-br-3xl'>
+            <div className='p-4 mt-auto bg-[#e3f0fc] rounded-br-3xl'>
                 {user ? (
-                    <div className='flex items-center gap-3 p-2 rounded-2xl border border-gray-100 shadow-sm'>
+                    <div className='flex items-center gap-3 p-2 rounded-2xl border border-gray-500 shadow-sm'>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
                             src={user.photoURL || "https://api.dicebear.com/7.x/avataaars/svg?seed=Guest"} 
