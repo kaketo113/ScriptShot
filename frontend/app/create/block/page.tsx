@@ -13,7 +13,7 @@ import {
     GripVertical, Trash2, Save, Loader2, ArrowLeft, AlignLeft,
     PlusCircle, LayoutTemplate, Code2, Monitor,
     Minus, FileInput, CreditCard, Youtube, 
-    ChevronLeft, ChevronRight, AlertTriangle
+    ChevronLeft, ChevronRight, AlertTriangle, Maximize, Smartphone
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { db } from '../../../lib/firebase';
@@ -196,82 +196,42 @@ const BlockRenderer = ({ block }: { block: Block }) => {
     };
 
     switch (block.type) {
-        case 'heading':
-            return <h2 className="text-2xl font-bold mb-4 text-gray-900 pb-2 border-b-2 border-blue-500 inline-block">{block.content}</h2>;
-        case 'text':
-            return <p className="text-gray-700 mb-4 leading-relaxed whitespace-pre-wrap">{block.content}</p>;
-        case 'button':
-            return (
-                <button className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-bold shadow-md hover:bg-blue-700 transition-all mb-4">
-                    {block.content || 'ボタン'}
-                </button>
-            );
-        case 'image':
-            return (
-                <div className="w-full mb-4 rounded-xl overflow-hidden shadow-sm bg-gray-50">
-                    {block.content ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img 
-                            src={block.content} 
-                            alt="Preview" 
-                            className="w-full h-auto object-cover" 
-                            crossOrigin="anonymous" 
-                        />
-                    ) : (
-                        <div className="h-32 flex items-center justify-center text-gray-400 gap-2">
-                            <ImageIcon size={24}/>
-                            <span className="text-sm">画像プレビュー</span>
-                        </div>
-                    )}
-                </div>
-            );
-        case 'divider':
-            return <hr className="my-6 border-t-2 border-dashed border-gray-300" />;
-        case 'input':
-            return (
-                <div className="mb-4">
-                    <input type="text" placeholder={block.content || '入力欄'} disabled className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-500" />
-                </div>
-            );
-        case 'youtube':
+        case 'heading': return <h2 className="text-2xl font-bold mb-4 text-gray-900 pb-2 border-b-2 border-blue-500 inline-block">{block.content}</h2>;
+        case 'text': return <p className="text-gray-700 mb-4 leading-relaxed whitespace-pre-wrap">{block.content}</p>;
+        case 'button': return <button className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-bold shadow-md hover:bg-blue-700 transition-all mb-4">{block.content || 'ボタン'}</button>;
+        case 'image': return (
+            <div className="w-full mb-4 rounded-xl overflow-hidden shadow-sm bg-gray-50">
+                {block.content ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={block.content} alt="Preview" className="w-full h-auto object-cover" crossOrigin="anonymous" />
+                ) : (
+                    <div className="h-32 flex items-center justify-center text-gray-400 gap-2"><ImageIcon size={24}/><span className="text-sm">画像プレビュー</span></div>
+                )}
+            </div>
+        );
+        case 'divider': return <hr className="my-6 border-t-2 border-dashed border-gray-300" />;
+        case 'input': return <div className="mb-4"><input type="text" placeholder={block.content || '入力欄'} disabled className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-500" /></div>;
+        case 'youtube': {
             const videoId = getYouTubeId(block.content);
             return (
                 <div className="w-full aspect-video bg-black rounded-xl overflow-hidden mb-4 shadow-lg">
-                    {videoId ? (
-                        <iframe src={`https://www.youtube.com/embed/${videoId}`} className="w-full h-full" allowFullScreen title="YouTube video" />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-100 gap-2">
-                            <Youtube size={24}/>
-                            <span className="text-sm">動画プレビュー</span>
-                        </div>
-                    )}
+                    {videoId ? (<iframe src={`https://www.youtube.com/embed/${videoId}`} className="w-full h-full" allowFullScreen title="YouTube video" />) : (<div className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-100 gap-2"><Youtube size={24}/><span className="text-sm">動画プレビュー</span></div>)}
                 </div>
             );
-        case 'card':
-            let cardData = { title: 'タイトル', desc: '説明文', btn: 'ボタン', img: '' };
-            try { cardData = JSON.parse(block.content); } catch {}
+        }
+        case 'card': {
+            let cardData = { title: '', desc: '', btn: '', img: '' }; try { cardData = JSON.parse(block.content); } catch {}
             return (
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 border border-gray-200">
-                    {cardData.img && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img 
-                            src={cardData.img} 
-                            alt={cardData.title} 
-                            className="w-full h-40 object-cover" 
-                            crossOrigin="anonymous" 
-                        />
-                    )}
+                    {cardData.img && (/* eslint-disable-next-line @next/next/no-img-element */<img src={cardData.img} alt={cardData.title} className="w-full h-40 object-cover" crossOrigin="anonymous" />)}
                     <div className="p-5">
                         <h3 className="font-bold text-lg mb-2 text-gray-900">{cardData.title || 'カードタイトル'}</h3>
                         <p className="text-gray-600 text-sm mb-4 leading-relaxed">{cardData.desc || 'ここに説明文が入ります。'}</p>
-                        {cardData.btn && (
-                            <button className="w-full py-2 bg-gray-900 text-white rounded-lg text-sm font-bold hover:bg-black transition-colors">
-                                {cardData.btn}
-                            </button>
-                        )}
+                        {cardData.btn && (<button className="w-full py-2 bg-gray-900 text-white rounded-lg text-sm font-bold hover:bg-black transition-colors">{cardData.btn}</button>)}
                     </div>
                 </div>
             );
+        }
         default: return null;
     }
 };
@@ -286,13 +246,16 @@ export default function CreateBlockPage() {
     
     // 離脱確認モーダルの状態
     const [showConfirmModal, setShowConfirmModal] = useState(false);
-    // 遷移先を保存するステート
     const [pendingPath, setPendingPath] = useState<string>('/');
+
+    // ビューモードの状態管理 (mobile | desktop)
+    const [viewMode, setViewMode] = useState<'mobile' | 'desktop'>('mobile');
 
     const captureRef = useRef<HTMLDivElement>(null);
     const toolboxRef = useRef<HTMLDivElement>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
     const previewBottomRef = useRef<HTMLDivElement>(null);
+    const previewWrapperRef = useRef<HTMLDivElement>(null);
     
     const router = useRouter();
     const dndContextId = useId();
@@ -419,22 +382,30 @@ export default function CreateBlockPage() {
         }
     };
 
-    // 汎用的な遷移チェック関数
     const handleNavigation = (path: string) => {
         if (isDirty) {
-            // 未保存なら行き先を保存してモーダルを表示
             setPendingPath(path);
             setShowConfirmModal(true);
         } else {
-            // 保存済みならそのまま移動
             router.push(path);
         }
     };
 
-    // モーダルで「破棄して移動」を選んだ時
     const confirmNavigation = () => {
         setShowConfirmModal(false);
-        router.push(pendingPath); // 保存しておいたパスへ移動
+        router.push(pendingPath);
+    };
+
+    const toggleFullScreen = () => {
+        if (previewWrapperRef.current) {
+            if (!document.fullscreenElement) {
+                previewWrapperRef.current.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
     };
 
     return (
@@ -460,7 +431,7 @@ export default function CreateBlockPage() {
                         >
                             <Code2 className='w-4 h-4' /><span>コード</span>
                         </button>
-                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all bg-white text-emerald-600 shadow-sm font-bold border border-gray-100'><Monitor className='w-4 h-4' /><span>ブロック</span></button>
+                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all bg-white text-emerald-600 shadow-sm font-bold border border-gray-100'><LayoutTemplate className='w-4 h-4' /><span>ブロック</span></button>
                     </div>
                 </div>
                 
@@ -471,9 +442,7 @@ export default function CreateBlockPage() {
 
             {/* Main Content */}
             <div className='flex-1 flex overflow-hidden p-4 md:p-6 gap-4 md:gap-6'>
-                {/* ... (中身は変更なし) ... */}
                 <div className='w-1/2 flex flex-col bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden relative z-10'>
-                    
                     <div className="py-6 px-4 border-b border-gray-100 bg-white relative group/toolbox z-20">
                         <div className="flex items-center justify-between mb-6 px-2">
                             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
@@ -523,7 +492,6 @@ export default function CreateBlockPage() {
                                     </SortableContext>
                                 </DndContext>
                             )}
-                            
                             <div ref={bottomRef}></div>
                         </div>
                     </div>
@@ -536,13 +504,59 @@ export default function CreateBlockPage() {
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                             プレビュー
                         </div>
+                        
+                        {/*　モード切り替え & 全画面表示ボタン */}
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center bg-gray-100 rounded-lg p-0.5 border border-gray-200">
+                                <button 
+                                    onClick={() => setViewMode('mobile')}
+                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'mobile' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                    title="モバイル表示"
+                                >
+                                    <Smartphone size={14} />
+                                </button>
+                                <button 
+                                    onClick={() => setViewMode('desktop')}
+                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'desktop' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                    title="PC表示"
+                                >
+                                    <Monitor size={14} />
+                                </button>
+                            </div>
+                            
+                            <div className="w-px h-4 bg-gray-200 mx-1"></div>
+
+                            <button 
+                                onClick={toggleFullScreen}
+                                className='flex items-center gap-1.5 text-[10px] font-bold text-gray-400 hover:text-emerald-600 transition-colors px-2 py-1 rounded hover:bg-emerald-50'
+                                title="全画面表示"
+                            >
+                                <Maximize size={12} />
+                                <span>全画面</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <div className='flex-1 flex items-center justify-center relative bg-[#F3F4F6] p-8 overflow-hidden'>
-                        <div className="w-full h-full max-w-[480px] max-h-[700px] bg-white rounded-3xl shadow-xl overflow-y-auto relative ring-4 ring-gray-200 border border-gray-100">
-                            <div className="sticky top-0 left-0 right-0 h-8 bg-gray-50 border-b border-gray-100 flex items-center justify-center z-10">
-                                <div className="w-16 h-1 bg-gray-300 rounded-full"></div>
-                            </div>
+                    <div 
+                        ref={previewWrapperRef}
+                        className='flex-1 flex items-center justify-center relative bg-[#F3F4F6] p-8 overflow-hidden'
+                    >
+                        <div 
+                            className={`
+                                bg-white shadow-xl overflow-y-auto relative border border-gray-100
+                                transition-all duration-300 ease-in-out
+                                ${viewMode === 'mobile' 
+                                    ? 'w-full h-full max-w-[480px] max-h-[700px] rounded-3xl ring-4 ring-gray-200' 
+                                    : 'w-full h-full rounded-xl'
+                                }
+                            `}
+                        >
+                            {viewMode === 'mobile' && (
+                                <div className="sticky top-0 left-0 right-0 h-8 bg-gray-50 border-b border-gray-100 flex items-center justify-center z-10">
+                                    <div className="w-16 h-1 bg-gray-300 rounded-full"></div>
+                                </div>
+                            )}
+                            
                             <div className="p-8 min-h-full">
                                 {blocks.map(block => (
                                     <BlockRenderer key={block.id} block={block} />
