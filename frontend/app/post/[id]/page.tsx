@@ -32,8 +32,7 @@ interface PostData {
     createdAt: Timestamp;
 }
 
-// --- ヘルパーコンポーネント & フック ---
-
+// --- タイピングアニメーション用フック ---
 const useTypewriter = (text: string | undefined, isActive: boolean) => {
     const [displayedText, setDisplayedText] = useState('');
     const [isTyping, setIsTyping] = useState(false);
@@ -73,6 +72,7 @@ const useTypewriter = (text: string | undefined, isActive: boolean) => {
     return { displayedText, isTyping };
 };
 
+// --- ブロック設定 ---
 const getBlockConfig = (type: string) => {
     switch (type) {
         case 'heading': return { label: '見出し', icon: Type, bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700' };
@@ -91,14 +91,12 @@ const DetailBlock = ({ block, index }: { block: any, index: number }) => {
     const config = getBlockConfig(block.type);
     const Icon = config.icon;
     let displayContent = block.content;
-    
     if (block.type === 'card') {
         try {
             const data = JSON.parse(block.content);
             displayContent = data.title || 'カードブロック';
         } catch { displayContent = 'カードブロック'; }
     }
-
     return (
         <div className={`relative flex items-center h-[42px] px-4 py-2 mb-2 ${config.bg} ${config.text} rounded-md border ${config.border} shadow-sm`}>
             <div className="flex items-center gap-3">
@@ -120,15 +118,14 @@ const BlockRenderer = ({ block }: { block: any }) => {
         const match = url.match(regExp);
         return (match && match[2].length === 11) ? match[2] : null;
     };
-
     switch (block.type) {
         case 'heading': return <h2 className="text-2xl font-bold mb-4 text-gray-900 pb-2 border-b-2 border-blue-500 inline-block">{block.content}</h2>;
         case 'text': return <p className="text-gray-700 mb-4 leading-relaxed whitespace-pre-wrap">{block.content}</p>;
         case 'button': return <button className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-bold shadow-md hover:bg-blue-700 transition-all mb-4">{block.content || 'ボタン'}</button>;
-        case 'image': return block.content ? (/* eslint-disable-next-line @next/next/no-img-element */<img src={block.content} alt="プレビュー" className="w-full mb-4 rounded-xl shadow-sm h-auto object-cover" crossOrigin="anonymous" />) : null;
+        case 'image': return block.content ? (/* eslint-disable-next-line @next/next/no-img-element */<img src={block.content} alt="Preview" className="w-full mb-4 rounded-xl shadow-sm h-auto object-cover" crossOrigin="anonymous" />) : null;
         case 'divider': return <hr className="my-6 border-t-2 border-dashed border-gray-300" />;
         case 'input': return <input type="text" placeholder={block.content} disabled className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-500 mb-4" />;
-        case 'youtube': { const vId = getYouTubeId(block.content); return vId ? (<div className="w-full aspect-video bg-black rounded-xl overflow-hidden mb-4 shadow-lg"><iframe src={`https://www.youtube.com/embed/${vId}`} className="w-full h-full" allowFullScreen title="動画" /></div>) : null; }
+        case 'youtube': { const vId = getYouTubeId(block.content); return vId ? (<div className="w-full aspect-video bg-black rounded-xl overflow-hidden mb-4 shadow-lg"><iframe src={`https://www.youtube.com/embed/${vId}`} className="w-full h-full" allowFullScreen title="YouTube" /></div>) : null; }
         case 'card': {
             let d = { title: '', desc: '', btn: '', img: '' }; try { d = JSON.parse(block.content); } catch {}
             return (
@@ -142,13 +139,12 @@ const BlockRenderer = ({ block }: { block: any }) => {
     }
 };
 
-// --- 個別投稿表示コンポーネント ---
+// --- 個別投稿ビュー ---
 const PostView = ({ post }: { post: PostData }) => {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isLiked, setIsLiked] = useState(false);
     const [copied, setCopied] = useState(false);
     
-    // 画面表示時は常にアニメーションを有効にする
     const { displayedText, isTyping } = useTypewriter(post?.code, post.type === 'text');
     const codeEndRef = useRef<HTMLDivElement>(null);
 
@@ -185,7 +181,7 @@ const PostView = ({ post }: { post: PostData }) => {
     return (
         <div className="h-full w-full flex flex-col lg:flex-row relative">
             
-            {/* 左パネル */}
+            {/* 左パネル: コード / ブロック構成 */}
             <div className="w-full lg:w-1/2 bg-white flex flex-col border-r border-gray-200 relative z-10">
                 <div className="h-10 bg-gray-50 flex items-center justify-between px-4 border-b border-gray-200 shrink-0">
                     <div className="flex items-center gap-2 text-xs font-mono text-gray-500">
@@ -201,15 +197,6 @@ const PostView = ({ post }: { post: PostData }) => {
                 </div>
 
                 <div className="flex-1 overflow-auto custom-scrollbar p-0 bg-white">
-                    {post.caption && (
-                        <div className="p-5 border-b border-gray-100 bg-gray-50/50">
-                            <div className="flex items-center gap-2 mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                <AlignLeft size={12} /><span>説明</span>
-                            </div>
-                            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-sans">{post.caption}</p>
-                        </div>
-                    )}
-
                     {post.type === 'text' ? (
                         <div className="relative min-h-full bg-[#1e1e1e]">
                             <pre className="m-0 p-6 font-mono text-sm leading-relaxed text-gray-300 whitespace-pre-wrap break-all" style={{ fontFamily: '"JetBrains Mono", Menlo, Consolas, monospace' }}>
@@ -228,7 +215,7 @@ const PostView = ({ post }: { post: PostData }) => {
                 </div>
             </div>
 
-            {/* 右パネル */}
+            {/* 右パネル: プレビュー + アクション・説明エリア */}
             <div className="w-full lg:w-1/2 bg-[#F9FAFB] flex flex-col relative overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] opacity-100 pointer-events-none" />
 
@@ -238,23 +225,25 @@ const PostView = ({ post }: { post: PostData }) => {
                         <span className="tracking-wider font-bold">プレビュー</span>
                     </div>
                     <div className="flex items-center gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={post.userAvatar} alt={post.userName} className="w-6 h-6 rounded-full border border-gray-200" onError={(e) => { (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest'; }} />
                         <span className="text-xs font-bold text-gray-800">{post.userName}</span>
                         <span className="text-[10px] text-gray-400 font-mono">{date}</span>
                     </div>
                 </div>
 
-                <div className="flex-1 relative p-8 flex flex-col z-10 items-center justify-center">
+                {/* スクロールエリア (プレビューのみ) */}
+                <div className="flex-1 relative p-8 flex flex-col z-10 items-center overflow-y-auto custom-scrollbar">
                     {post.type === 'text' ? (
                         previewUrl ? (
-                            <div className="flex-1 w-full bg-white rounded-lg shadow-xl overflow-hidden ring-1 ring-gray-200 relative">
+                            <div className="w-full aspect-video bg-white rounded-lg shadow-xl overflow-hidden ring-1 ring-gray-200 relative shrink-0">
                                 <iframe src={previewUrl} className="w-full h-full border-none" sandbox="allow-scripts allow-modals" />
                             </div>
                         ) : (
-                            <div className="flex items-center justify-center h-full text-gray-400">読み込み中...</div>
+                            <div className="flex items-center justify-center h-64 text-gray-400">読み込み中...</div>
                         )
                     ) : (
-                        <div className="w-full h-full max-w-[480px] max-h-[700px] bg-white rounded-3xl shadow-xl overflow-y-auto relative ring-4 ring-gray-200 border border-gray-100">
+                        <div className="w-full h-full max-w-[480px] max-h-[700px] bg-white rounded-3xl shadow-xl overflow-y-auto relative ring-4 ring-gray-200 border border-gray-100 shrink-0">
                             <div className="sticky top-0 left-0 right-0 h-8 bg-gray-50 border-b border-gray-100 flex items-center justify-center z-10">
                                 <div className="w-16 h-1 bg-gray-300 rounded-full"></div>
                             </div>
@@ -267,43 +256,59 @@ const PostView = ({ post }: { post: PostData }) => {
                     )}
                 </div>
 
-                <div className="h-16 bg-white border-t border-gray-200 flex items-center justify-between px-6 z-20 relative shrink-0">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => setIsLiked(!isLiked)} className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${isLiked ? 'bg-pink-50 text-pink-600 border border-pink-200' : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100 hover:text-gray-900'}`}>
-                            <Heart size={18} className={isLiked ? 'fill-current' : ''} />
-                            <span className="text-sm font-medium">{post.likes + (isLiked ? 1 : 0)}</span>
-                        </button>
-                        <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-all">
-                            <MessageCircle size={18} />
-                            <span className="text-sm font-medium">{post.comments}</span>
+                {/* ★修正: 説明エリアとアクションバーを同じ親divに統合 */}
+                <div className="bg-white border-t border-gray-200 flex flex-col z-20 relative shrink-0">
+                    
+                    {/* 説明文 (存在する場合のみ表示) */}
+                    {post.caption && (
+                        <div className="px-6 pt-5 pb-2">
+                            <div className="flex items-center gap-2 mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                <AlignLeft size={12} className="text-blue-500" />
+                                <span>説明</span>
+                            </div>
+                            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-sans">
+                                {post.caption}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* アクションボタン (いいね・コメント・シェア) */}
+                    <div className="h-16 flex items-center justify-between px-6">
+                        <div className="flex items-center gap-4">
+                            <button onClick={() => setIsLiked(!isLiked)} className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${isLiked ? 'bg-pink-50 text-pink-600 border border-pink-200' : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100 hover:text-gray-900'}`}>
+                                <Heart size={18} className={isLiked ? 'fill-current' : ''} />
+                                <span className="text-sm font-medium">{post.likes + (isLiked ? 1 : 0)}</span>
+                            </button>
+                            <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-all">
+                                <MessageCircle size={18} />
+                                <span className="text-sm font-medium">{post.comments}</span>
+                            </button>
+                        </div>
+                        <button className="p-2 rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                            <Share2 size={20} />
                         </button>
                     </div>
-                    <button className="p-2 rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors">
-                        <Share2 size={20} />
-                    </button>
                 </div>
             </div>
         </div>
     );
 };
 
-// --- メインページコンポーネント ---
+// --- メインページ ---
 export default function PostDetailPage({ params }: { params: Promise<{ id: string }>; }) {
     const { id: initialId } = React.use(params);
     const [posts, setPosts] = useState<PostData[]>([]);
     const [loading, setLoading] = useState(true);
-    const router = useRouter();
 
     useEffect(() => {
         const fetchPosts = async () => {
             try {
-                // 最新順に全件取得
                 const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
                 const snapshot = await getDocs(q);
                 const fetchedPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PostData));
                 setPosts(fetchedPosts);
             } catch (error) {
-                console.error("Error:", error);
+                console.error("Fetch Error:", error);
             } finally {
                 setLoading(false);
             }
@@ -311,10 +316,8 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         fetchPosts();
     }, []);
 
-    // 現在の投稿データと前後の投稿IDを特定
     const currentIndex = posts.findIndex(p => p.id === initialId);
     const currentPost = posts[currentIndex];
-    
     const prevPostId = currentIndex > 0 ? posts[currentIndex - 1].id : null;
     const nextPostId = currentIndex < posts.length - 1 ? posts[currentIndex + 1].id : null;
 
@@ -325,7 +328,6 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
             </div>
         );
     }
-
     if (!currentPost) {
         return (
             <div className="h-screen bg-[#F9FAFB] flex items-center justify-center text-gray-500">
@@ -337,7 +339,6 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
     return (
         <div className="flex h-screen bg-[#F9FAFB] text-gray-900 font-sans overflow-hidden">
             <Sidebar />
-
             <main className="flex-1 md:ml-64 relative h-full flex flex-col">
                 <header className="absolute top-0 left-0 right-0 h-16 px-6 flex items-center justify-between z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 pointer-events-none">
                     <a href="/" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors pointer-events-auto p-2 rounded-full hover:bg-gray-100">
@@ -345,38 +346,18 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                         <span className="text-sm font-bold tracking-tight">ホームに戻る</span>
                     </a>
                 </header>
-
                 <div className="flex-1 relative pt-16 h-full overflow-hidden">
                     <PostView post={currentPost} />
-
-                    {/* ★修正: 左右のホバーエリアによるナビゲーション */}
-                    
-                    {/* 左側: 前の投稿 (新しい投稿) */}
                     {prevPostId && (
                         <div className="absolute top-0 left-0 bottom-0 w-24 z-50 flex items-center justify-start pl-6 group pointer-events-none">
-                            {/* ホバー時に背景を少し暗くする効果（任意） */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                            
-                            <Link 
-                                href={`/post/${prevPostId}`}
-                                className="pointer-events-auto p-4 bg-white border border-gray-200 rounded-full shadow-xl text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-all transform scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100"
-                                title="前の投稿"
-                            >
+                            <Link href={`/post/${prevPostId}`} className="pointer-events-auto p-4 bg-white border border-gray-200 rounded-full shadow-xl text-gray-500 hover:text-blue-600 transition-all transform scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100">
                                 <ChevronLeft size={28} />
                             </Link>
                         </div>
                     )}
-
-                    {/* 右側: 次の投稿 (古い投稿) */}
                     {nextPostId && (
                         <div className="absolute top-0 right-0 bottom-0 w-24 z-50 flex items-center justify-end pr-6 group pointer-events-none">
-                            <div className="absolute inset-0 bg-gradient-to-l from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                            
-                            <Link 
-                                href={`/post/${nextPostId}`}
-                                className="pointer-events-auto p-4 bg-white border border-gray-200 rounded-full shadow-xl text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-all transform scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100"
-                                title="次の投稿"
-                            >
+                            <Link href={`/post/${nextPostId}`} className="pointer-events-auto p-4 bg-white border border-gray-200 rounded-full shadow-xl text-gray-500 hover:text-blue-600 transition-all transform scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100">
                                 <ChevronRight size={28} />
                             </Link>
                         </div>
