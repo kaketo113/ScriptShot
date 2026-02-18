@@ -167,7 +167,7 @@ export default function Home() {
                                                     <div className="w-12 h-12 md:w-16 md:h-16 bg-white border border-gray-200 rounded-full shadow-lg flex items-center justify-center text-gray-400 group-hover:text-blue-600 group-hover:scale-110 transition-all"><ChevronLeft size={28} /></div>
                                                 </button>
                                                 <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-8 flex items-center gap-4">
-                                                    <PlayCircle className="text-blue-600" size={32} /> 15秒でわかるScriptShot
+                                                    <PlayCircle className="text-blue-600" size={32} /> 1分でわかるScriptShot
                                                 </h2>
                                                 <div className="relative w-full max-w-4xl aspect-video bg-black rounded-[2.5rem] overflow-hidden shadow-2xl border-[8px] border-white ring-1 ring-gray-200">
                                                     <video src="/videos/how-to-use.mp4" className="w-full h-full object-cover" controls autoPlay muted playsInline />
