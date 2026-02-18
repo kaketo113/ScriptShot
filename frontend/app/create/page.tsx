@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { Save, Code2, Loader2, Monitor, ArrowLeft, AlignLeft, AlertTriangle } from 'lucide-react';
+import { Save, Code2, Loader2, Monitor, ArrowLeft, AlignLeft, HelpCircle, AlertTriangle, Maximize } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toJpeg } from 'html-to-image';
 
 import Editor from 'react-simple-code-editor';
 import Prism from 'prismjs';
@@ -17,7 +18,7 @@ export default function CreatePage() {
     const { user } = useAuth();
     const router = useRouter();
     
-    // 初期値
+    // 初期値 (CSS漏れを防ぐため、クラス指定に変更しました)
     const [code, setCode] = useState(`<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -26,14 +27,16 @@ export default function CreatePage() {
     <title>Demo</title>
 </head>
 <body>
-    <div class="card">
-        <h1>Hello World!</h1>
-        <p>コードを書いて、リアルタイムに確認しよう。</p>
-        <button>Click Me</button>
+    <div class="container">
+        <div class="card">
+            <h1>Hello World!</h1>
+            <p>コードを書いて、リアルタイムで確認しよう。</p>
+            <button class="action-btn">Click Me</button>
+        </div>
     </div>
 </body>
 <style>
-    body { 
+    .container { 
         font-family: sans-serif;
         display: flex; 
         justify-content: center; 
@@ -51,7 +54,8 @@ export default function CreatePage() {
     }
     h1 { color: #2563eb; margin-bottom: 1rem; }
     p { color: #666; margin-bottom: 2rem; }
-    button {
+    
+    .action-btn {
         background: #2563eb;
         color: white;
         border: none;
@@ -61,7 +65,7 @@ export default function CreatePage() {
         cursor: pointer;
         transition: transform 0.1s;
     }
-    button:active { transform: scale(0.95); }
+    .action-btn:active { transform: scale(0.95); }
 </style>`);
     
     const [previewUrl, setPreviewUrl] = useState('');
@@ -73,6 +77,10 @@ export default function CreatePage() {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [pendingPath, setPendingPath] = useState<string>('/');
 
+    // 参照
+    const captureRef = useRef<HTMLDivElement>(null);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+
     useEffect(() => {
         const timeout = setTimeout(() => {
             const blob = new Blob([code], { type: 'text/html' });
@@ -83,10 +91,28 @@ export default function CreatePage() {
         return () => clearTimeout(timeout);
     }, [code]);
 
+    const generateThumbnail = async () => {
+        if (!captureRef.current) return null;
+        try {
+            await new Promise(resolve => setTimeout(resolve, 800));
+            return await toJpeg(captureRef.current, { 
+                quality: 0.8, 
+                width: 800, 
+                height: 600, 
+                backgroundColor: '#ffffff',
+                cacheBust: true
+            });
+        } catch (err) { 
+            console.error("Thumbnail generation failed:", err);
+            return null; 
+        }
+    };
+
     const handleSave = async () => {
         if (!code.trim()) return;
         setIsSaving(true);
         try {
+            const thumbnailBase64 = await generateThumbnail();
             await addDoc(collection(db, "posts"), {
                 userId: user?.uid || "guest_user",
                 userName: user?.displayName || "Guest User",
@@ -94,6 +120,7 @@ export default function CreatePage() {
                 type: 'text',
                 code: code,
                 caption: caption,
+                thumbnail: thumbnailBase64 || null,
                 likes: 0,
                 comments: 0,
                 createdAt: serverTimestamp(),
@@ -109,7 +136,6 @@ export default function CreatePage() {
         }
     };
 
-    // 画面遷移時のチェック関数
     const handleNavigation = (path: string) => {
         if (isDirty) {
             setPendingPath(path);
@@ -119,10 +145,22 @@ export default function CreatePage() {
         }
     };
 
-    // モーダルで「移動する」を選んだ時
     const confirmNavigation = () => {
         setShowConfirmModal(false);
         router.push(pendingPath);
+    };
+
+    // 全画面表示切り替え
+    const toggleFullScreen = () => {
+        if (iframeRef.current) {
+            if (!document.fullscreenElement) {
+                iframeRef.current.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
     };
 
     return (
@@ -197,12 +235,21 @@ export default function CreatePage() {
                             </span>
                             プレビュー
                         </div>
-                        <div className='text-[10px] text-gray-400 font-mono'>1920 x 1080</div>
+                        {/* 全画面表示ボタン */}
+                        <button 
+                            onClick={toggleFullScreen}
+                            className='flex items-center gap-1.5 text-[10px] font-bold text-gray-400 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-blue-50'
+                            title="全画面表示"
+                        >
+                            <Maximize size={12} />
+                            <span>全画面</span>
+                        </button>
                     </div>
                     
                     <div className="flex-1 bg-gray-50 relative">
                         {previewUrl && (
                             <iframe
+                                ref={iframeRef}
                                 src={previewUrl}
                                 title="preview"
                                 className="w-full h-full border-none"
@@ -219,7 +266,7 @@ export default function CreatePage() {
                                 value={caption}
                                 onChange={(e) => {
                                     setCaption(e.target.value);
-                                    setIsDirty(true); // キャプション変更時もフラグを立てる
+                                    setIsDirty(true);
                                 }}
                                 placeholder="作品の説明を入力してください..."
                                 className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500/50 resize-none h-16 custom-scrollbar transition-all focus:bg-white focus:shadow-sm"
@@ -241,7 +288,17 @@ export default function CreatePage() {
 
             </div>
 
-            {/* 離脱確認モーダル */}
+            {/* サムネ撮影用 */}
+            <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
+                <div 
+                    ref={captureRef} 
+                    style={{ width: '800px', height: '600px', background: '#ffffff', overflow: 'hidden' }}
+                >
+                    <div dangerouslySetInnerHTML={{ __html: code }} className="w-full h-full" />
+                </div>
+            </div>
+
+            {/* 自作の離脱確認モーダル */}
             {showConfirmModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm transform scale-100 transition-all">
