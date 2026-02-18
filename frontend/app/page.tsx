@@ -145,7 +145,7 @@ export default function Home() {
                                 onClick={handleCloseHero}
                                 className="absolute top-6 right-6 z-50 flex items-center gap-2 px-3 py-1.5 bg-white/50 hover:bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-500 hover:text-red-500 transition-all shadow-sm backdrop-blur-sm group"
                             >
-                                <span>今後表示しない</span>
+                                <span>使い方ガイドを今後表示しない</span>
                                 <div className="bg-gray-200 group-hover:bg-red-100 rounded-full p-0.5 transition-colors">
                                     <X size={12} />
                                 </div>
@@ -161,8 +161,8 @@ export default function Home() {
                                 <p className="text-gray-500 text-lg md:text-xl max-w-2xl mb-12 leading-relaxed">
                                     ScriptShotは、あなたのコードやアイデアを美しく共有するプラットフォームです。
                                     <br className="hidden md:block" />
-                                    <a href='/create'><span className="text-blue-600 font-bold decoration-blue-200 underline decoration-4 underline-offset-4"> プログラミング</span></a> も 
-                                    <a href='/create/block'><span className="text-emerald-600 font-bold decoration-emerald-200 underline decoration-4 underline-offset-4 ml-2"> ノーコード制作</span></a> も、これ一つで。
+                                    <a href='/create'><span className="text-blue-600 font-bold decoration-blue-200 underline decoration-4 underline-offset-4 hover:text-blue-700"> プログラミング</span></a> も 
+                                    <a href='/create/block'><span className="text-emerald-600 font-bold decoration-emerald-200 underline decoration-4 underline-offset-4 ml-2 hover:text-emerald-700"> ノーコード制作</span></a> も、これ一つで。
                                 </p>
 
                                 {/* モード選択エリア */}
