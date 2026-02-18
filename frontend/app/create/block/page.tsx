@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useId, useEffect } from 'react';
 import { 
-    DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay 
+    DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors 
 } from '@dnd-kit/core';
 import { 
     arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable 
@@ -11,7 +11,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { 
     Type, Image as ImageIcon, MousePointerClick, Box, 
     GripVertical, Trash2, Save, Loader2, ArrowLeft, AlignLeft,
-    PlusCircle, LayoutTemplate, Code2, Monitor, HelpCircle,
+    PlusCircle, LayoutTemplate, Code2, Monitor,
     Minus, FileInput, CreditCard, Youtube, 
     ChevronLeft, ChevronRight, AlertTriangle
 } from 'lucide-react';
@@ -21,7 +21,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { toJpeg } from 'html-to-image';
 import { useRouter } from 'next/navigation';
 
-// --- Types ---
+// Types
 type BlockType = 'heading' | 'text' | 'image' | 'button' | 'divider' | 'input' | 'card' | 'youtube';
 
 interface Block {
@@ -35,7 +35,7 @@ const INITIAL_BLOCKS: Block[] = [
     { id: '2', type: 'text', content: 'これはサンプルテキストです。ここをクリックして自由に編集してください。' },
 ];
 
-// --- Components ---
+// Components
 
 // 1. ブロック追加ボタン
 const ToolButton = ({ type, icon: Icon, label, colorClass, onClick }: any) => (
@@ -187,7 +187,7 @@ const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: 
     );
 };
 
-// 3. プレビューレンダラー（CORS対策版）
+// 3. プレビューレンダラー
 const BlockRenderer = ({ block }: { block: Block }) => {
     const getYouTubeId = (url: string) => {
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -210,7 +210,6 @@ const BlockRenderer = ({ block }: { block: Block }) => {
             return (
                 <div className="w-full mb-4 rounded-xl overflow-hidden shadow-sm bg-gray-50">
                     {block.content ? (
-                        // ★修正: crossOrigin追加
                         // eslint-disable-next-line @next/next/no-img-element
                         <img 
                             src={block.content} 
@@ -254,7 +253,6 @@ const BlockRenderer = ({ block }: { block: Block }) => {
             return (
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 border border-gray-200">
                     {cardData.img && (
-                        // ★修正: crossOrigin追加
                         // eslint-disable-next-line @next/next/no-img-element
                         <img 
                             src={cardData.img} 
@@ -278,13 +276,18 @@ const BlockRenderer = ({ block }: { block: Block }) => {
     }
 };
 
-// --- Main Page Component ---
+// Main Page Component
 export default function CreateBlockPage() {
     const { user } = useAuth();
     const [blocks, setBlocks] = useState<Block[]>(INITIAL_BLOCKS);
     const [caption, setCaption] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
+    
+    // 離脱確認モーダルの状態
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    // 遷移先を保存するステート
+    const [pendingPath, setPendingPath] = useState<string>('/');
 
     const captureRef = useRef<HTMLDivElement>(null);
     const toolboxRef = useRef<HTMLDivElement>(null);
@@ -299,6 +302,7 @@ export default function CreateBlockPage() {
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
+    // ブラウザの閉じる/リロード対策
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
             if (isDirty) {
@@ -310,7 +314,6 @@ export default function CreateBlockPage() {
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [isDirty]);
 
-    // 両方のパネルを自動スクロール
     useEffect(() => {
         if (bottomRef.current) {
             bottomRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -370,20 +373,17 @@ export default function CreateBlockPage() {
         }
     };
 
-    // ★修正: 待機時間延長とキャッシュ対策を追加
     const generateThumbnail = async () => {
         if (!captureRef.current) return null;
         try {
-            // レンダリング完了を待つために長めに待機 (800ms)
             await new Promise(resolve => setTimeout(resolve, 800));
-            
             return await toJpeg(captureRef.current, { 
                 quality: 0.8, 
                 width: 800, 
                 height: 600, 
                 backgroundColor: '#ffffff', 
                 style: { background: 'white' },
-                cacheBust: true // キャッシュの影響を受けないように
+                cacheBust: true 
             });
         } catch (err) { 
             console.error("Thumbnail generation failed:", err);
@@ -409,6 +409,7 @@ export default function CreateBlockPage() {
                 comments: 0,
                 createdAt: serverTimestamp(),
             });
+            
             setIsDirty(false);
             router.push('/');
         } catch (error) {
@@ -418,15 +419,33 @@ export default function CreateBlockPage() {
         }
     };
 
+    // 汎用的な遷移チェック関数
+    const handleNavigation = (path: string) => {
+        if (isDirty) {
+            // 未保存なら行き先を保存してモーダルを表示
+            setPendingPath(path);
+            setShowConfirmModal(true);
+        } else {
+            // 保存済みならそのまま移動
+            router.push(path);
+        }
+    };
+
+    // モーダルで「破棄して移動」を選んだ時
+    const confirmNavigation = () => {
+        setShowConfirmModal(false);
+        router.push(pendingPath); // 保存しておいたパスへ移動
+    };
+
     return (
         <div className='h-screen w-full bg-[#F9FAFB] text-gray-900 flex flex-col font-sans overflow-hidden'>
             
-            {/* Header (すりガラス効果追加) */}
+            {/* Header */}
             <header className='h-16 px-6 flex items-center justify-between bg-white/80 backdrop-blur-sm z-50 shrink-0 border-b border-gray-100'>
                 <div className='flex items-center gap-4'>
-                     <a href='/' className='text-gray-500 hover:text-gray-900 transition-colors p-2 hover:bg-gray-100 rounded-full'>
+                     <button onClick={() => handleNavigation('/')} className='text-gray-500 hover:text-gray-900 transition-colors p-2 hover:bg-gray-100 rounded-full'>
                         <ArrowLeft className='w-5 h-5' />
-                    </a>
+                    </button>
                     <div className='flex items-center gap-2'>
                         <LayoutTemplate size={20} className="text-emerald-600" />
                         <span className='font-bold text-lg tracking-tight'>ブロックエディタ</span>
@@ -435,7 +454,12 @@ export default function CreateBlockPage() {
 
                  <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'>
                     <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
-                        <a href='/create' className='flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all text-gray-500 hover:text-gray-900 hover:bg-white/50 font-medium'><Code2 className='w-4 h-4' /><span>コード</span></a>
+                        <button 
+                            onClick={() => handleNavigation('/create')}
+                            className='flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all text-gray-500 hover:text-gray-900 hover:bg-white/50 font-medium'
+                        >
+                            <Code2 className='w-4 h-4' /><span>コード</span>
+                        </button>
                         <button className='flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all bg-white text-emerald-600 shadow-sm font-bold border border-gray-100'><Monitor className='w-4 h-4' /><span>ブロック</span></button>
                     </div>
                 </div>
@@ -445,13 +469,11 @@ export default function CreateBlockPage() {
                 </div>
             </header>
 
-            {/* Main Content (カード風レイアウト) */}
+            {/* Main Content */}
             <div className='flex-1 flex overflow-hidden p-4 md:p-6 gap-4 md:gap-6'>
-                
-                {/* 左側：編集エリア (丸角カード) */}
+                {/* ... (中身は変更なし) ... */}
                 <div className='w-1/2 flex flex-col bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden relative z-10'>
                     
-                    {/* ツールボックス */}
                     <div className="py-6 px-4 border-b border-gray-100 bg-white relative group/toolbox z-20">
                         <div className="flex items-center justify-between mb-6 px-2">
                             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
@@ -472,7 +494,6 @@ export default function CreateBlockPage() {
                             className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide snap-x scroll-smooth relative z-20"
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         >
-                            {/* 色を濃くして白飛び防止 */}
                             <ToolButton type="heading" icon={Type} label="見出し" colorClass="border-blue-300 hover:border-blue-400 text-blue-700 bg-blue-100" onClick={addBlock} />
                             <ToolButton type="text" icon={Box} label="本文" colorClass="border-emerald-300 hover:border-emerald-400 text-emerald-700 bg-emerald-100" onClick={addBlock} />
                             <ToolButton type="image" icon={ImageIcon} label="画像" colorClass="border-purple-300 hover:border-purple-400 text-purple-700 bg-purple-100" onClick={addBlock} />
@@ -486,7 +507,6 @@ export default function CreateBlockPage() {
                         <div className="absolute right-0 top-12 bottom-0 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none md:hidden z-20"></div>
                     </div>
 
-                    {/* タイムライン */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-white relative z-10">
                         <div className="max-w-xl mx-auto pb-20">
                             {blocks.length === 0 ? (
@@ -509,7 +529,7 @@ export default function CreateBlockPage() {
                     </div>
                 </div>
 
-                {/* 右側：プレビュー (丸角カード) */}
+                {/* 右側：プレビュー */}
                 <div className='w-1/2 flex flex-col bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden'>
                     <div className='h-12 border-b border-gray-100 flex items-center justify-between px-6 bg-white'>
                         <div className='flex items-center gap-2 text-[10px] font-bold text-emerald-600 uppercase tracking-widest'>
@@ -527,7 +547,6 @@ export default function CreateBlockPage() {
                                 {blocks.map(block => (
                                     <BlockRenderer key={block.id} block={block} />
                                 ))}
-                                {/* 自動スクロール用アンカー */}
                                 <div ref={previewBottomRef}></div>
                             </div>
                         </div>
@@ -565,6 +584,37 @@ export default function CreateBlockPage() {
                     {blocks.map(block => <BlockRenderer key={block.id} block={block} />)}
                 </div>
             </div>
+
+            {/* 離脱確認モーダル */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm transform scale-100 transition-all">
+                        <div className="flex flex-col items-center text-center gap-4">
+                            <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-2">
+                                <AlertTriangle size={24} />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900">このページを離れますか？</h3>
+                            <p className="text-sm text-gray-500">
+                                作成内容は破棄されます。<br />本当によろしいですか？
+                            </p>
+                            <div className="flex gap-3 w-full mt-4">
+                                <button 
+                                    onClick={() => setShowConfirmModal(false)}
+                                    className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
+                                >
+                                    キャンセル
+                                </button>
+                                <button 
+                                    onClick={confirmNavigation}
+                                    className="flex-1 py-2.5 px-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-red-500/30"
+                                >
+                                    破棄して移動
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
