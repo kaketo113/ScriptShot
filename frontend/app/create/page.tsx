@@ -7,6 +7,8 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Save, Code2, Loader2, Monitor, ArrowLeft, AlignLeft, HelpCircle, AlertTriangle, Maximize } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toJpeg } from 'html-to-image';
+import { storage } from '../../lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 import Editor from 'react-simple-code-editor';
 import Prism from 'prismjs';
@@ -112,7 +114,35 @@ export default function CreatePage() {
         if (!code.trim()) return;
         setIsSaving(true);
         try {
+            // 1. サムネイルのBase64文字列を取得
             const thumbnailBase64 = await generateThumbnail();
+            let thumbnailUrl = null;
+
+            // 2. Base64が存在する場合、StorageにアップロードしてURLを取得
+            if (thumbnailBase64) {
+                // Base64からデータURLのプレフィックスを取り除く
+                const base64Data = thumbnailBase64.replace(/^data:image\/jpeg;base64,/, "");
+                // Base64をバイナリデータ(Blob)に変換
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+                // Storageの参照を作成（ファイル名は一意にするためタイムスタンプを利用）
+                const fileName = `thumbnails/text_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+                const storageRef = ref(storage, fileName);
+
+                // アップロード実行
+                await uploadBytes(storageRef, blob);
+                
+                // ダウンロード用URLを取得
+                thumbnailUrl = await getDownloadURL(storageRef);
+            }
+
+            // 3. Firestoreには、取得したURLだけを保存する
             await addDoc(collection(db, "posts"), {
                 userId: user?.uid || "guest_user",
                 userName: user?.displayName || "Guest User",
@@ -120,7 +150,7 @@ export default function CreatePage() {
                 type: 'text',
                 code: code,
                 caption: caption,
-                thumbnail: thumbnailBase64 || null,
+                thumbnail: thumbnailUrl, // ここがURL（文字列）に変わる
                 likes: 0,
                 comments: 0,
                 createdAt: serverTimestamp(),

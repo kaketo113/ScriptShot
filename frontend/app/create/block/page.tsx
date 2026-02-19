@@ -20,6 +20,8 @@ import { db } from '../../../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { toJpeg } from 'html-to-image';
 import { useRouter } from 'next/navigation';
+import { storage } from '../../../lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Types
 type BlockType = 'heading' | 'text' | 'image' | 'button' | 'divider' | 'input' | 'card' | 'youtube';
@@ -358,7 +360,29 @@ export default function CreateBlockPage() {
         if (blocks.length === 0) return;
         setIsSaving(true);
         try {
+            // 1. サムネイル生成
             const thumbnailBase64 = await generateThumbnail();
+            let thumbnailUrl = null;
+
+            // 2. Storageへアップロード
+            if (thumbnailBase64) {
+                const base64Data = thumbnailBase64.replace(/^data:image\/jpeg;base64,/, "");
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+                const fileName = `thumbnails/block_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+                const storageRef = ref(storage, fileName);
+
+                await uploadBytes(storageRef, blob);
+                thumbnailUrl = await getDownloadURL(storageRef);
+            }
+
+            // 3. Firestoreへ保存
             await addDoc(collection(db, "posts"), {
                 userId: user?.uid || "guest_user",
                 userName: user?.displayName || "Guest User",
@@ -366,7 +390,7 @@ export default function CreateBlockPage() {
                 type: 'block',
                 blocks,
                 codeSnippet: 'Generated from Blocks',
-                thumbnail: thumbnailBase64 || null,
+                thumbnail: thumbnailUrl, // ここがURLに変わる
                 caption,
                 likes: 0,
                 comments: 0,
@@ -376,6 +400,7 @@ export default function CreateBlockPage() {
             setIsDirty(false);
             router.push('/');
         } catch (error) {
+            console.error("Error saving post:", error);
             alert("投稿に失敗しました。");
         } finally {
             setIsSaving(false);

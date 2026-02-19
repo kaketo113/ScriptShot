@@ -9,11 +9,12 @@ import { useAuth } from '../context/AuthContext';
 import { 
     Code2, Box, Layers, Share2, Zap, 
     MousePointerClick, CreditCard, Image as ImageIcon, Type,
-    Youtube, FileInput, RotateCcw, X, ChevronLeft, ChevronRight, PlayCircle, ChevronDown, Loader2
+    Youtube, FileInput, RotateCcw, X, ChevronLeft, ChevronRight, PlayCircle, ChevronDown, Loader2,
+    Flame
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// 漂う要素の設定（変更なし）
+// 漂う要素の設定
 const FLOATING_ITEMS = [
     { type: 'tag', label: '<div>', top: '10%', left: '10%', delay: 0 },
     { type: 'tag', label: '<main>', top: '20%', left: '85%', delay: 1 },
@@ -54,14 +55,15 @@ const FloatingElement = ({ item }: { item: any }) => {
     );
 };
 
-// 1回の読み込み件数（3列レイアウトに合わせて9件）
 const FETCH_LIMIT = 9;
+const HOT_LIMIT = 3; // 熱い投稿は上位3件を表示
 
 export default function Home() {
     const { user } = useAuth();
     
     // データ管理用のState
     const [posts, setPosts] = useState<any[]>([]);
+    const [hotPosts, setHotPosts] = useState<any[]>([]);
     const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
     const [hasMore, setHasMore] = useState(true);
     const [isLoadingInitial, setIsLoadingInitial] = useState(true);
@@ -72,28 +74,42 @@ export default function Home() {
     const [currentSlide, setCurrentSlide] = useState(0);
     const timelineRef = useRef<HTMLDivElement>(null);
 
-    // 初期ロード時のデータ取得
+    // 初期ロード時のデータ取得（最新の投稿 ＋ 熱い投稿を並行取得）
     useEffect(() => {
         const isHidden = localStorage.getItem('hide_hero_section');
         if (!isHidden) setShowHero(true);
 
-        const fetchInitialPosts = async () => {
+        const fetchAllInitialData = async () => {
             try {
-                // limitを追加してN+1やメモリ不足を回避
-                const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(FETCH_LIMIT));
-                const querySnapshot = await getDocs(q);
+                // 1. 最新の投稿を取得
+                const latestQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(FETCH_LIMIT));
                 
-                const fetchedPosts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setPosts(fetchedPosts);
+                // 2. 熱い投稿（いいね順）を取得
+                const hotQuery = query(collection(db, "posts"), orderBy("likes", "desc"), limit(HOT_LIMIT));
 
-                // 次のページのために最後のドキュメントを保存
-                const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
-                setLastDoc(lastVisible);
+                // 並行してリクエストを飛ばす（パフォーマンス最適化）
+                const [latestSnap, hotSnap] = await Promise.all([
+                    getDocs(latestQuery),
+                    getDocs(hotQuery)
+                ]);
+                
+                // 最新投稿の処理
+                const fetchedLatest = latestSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setPosts(fetchedLatest);
 
-                // 取得件数がFETCH_LIMIT未満なら、もう次のページはないと判断する
-                if (querySnapshot.docs.length < FETCH_LIMIT) {
+                if (latestSnap.docs.length > 0) {
+                    setLastDoc(latestSnap.docs[latestSnap.docs.length - 1]);
+                }
+                if (latestSnap.docs.length < FETCH_LIMIT) {
                     setHasMore(false);
                 }
+
+                // 熱い投稿の処理（いいね数が0のものは表示しない）
+                const fetchedHot = hotSnap.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter((post: any) => (post.likes || 0) > 0);
+                setHotPosts(fetchedHot);
+
             } catch (error) {
                 console.error("初期データの取得に失敗しました:", error);
             } finally {
@@ -101,7 +117,7 @@ export default function Home() {
             }
         };
 
-        fetchInitialPosts();
+        fetchAllInitialData();
     }, []);
 
     // 「もっと見る」ボタンを押した時の処理
@@ -110,7 +126,6 @@ export default function Home() {
         setIsLoadingMore(true);
 
         try {
-            // startAfterを使って、前回の続きから取得する
             const q = query(
                 collection(db, "posts"), 
                 orderBy("createdAt", "desc"), 
@@ -122,9 +137,9 @@ export default function Home() {
             const newPosts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setPosts(prev => [...prev, ...newPosts]);
 
-            const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
-            setLastDoc(lastVisible);
-
+            if (querySnapshot.docs.length > 0) {
+                setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
+            }
             if (querySnapshot.docs.length < FETCH_LIMIT) {
                 setHasMore(false);
             }
@@ -282,43 +297,74 @@ export default function Home() {
                         </button>
                     )}
 
-                    <div className="flex items-center gap-3 mb-10">
-                        <div className="w-1.5 h-8 bg-blue-600 rounded-full shadow-sm shadow-blue-200"></div>
-                        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">最新の投稿</h2>
-                    </div>
-
                     {isLoadingInitial ? (
                         <div className="flex justify-center items-center py-32">
                             <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
                         </div>
-                    ) : posts.length === 0 ? (
-                        <div className="text-center py-32 bg-white rounded-3xl border border-dashed border-gray-200 text-gray-400">
-                            <p className="text-lg">まだ投稿がありません。<br />あなたが最初のクリエイターになりましょう！</p>
-                        </div>
                     ) : (
                         <>
-                            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-                                {posts.map(post => <PostCard key={post.id} post={post} />)}
-                            </div>
-                            
-                            {/* もっと見るボタン（ページネーション） */}
-                            {hasMore && (
-                                <div className="mt-12 flex justify-center">
-                                    <button 
-                                        onClick={loadMorePosts}
-                                        disabled={isLoadingMore}
-                                        className="flex items-center gap-2 px-8 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-full hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isLoadingMore ? (
-                                            <>
-                                                <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                                                読み込み中...
-                                            </>
-                                        ) : (
-                                            "もっと見る"
-                                        )}
-                                    </button>
+                            {/* 🌟 熱い投稿セクション */}
+                            {hotPosts.length > 0 && (
+                                <div className="mb-16 bg-white p-8 rounded-3xl border border-red-100 shadow-sm relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-64 h-64 bg-red-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50 pointer-events-none"></div>
+
+                                    <div className="flex items-center gap-3 mb-8 relative z-10">
+                                        <div className="p-2 bg-red-100 text-red-600 rounded-xl">
+                                            <Flame size={24} className="animate-pulse" />
+                                        </div>
+                                        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">今、熱い投稿</h2>
+                                    </div>
+
+                                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10'>
+                                        {hotPosts.map((post, index) => (
+                                            <div key={`hot-${post.id}`} className="relative">
+                                                {/* 順位バッジ */}
+                                                <div className="absolute -top-3 -left-3 w-8 h-8 bg-gray-900 text-white flex items-center justify-center rounded-full font-bold text-sm z-20 shadow-md">
+                                                    {index + 1}
+                                                </div>
+                                                <PostCard post={post} /> 
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
+                            )}
+
+                            {/* 最新の投稿セクション */}
+                            <div className="flex items-center gap-3 mb-10 mt-8">
+                                <div className="w-1.5 h-8 bg-blue-600 rounded-full shadow-sm shadow-blue-200"></div>
+                                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">最新の投稿</h2>
+                            </div>
+
+                            {posts.length === 0 ? (
+                                <div className="text-center py-32 bg-white rounded-3xl border border-dashed border-gray-200 text-gray-400">
+                                    <p className="text-lg">まだ投稿がありません。<br />あなたが最初のクリエイターになりましょう！</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
+                                        {posts.map(post => <PostCard key={`latest-${post.id}`} post={post} />)}
+                                    </div>
+                                    
+                                    {/* もっと見るボタン */}
+                                    {hasMore && (
+                                        <div className="mt-12 flex justify-center">
+                                            <button 
+                                                onClick={loadMorePosts}
+                                                disabled={isLoadingMore}
+                                                className="flex items-center gap-2 px-8 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-full hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {isLoadingMore ? (
+                                                    <>
+                                                        <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                                                        読み込み中...
+                                                    </>
+                                                ) : (
+                                                    "もっと見る"
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </>
                     )}
