@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { Save, Code2, Loader2, Monitor, ArrowLeft, AlignLeft, HelpCircle, AlertTriangle, Maximize } from 'lucide-react';
+import { Save, Code2, Loader2, Monitor, ArrowLeft, AlignLeft,LayoutTemplate, AlertTriangle, Maximize } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toJpeg } from 'html-to-image';
 
@@ -88,7 +88,7 @@ export default function CreatePage() {
         return () => clearTimeout(timeout);
     }, [code]);
 
-    // 🌟 画質とピクセル比を下げてファイルサイズを極小化する
+    // 画質とピクセル比を下げてファイルサイズを極小化する
     const generateThumbnail = async () => {
         if (!captureRef.current) return null;
         try {
@@ -114,7 +114,7 @@ export default function CreatePage() {
             // 圧縮されたBase64文字列（軽量）を取得
             const thumbnailBase64 = await generateThumbnail();
 
-            // 🌟 直接Firestoreに保存する
+            // 直接Firestoreに保存する
             await addDoc(collection(db, "posts"), {
                 userId: user?.uid || "guest_user",
                 userName: user?.displayName || "Guest User",
@@ -184,7 +184,7 @@ export default function CreatePage() {
                             onClick={() => handleNavigation('/create/block')}
                             className='flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all text-gray-500 hover:text-gray-900 hover:bg-white/50 font-medium'
                         >
-                            <Monitor className='w-4 h-4' /><span>ブロック</span>
+                            <LayoutTemplate className='w-4 h-4' /><span>ブロック</span>
                         </button>
                     </div>
                 </div>

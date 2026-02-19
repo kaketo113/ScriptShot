@@ -321,7 +321,7 @@ export default function CreateBlockPage() {
         }
     };
 
-    // 🌟 画質とピクセル比を下げてファイルサイズを極小化する
+    // 画質とピクセル比を下げてファイルサイズを極小化する
     const generateThumbnail = async () => {
         if (!captureRef.current) return null;
         try {
@@ -347,7 +347,7 @@ export default function CreateBlockPage() {
             // 圧縮されたBase64文字列（軽量）を取得
             const thumbnailBase64 = await generateThumbnail();
 
-            // 🌟 直接Firestoreに保存する
+            // 直接Firestoreに保存する
             await addDoc(collection(db, "posts"), {
                 userId: user?.uid || "guest_user",
                 userName: user?.displayName || "Guest User",
