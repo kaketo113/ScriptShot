@@ -7,8 +7,6 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Save, Code2, Loader2, Monitor, ArrowLeft, AlignLeft, HelpCircle, AlertTriangle, Maximize } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toJpeg } from 'html-to-image';
-import { storage } from '../../lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 import Editor from 'react-simple-code-editor';
 import Prism from 'prismjs';
@@ -20,7 +18,6 @@ export default function CreatePage() {
     const { user } = useAuth();
     const router = useRouter();
     
-    // 初期値 (CSS漏れを防ぐため、クラス指定に変更しました)
     const [code, setCode] = useState(`<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -75,11 +72,9 @@ export default function CreatePage() {
     const [isSaving, setIsSaving] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
 
-    // 離脱確認モーダルの状態管理
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [pendingPath, setPendingPath] = useState<string>('/');
 
-    // 参照
     const captureRef = useRef<HTMLDivElement>(null);
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -93,17 +88,19 @@ export default function CreatePage() {
         return () => clearTimeout(timeout);
     }, [code]);
 
+    // 🌟 画質とピクセル比を下げてファイルサイズを極小化する
     const generateThumbnail = async () => {
         if (!captureRef.current) return null;
         try {
-            await new Promise(resolve => setTimeout(resolve, 800));
-            return await toJpeg(captureRef.current, { 
-                quality: 0.8, 
-                width: 800, 
-                height: 600, 
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const dataUrl = await toJpeg(captureRef.current, { 
+                quality: 0.4,       // 画質を40%に落とす
+                pixelRatio: 1,      // Retina等で画像が巨大化するのを防ぐ
                 backgroundColor: '#ffffff',
-                cacheBust: true
+                cacheBust: true,
+                skipFonts: true,
             });
+            return dataUrl;
         } catch (err) { 
             console.error("Thumbnail generation failed:", err);
             return null; 
@@ -114,35 +111,10 @@ export default function CreatePage() {
         if (!code.trim()) return;
         setIsSaving(true);
         try {
-            // 1. サムネイルのBase64文字列を取得
+            // 圧縮されたBase64文字列（軽量）を取得
             const thumbnailBase64 = await generateThumbnail();
-            let thumbnailUrl = null;
 
-            // 2. Base64が存在する場合、StorageにアップロードしてURLを取得
-            if (thumbnailBase64) {
-                // Base64からデータURLのプレフィックスを取り除く
-                const base64Data = thumbnailBase64.replace(/^data:image\/jpeg;base64,/, "");
-                // Base64をバイナリデータ(Blob)に変換
-                const byteCharacters = atob(base64Data);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], { type: 'image/jpeg' });
-
-                // Storageの参照を作成（ファイル名は一意にするためタイムスタンプを利用）
-                const fileName = `thumbnails/text_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
-                const storageRef = ref(storage, fileName);
-
-                // アップロード実行
-                await uploadBytes(storageRef, blob);
-                
-                // ダウンロード用URLを取得
-                thumbnailUrl = await getDownloadURL(storageRef);
-            }
-
-            // 3. Firestoreには、取得したURLだけを保存する
+            // 🌟 直接Firestoreに保存する
             await addDoc(collection(db, "posts"), {
                 userId: user?.uid || "guest_user",
                 userName: user?.displayName || "Guest User",
@@ -150,7 +122,7 @@ export default function CreatePage() {
                 type: 'text',
                 code: code,
                 caption: caption,
-                thumbnail: thumbnailUrl, // ここがURL（文字列）に変わる
+                thumbnail: thumbnailBase64, // 圧縮した文字列を保存
                 likes: 0,
                 comments: 0,
                 createdAt: serverTimestamp(),
@@ -180,7 +152,6 @@ export default function CreatePage() {
         router.push(pendingPath);
     };
 
-    // 全画面表示切り替え
     const toggleFullScreen = () => {
         if (iframeRef.current) {
             if (!document.fullscreenElement) {
@@ -195,8 +166,6 @@ export default function CreatePage() {
 
     return (
         <div className='h-screen w-full bg-[#F9FAFB] text-gray-900 flex flex-col font-sans overflow-hidden'>
-            
-            {/* Header */}
             <header className='h-16 px-6 flex items-center justify-between bg-white/80 backdrop-blur-sm z-50 shrink-0 border-b border-gray-100'>
                 <div className='flex items-center gap-4'>
                     <button onClick={() => handleNavigation('/')} className='text-gray-500 hover:text-gray-900 transition-colors p-2 hover:bg-gray-100 rounded-full'>
@@ -225,10 +194,7 @@ export default function CreatePage() {
                 </div>
             </header>
 
-            {/* Main Content */}
             <div className='flex-1 flex overflow-hidden p-4 md:p-6 gap-4 md:gap-6'>
-                
-                {/* 左：コードエディタ */}
                 <div className='w-1/2 flex flex-col bg-[#1e1e1e] rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden relative group transition-all hover:shadow-2xl'>
                     <div className='absolute top-4 right-6 z-10 text-[10px] font-bold text-gray-500 tracking-widest pointer-events-none bg-[#1e1e1e]/80 backdrop-blur px-2 py-1 rounded-full border border-white/5'>
                         HTML & CSS
@@ -255,7 +221,6 @@ export default function CreatePage() {
                     </div>
                 </div>
 
-                {/* 右：ライブプレビュー & 保存 */}
                 <div className='w-1/2 flex flex-col bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden transition-all hover:shadow-2xl'>
                     <div className='h-12 border-b border-gray-100 flex items-center px-6 justify-between bg-white'>
                         <div className='flex items-center gap-2 text-[10px] font-bold text-green-600 uppercase tracking-widest'>
@@ -265,7 +230,6 @@ export default function CreatePage() {
                             </span>
                             プレビュー
                         </div>
-                        {/* 全画面表示ボタン */}
                         <button 
                             onClick={toggleFullScreen}
                             className='flex items-center gap-1.5 text-[10px] font-bold text-gray-400 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-blue-50'
@@ -315,10 +279,9 @@ export default function CreatePage() {
                         </div>
                     </div>
                 </div>
-
             </div>
 
-            {/* サムネ撮影用 */}
+            {/* サムネ撮影用（画面外） */}
             <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
                 <div 
                     ref={captureRef} 
@@ -328,7 +291,7 @@ export default function CreatePage() {
                 </div>
             </div>
 
-            {/* 自作の離脱確認モーダル */}
+            {/* 離脱確認モーダル */}
             {showConfirmModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm transform scale-100 transition-all">

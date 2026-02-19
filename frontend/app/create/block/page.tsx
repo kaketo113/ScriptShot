@@ -20,10 +20,7 @@ import { db } from '../../../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { toJpeg } from 'html-to-image';
 import { useRouter } from 'next/navigation';
-import { storage } from '../../../lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-// Types
 type BlockType = 'heading' | 'text' | 'image' | 'button' | 'divider' | 'input' | 'card' | 'youtube';
 
 interface Block {
@@ -37,9 +34,6 @@ const INITIAL_BLOCKS: Block[] = [
     { id: '2', type: 'text', content: 'これはサンプルテキストです。ここをクリックして自由に編集してください。' },
 ];
 
-// Components
-
-// 1. ブロック追加ボタン
 const ToolButton = ({ type, icon: Icon, label, colorClass, onClick }: any) => (
     <button 
         onClick={() => onClick(type)}
@@ -55,7 +49,6 @@ const ToolButton = ({ type, icon: Icon, label, colorClass, onClick }: any) => (
     </button>
 );
 
-// 2. ソート可能なブロックカード
 const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: (id: string) => void, onChange: (id: string, val: string) => void }) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
     
@@ -189,7 +182,6 @@ const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: 
     );
 };
 
-// 3. プレビューレンダラー
 const BlockRenderer = ({ block }: { block: Block }) => {
     const getYouTubeId = (url: string) => {
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -238,7 +230,6 @@ const BlockRenderer = ({ block }: { block: Block }) => {
     }
 };
 
-// Main Page Component
 export default function CreateBlockPage() {
     const { user } = useAuth();
     const [blocks, setBlocks] = useState<Block[]>(INITIAL_BLOCKS);
@@ -246,11 +237,8 @@ export default function CreateBlockPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
     
-    // 離脱確認モーダルの状態
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [pendingPath, setPendingPath] = useState<string>('/');
-
-    // ビューモードの状態管理 (mobile | desktop)
     const [viewMode, setViewMode] = useState<'mobile' | 'desktop'>('mobile');
 
     const captureRef = useRef<HTMLDivElement>(null);
@@ -267,7 +255,6 @@ export default function CreateBlockPage() {
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
-    // ブラウザの閉じる/リロード対策
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
             if (isDirty) {
@@ -280,12 +267,8 @@ export default function CreateBlockPage() {
     }, [isDirty]);
 
     useEffect(() => {
-        if (bottomRef.current) {
-            bottomRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-        if (previewBottomRef.current) {
-            previewBottomRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
+        if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+        if (previewBottomRef.current) previewBottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }, [blocks.length]);
 
     const scrollToolbox = (direction: 'left' | 'right') => {
@@ -338,18 +321,19 @@ export default function CreateBlockPage() {
         }
     };
 
+    // 🌟 画質とピクセル比を下げてファイルサイズを極小化する
     const generateThumbnail = async () => {
         if (!captureRef.current) return null;
         try {
-            await new Promise(resolve => setTimeout(resolve, 800));
-            return await toJpeg(captureRef.current, { 
-                quality: 0.8, 
-                width: 800, 
-                height: 600, 
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const dataUrl = await toJpeg(captureRef.current, { 
+                quality: 0.4,       // 画質を落とす
+                pixelRatio: 1,      // Retina等で巨大化するのを防ぐ
                 backgroundColor: '#ffffff', 
-                style: { background: 'white' },
-                cacheBust: true 
+                cacheBust: true,
+                skipFonts: true,
             });
+            return dataUrl;
         } catch (err) { 
             console.error("Thumbnail generation failed:", err);
             return null; 
@@ -360,29 +344,10 @@ export default function CreateBlockPage() {
         if (blocks.length === 0) return;
         setIsSaving(true);
         try {
-            // 1. サムネイル生成
+            // 圧縮されたBase64文字列（軽量）を取得
             const thumbnailBase64 = await generateThumbnail();
-            let thumbnailUrl = null;
 
-            // 2. Storageへアップロード
-            if (thumbnailBase64) {
-                const base64Data = thumbnailBase64.replace(/^data:image\/jpeg;base64,/, "");
-                const byteCharacters = atob(base64Data);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], { type: 'image/jpeg' });
-
-                const fileName = `thumbnails/block_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
-                const storageRef = ref(storage, fileName);
-
-                await uploadBytes(storageRef, blob);
-                thumbnailUrl = await getDownloadURL(storageRef);
-            }
-
-            // 3. Firestoreへ保存
+            // 🌟 直接Firestoreに保存する
             await addDoc(collection(db, "posts"), {
                 userId: user?.uid || "guest_user",
                 userName: user?.displayName || "Guest User",
@@ -390,7 +355,7 @@ export default function CreateBlockPage() {
                 type: 'block',
                 blocks,
                 codeSnippet: 'Generated from Blocks',
-                thumbnail: thumbnailUrl, // ここがURLに変わる
+                thumbnail: thumbnailBase64, // 圧縮した文字列を直接保存
                 caption,
                 likes: 0,
                 comments: 0,
@@ -435,8 +400,6 @@ export default function CreateBlockPage() {
 
     return (
         <div className='h-screen w-full bg-[#F9FAFB] text-gray-900 flex flex-col font-sans overflow-hidden'>
-            
-            {/* Header */}
             <header className='h-16 px-6 flex items-center justify-between bg-white/80 backdrop-blur-sm z-50 shrink-0 border-b border-gray-100'>
                 <div className='flex items-center gap-4'>
                      <button onClick={() => handleNavigation('/')} className='text-gray-500 hover:text-gray-900 transition-colors p-2 hover:bg-gray-100 rounded-full'>
@@ -465,7 +428,6 @@ export default function CreateBlockPage() {
                 </div>
             </header>
 
-            {/* Main Content */}
             <div className='flex-1 flex overflow-hidden p-4 md:p-6 gap-4 md:gap-6'>
                 <div className='w-1/2 flex flex-col bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden relative z-10'>
                     <div className="py-6 px-4 border-b border-gray-100 bg-white relative group/toolbox z-20">
@@ -522,7 +484,6 @@ export default function CreateBlockPage() {
                     </div>
                 </div>
 
-                {/* 右側：プレビュー */}
                 <div className='w-1/2 flex flex-col bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden'>
                     <div className='h-12 border-b border-gray-100 flex items-center justify-between px-6 bg-white'>
                         <div className='flex items-center gap-2 text-[10px] font-bold text-emerald-600 uppercase tracking-widest'>
@@ -530,7 +491,6 @@ export default function CreateBlockPage() {
                             プレビュー
                         </div>
                         
-                        {/*　モード切り替え & 全画面表示ボタン */}
                         <div className="flex items-center gap-2">
                             <div className="flex items-center bg-gray-100 rounded-lg p-0.5 border border-gray-200">
                                 <button 
@@ -624,7 +584,6 @@ export default function CreateBlockPage() {
                 </div>
             </div>
 
-            {/* 離脱確認モーダル */}
             {showConfirmModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm transform scale-100 transition-all">
