@@ -4,16 +4,16 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Sidebar } from '../components/Sidebar';
 import { PostCard } from '../components/PostCard';
 import { db } from '../lib/firebase';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, limit, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { 
-    Code2, Box, ArrowRight, Layers, Share2, Zap, 
+    Code2, Box, Layers, Share2, Zap, 
     MousePointerClick, CreditCard, Image as ImageIcon, Type,
-    Youtube, FileInput, RotateCcw, X, ChevronLeft, ChevronRight, PlayCircle, ChevronDown
+    Youtube, FileInput, RotateCcw, X, ChevronLeft, ChevronRight, PlayCircle, ChevronDown, Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// 漂う要素の設定
+// 漂う要素の設定（変更なし）
 const FLOATING_ITEMS = [
     { type: 'tag', label: '<div>', top: '10%', left: '10%', delay: 0 },
     { type: 'tag', label: '<main>', top: '20%', left: '85%', delay: 1 },
@@ -54,24 +54,86 @@ const FloatingElement = ({ item }: { item: any }) => {
     );
 };
 
+// 1回の読み込み件数（3列レイアウトに合わせて9件）
+const FETCH_LIMIT = 9;
+
 export default function Home() {
-    const { user, login } = useAuth();
+    const { user } = useAuth();
+    
+    // データ管理用のState
     const [posts, setPosts] = useState<any[]>([]);
+    const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+    // UI管理用のState
     const [showHero, setShowHero] = useState(false);
     const [currentSlide, setCurrentSlide] = useState(0);
     const timelineRef = useRef<HTMLDivElement>(null);
 
+    // 初期ロード時のデータ取得
     useEffect(() => {
         const isHidden = localStorage.getItem('hide_hero_section');
         if (!isHidden) setShowHero(true);
 
-        const fetchPosts = async () => {
-            const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
-            const querySnapshot = await getDocs(q);
-            setPosts(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const fetchInitialPosts = async () => {
+            try {
+                // limitを追加してN+1やメモリ不足を回避
+                const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(FETCH_LIMIT));
+                const querySnapshot = await getDocs(q);
+                
+                const fetchedPosts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setPosts(fetchedPosts);
+
+                // 次のページのために最後のドキュメントを保存
+                const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+                setLastDoc(lastVisible);
+
+                // 取得件数がFETCH_LIMIT未満なら、もう次のページはないと判断する
+                if (querySnapshot.docs.length < FETCH_LIMIT) {
+                    setHasMore(false);
+                }
+            } catch (error) {
+                console.error("初期データの取得に失敗しました:", error);
+            } finally {
+                setIsLoadingInitial(false);
+            }
         };
-        fetchPosts();
+
+        fetchInitialPosts();
     }, []);
+
+    // 「もっと見る」ボタンを押した時の処理
+    const loadMorePosts = async () => {
+        if (!lastDoc || isLoadingMore) return;
+        setIsLoadingMore(true);
+
+        try {
+            // startAfterを使って、前回の続きから取得する
+            const q = query(
+                collection(db, "posts"), 
+                orderBy("createdAt", "desc"), 
+                startAfter(lastDoc), 
+                limit(FETCH_LIMIT)
+            );
+            const querySnapshot = await getDocs(q);
+            
+            const newPosts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setPosts(prev => [...prev, ...newPosts]);
+
+            const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+            setLastDoc(lastVisible);
+
+            if (querySnapshot.docs.length < FETCH_LIMIT) {
+                setHasMore(false);
+            }
+        } catch (error) {
+            console.error("追加データの取得に失敗しました:", error);
+        } finally {
+            setIsLoadingMore(false);
+        }
+    };
 
     const handleCloseHero = () => {
         localStorage.setItem('hide_hero_section', 'true');
@@ -89,14 +151,12 @@ export default function Home() {
         timelineRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const nextSlide = () => setCurrentSlide((prev) => (prev === 1 ? 0 : prev + 1));
-    const prevSlide = () => setCurrentSlide((prev) => (prev === 0 ? 1 : prev - 1));
-
     return (
         <div className='flex min-h-screen bg-[#F9FAFB] text-[#111827] font-sans selection:bg-blue-500/20 overflow-x-hidden'>
             <Sidebar />
 
             <main className='flex-1 md:ml-64 relative'>
+                {/* ヒーローセクション */}
                 <AnimatePresence>
                     {showHero && (
                         <motion.div 
@@ -104,7 +164,6 @@ export default function Home() {
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.6, ease: "easeInOut" }}
                         >
-                            {/* Hero Slides (100vh) */}
                             <div className="relative w-full border-b border-gray-200 min-h-screen flex flex-col items-center justify-center bg-white overflow-hidden">
                                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:32px_32px] opacity-40"></div>
                                 
@@ -188,7 +247,6 @@ export default function Home() {
                                 </button>
                             </div>
 
-                            {/* サイトの機能紹介エリア (bg-[#F9FAFB]) */}
                             <div className="border-b border-gray-200 bg-[#F9FAFB]">
                                 <div className="max-w-6xl mx-auto px-6 py-16">
                                     <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-10 text-center">このサイトの機能</h2>
@@ -229,14 +287,40 @@ export default function Home() {
                         <h2 className="text-2xl font-bold text-gray-900 tracking-tight">最新の投稿</h2>
                     </div>
 
-                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-                        {posts.map(post => <PostCard key={post.id} post={post} />)}
-                    </div>
-
-                    {posts.length === 0 && (
+                    {isLoadingInitial ? (
+                        <div className="flex justify-center items-center py-32">
+                            <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                        </div>
+                    ) : posts.length === 0 ? (
                         <div className="text-center py-32 bg-white rounded-3xl border border-dashed border-gray-200 text-gray-400">
                             <p className="text-lg">まだ投稿がありません。<br />あなたが最初のクリエイターになりましょう！</p>
                         </div>
+                    ) : (
+                        <>
+                            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
+                                {posts.map(post => <PostCard key={post.id} post={post} />)}
+                            </div>
+                            
+                            {/* もっと見るボタン（ページネーション） */}
+                            {hasMore && (
+                                <div className="mt-12 flex justify-center">
+                                    <button 
+                                        onClick={loadMorePosts}
+                                        disabled={isLoadingMore}
+                                        className="flex items-center gap-2 px-8 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-full hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isLoadingMore ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                                                読み込み中...
+                                            </>
+                                        ) : (
+                                            "もっと見る"
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </main>
