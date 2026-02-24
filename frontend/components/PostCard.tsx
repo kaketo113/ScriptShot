@@ -9,49 +9,57 @@ import { db } from '../lib/firebase';
 import { doc, getDoc, setDoc, deleteDoc, updateDoc, increment } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 
+// 1. 型定義とテーマ設定
 interface PostCardProps {
     post: any;
 }
 
-export const PostCard = ({ post }: PostCardProps) => {
-    const { user } = useAuth();
-    
-    // いいね機能の状態管理（propsの値を初期値とする）
-    const [likeCount, setLikeCount] = useState<number>(post.likes || 0);
+// テキストモードとブロックモードで切り替える色設定
+const THEME_STYLES = {
+    text: {
+        card: 'border-blue-100 hover:border-blue-300 hover:shadow-blue-100/50',
+        badge: 'bg-blue-50 text-blue-600 border-blue-100',
+        icon: 'text-blue-500 bg-blue-50',
+        footerBg: 'bg-blue-100',
+        label: 'テキストモード',
+        IconComponent: Code2
+    },
+    block: {
+        card: 'border-emerald-100 hover:border-emerald-300 hover:shadow-emerald-100/50',
+        badge: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+        icon: 'text-emerald-500 bg-emerald-50',
+        footerBg: 'bg-emerald-100',
+        label: 'ブロックモード',
+        IconComponent: Layers
+    }
+};
+
+// 2. カスタムフック (いいねロジック)
+const useLike = (postId: string, initialLikes: number, userId: string | undefined) => {
+    const [likeCount, setLikeCount] = useState<number>(initialLikes || 0);
     const [isLiked, setIsLiked] = useState<boolean>(false);
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-    const date = post.createdAt?.toDate 
-        ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true, locale: ja })
-        : 'たった今';
-
-    const displayCode = post.code || post.codeSnippet || '';
-    const isText = post.type === 'text';
-
-    // コンポーネントマウント時に「自分がいいね済みか」をFirestoreから取得
+    // 初期マウント時のいいね状態確認
     useEffect(() => {
-        if (!user || !post.id) return;
-        
+        if (!userId || !postId) return;
         const checkLikeStatus = async () => {
             try {
-                const likeRef = doc(db, 'posts', post.id, 'likes', user.uid);
-                const likeSnap = await getDoc(likeRef);
-                if (likeSnap.exists()) {
-                    setIsLiked(true);
-                }
+                const likeSnap = await getDoc(doc(db, 'posts', postId, 'likes', userId));
+                setIsLiked(likeSnap.exists());
             } catch (error) {
                 console.error("いいね状態の取得に失敗:", error);
             }
         };
         checkLikeStatus();
-    }, [user, post.id]);
+    }, [userId, postId]);
 
-    // いいねボタンのクリック処理
-    const handleLikeToggle = async (e: React.MouseEvent) => {
-        e.preventDefault();  // Linkコンポーネントの画面遷移を防ぐ
-        e.stopPropagation(); // イベントのバブリング（親要素への伝播）を防ぐ
+    // いいねのトグル処理
+    const toggleLike = async (e: React.MouseEvent) => {
+        e.preventDefault();  // リンク遷移を防ぐ
+        e.stopPropagation();
 
-        if (!user) {
+        if (!userId) {
             alert('いいねするにはログインが必要です');
             return;
         }
@@ -60,26 +68,25 @@ export const PostCard = ({ post }: PostCardProps) => {
         const previousIsLiked = isLiked;
         const previousCount = likeCount;
         
+        // 楽観的UI更新
         setIsLiked(!previousIsLiked);
         setLikeCount(previousIsLiked ? previousCount - 1 : previousCount + 1);
         setIsProcessing(true);
 
         try {
-            const postRef = doc(db, 'posts', post.id);
-            const likeRef = doc(db, 'posts', post.id, 'likes', user.uid);
+            const postRef = doc(db, 'posts', postId);
+            const likeRef = doc(db, 'posts', postId, 'likes', userId);
 
             if (previousIsLiked) {
-                // いいね取り消し
                 await deleteDoc(likeRef);
                 await updateDoc(postRef, { likes: increment(-1) });
             } else {
-                // いいね追加
                 await setDoc(likeRef, { createdAt: new Date() });
                 await updateDoc(postRef, { likes: increment(1) });
             }
         } catch (error) {
             console.error('いいねの更新に失敗しました:', error);
-            // 失敗したら元の状態に戻す（ロールバック）
+            // 失敗時はロールバック
             setIsLiked(previousIsLiked);
             setLikeCount(previousCount);
         } finally {
@@ -87,24 +94,26 @@ export const PostCard = ({ post }: PostCardProps) => {
         }
     };
 
-    const cardStyle = isText
-        ? 'bg-white border-blue-100 hover:border-blue-300 hover:shadow-blue-100/50'
-        : 'bg-white border-emerald-100 hover:border-emerald-300 hover:shadow-emerald-100/50';
+    return { likeCount, isLiked, isProcessing, toggleLike };
+};
 
-    const badgeStyle = isText
-        ? 'bg-blue-50 text-blue-600 border-blue-100'
-        : 'bg-emerald-50 text-emerald-600 border-emerald-100';
+// 3. メインコンポーネント
+export const PostCard = ({ post }: PostCardProps) => {
+    const { user } = useAuth();
+    
+    // カスタムフックを使用
+    const { likeCount, isLiked, isProcessing, toggleLike } = useLike(post.id, post.likes, user?.uid);
 
-    const iconColor = isText
-        ? 'text-blue-500 bg-blue-50'
-        : 'text-emerald-500 bg-emerald-50';
-
-    const footerBgClass = isText ? 'bg-blue-100' : 'bg-emerald-100';
+    // 表示用データの成形
+    const date = post.createdAt?.toDate ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true, locale: ja }) : 'たった今';
+    const displayCode = post.code || post.codeSnippet || '';
+    const theme = post.type === 'text' ? THEME_STYLES.text : THEME_STYLES.block;
+    const BadgeIcon = theme.IconComponent;
 
     return (
-        // 親要素は <a> ではなく <div>。ホバーアニメーションなどはここに設定
-        <div className={`group relative block h-[380px] rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${cardStyle}`}>
+        <div className={`group relative block h-[380px] bg-white rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${theme.card}`}>
             
+            {/* カード全体を包むリンク */}
             <Link href={`/post/${post.id}`} className="absolute inset-0 z-0" aria-label={`${post.userName}の投稿を見る`} />
 
             {/* 上半分 (プレビューエリア) */}
@@ -130,15 +139,17 @@ export const PostCard = ({ post }: PostCardProps) => {
                     </div>
                 )}
 
-                <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 border shadow-sm ${badgeStyle}`}>
-                    {isText ? <Code2 size={12} /> : <Layers size={12} />}
-                    <span>{isText ? 'テキストモード' : 'ブロックモード'}</span>
+                {/* モードバッジ */}
+                <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 border shadow-sm ${theme.badge}`}>
+                    <BadgeIcon size={12} />
+                    <span>{theme.label}</span>
                 </div>
             </div>
 
             {/* 下半分 (情報エリア) */}
-            <div className={`h-1/2 p-5 flex flex-col justify-between ${footerBgClass} relative z-10 pointer-events-none`}>
+            <div className={`h-1/2 p-5 flex flex-col justify-between ${theme.footerBg} relative z-10 pointer-events-none`}>
                 <div>
+                    {/* ユーザー情報 */}
                     <div className="flex items-center gap-3 mb-3 pointer-events-auto relative z-20">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
@@ -153,18 +164,19 @@ export const PostCard = ({ post }: PostCardProps) => {
                         </div>
                     </div>
 
+                    {/* キャプション */}
                     <p className="text-sm text-gray-600 line-clamp-2 mb-3 min-h-[40px] leading-relaxed">
                         {post.caption || <span className="text-gray-300 italic text-xs">No description</span>}
                     </p>
                 </div>
 
-                {/* フッター */}
+                {/* フッターアクション */}
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100/50 pointer-events-auto relative z-20">
                     <div className="flex items-center gap-4 text-gray-400">
                         
                         {/* いいねボタン */}
                         <button 
-                            onClick={handleLikeToggle}
+                            onClick={toggleLike}
                             disabled={isProcessing}
                             className={`flex items-center gap-1.5 text-xs transition-colors p-1.5 -ml-1.5 rounded-lg ${
                                 isLiked 
@@ -182,7 +194,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                         </div>
                     </div>
                     
-                    <div className={`p-2 rounded-full transition-all duration-300 transform group-hover:translate-x-1 ${iconColor}`}>
+                    <div className={`p-2 rounded-full transition-all duration-300 transform group-hover:translate-x-1 ${theme.icon}`}>
                         <ArrowRight size={16} />
                     </div>
                 </div>

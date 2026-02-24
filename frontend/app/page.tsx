@@ -4,7 +4,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Sidebar } from '../components/Sidebar';
 import { PostCard } from '../components/PostCard';
 import { db } from '../lib/firebase';
-// onSnapshot を使用してリアルタイム化
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore'; 
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -15,7 +14,10 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// 漂う要素の設定（完全復元）
+// 1. 定数・設定データ
+const FETCH_LIMIT = 20;
+const HOT_LIMIT = 3;
+
 const FLOATING_ITEMS = [
     { type: 'tag', label: '<div>', top: '10%', left: '10%', delay: 0 },
     { type: 'tag', label: '<main>', top: '20%', left: '85%', delay: 1 },
@@ -32,16 +34,41 @@ const FLOATING_ITEMS = [
     { type: 'block', icon: FileInput, label: 'Input', top: '10%', left: '35%', delay: 1.0 },
 ];
 
+// 2. カスタムフック (データ取得ロジック)
+const useFetchPosts = () => {
+    const [posts, setPosts] = useState<any[]>([]);
+    const [hotPosts, setHotPosts] = useState<any[]>([]);
+    const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+
+    useEffect(() => {
+        const latestQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(FETCH_LIMIT));
+        const unsubscribeLatest = onSnapshot(latestQuery, (snapshot) => {
+            setPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            setIsLoadingInitial(false); 
+        });
+
+        const hotQuery = query(collection(db, "posts"), orderBy("likes", "desc"), limit(HOT_LIMIT));
+        const unsubscribeHot = onSnapshot(hotQuery, (snapshot) => {
+            setHotPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter((post: any) => (post.likes || 0) > 0));
+        });
+
+        return () => { unsubscribeLatest(); unsubscribeHot(); };
+    }, []);
+
+    return { posts, hotPosts, isLoadingInitial };
+};
+
+// 3. UIコンポーネント
+
+// 3-1. ヒーローセクション関連
 const FloatingElement = ({ item }: { item: any }) => {
     const isTag = item.type === 'tag';
     const Icon = item.icon;
     return (
         <motion.div
             className={`absolute z-0 pointer-events-none select-none flex items-center justify-center
-                ${isTag 
-                    ? 'px-5 py-3 rounded-xl bg-white/80 backdrop-blur-sm border border-blue-100 text-blue-600 font-mono text-base font-bold shadow-lg shadow-blue-500/5' 
-                    : 'p-4 rounded-2xl bg-white/80 backdrop-blur-sm border border-emerald-100 text-emerald-600 shadow-xl shadow-emerald-500/5'
-                }`}
+                ${isTag ? 'px-5 py-3 rounded-xl bg-white/80 backdrop-blur-sm border border-blue-100 text-blue-600 font-mono text-base font-bold shadow-lg shadow-blue-500/5' 
+                        : 'p-4 rounded-2xl bg-white/80 backdrop-blur-sm border border-emerald-100 text-emerald-600 shadow-xl shadow-emerald-500/5'}`}
             style={{ top: item.top, left: item.left }}
             animate={{ y: [0, -20, 0], rotate: [0, 5, -5, 0], scale: [1, 1.05, 1] }}
             transition={{ duration: 5 + Math.random() * 3, repeat: Infinity, ease: "easeInOut", delay: item.delay }}
@@ -56,55 +83,140 @@ const FloatingElement = ({ item }: { item: any }) => {
     );
 };
 
-const FETCH_LIMIT = 20; // リアルタイム監視する件数
-const HOT_LIMIT = 3;    // 熱い投稿の表示件数
+const HeroSlideOne = ({ setCurrentSlide }: { setCurrentSlide: (v: number) => void }) => (
+    <motion.div key="slide1" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.5 }} className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
+        <div className="absolute inset-0 overflow-hidden">
+            {FLOATING_ITEMS.map((item, index) => <FloatingElement key={index} item={item} />)}
+        </div>
+        <div className="relative z-10">
+            <h1 className="text-4xl md:text-7xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-700 to-gray-500 drop-shadow-sm leading-tight">
+                コードを書いて、<br />世界に共有しよう。
+            </h1>
+            <p className="text-gray-500 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed">
+                ScriptShotは、あなたのコードやアイデアを美しく共有するプラットフォームです。
+            </p>
+            <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl mx-auto justify-center">
+                <a href="/create" className="group flex-1 p-6 rounded-3xl bg-white border border-gray-100 hover:border-blue-300 shadow-xl transition-all hover:-translate-y-1">
+                    <div className="p-4 rounded-2xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors mb-4 inline-block"><Code2 size={32} /></div>
+                    <div className="font-bold text-xl text-gray-900">コードを書く</div>
+                    <div className="text-sm text-gray-400">HTML/CSSを直接編集</div>
+                </a>
+                <a href="/create/block" className="group flex-1 p-6 rounded-3xl bg-white border-2 border-emerald-100 hover:border-emerald-400 shadow-xl transition-all hover:-translate-y-1 relative">
+                    <div className="absolute -top-3 -right-3 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg transform rotate-3">🔰おすすめ</div>
+                    <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors mb-4 inline-block"><MousePointerClick size={32} /></div>
+                    <div className="font-bold text-xl text-gray-900">ブロックで作る</div>
+                    <div className="text-sm text-emerald-600/70">手軽にドラッグ＆ドロップ</div>
+                </a>
+            </div>
+        </div>
 
+        {/* 動画へ進むボタン */}
+        <motion.button onClick={() => setCurrentSlide(1)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 group flex flex-col items-center gap-3 z-30 focus:outline-none">
+            <div className="px-3 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-tighter rounded-full shadow-lg shadow-blue-200 transition-transform group-hover:-translate-y-1 flex items-center gap-1.5">
+                <PlayCircle size={12} fill="currentColor" />
+                <span>操作説明動画へ</span>
+            </div>
+            <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-blue-500 animate-ping opacity-20 group-hover:opacity-40"></div>
+                <div className="absolute -inset-2 rounded-full bg-blue-100 opacity-0 group-hover:opacity-50 transition-opacity duration-500 animate-pulse"></div>
+                <div className="relative w-16 h-16 md:w-20 md:h-20 bg-white border-2 border-blue-50 rounded-full shadow-[0_15px_35px_-5px_rgba(59,130,246,0.3)] flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                    <ChevronRight size={36} className="relative z-10 translate-x-0.5" />
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/30 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity rounded-full"></div>
+                </div>
+            </div>
+        </motion.button>
+    </motion.div>
+);
+
+const HeroSlideTwo = ({ setCurrentSlide }: { setCurrentSlide: (v: number) => void }) => (
+    <motion.div key="slide2" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} transition={{ duration: 0.5 }} className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
+        <button onClick={() => setCurrentSlide(0)} className="absolute left-4 md:left-10 top-1/2 -translate-y-1/2 group flex flex-col items-center gap-2 z-30">
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-white border border-gray-200 rounded-full shadow-lg flex items-center justify-center text-gray-400 group-hover:text-blue-600 transition-all"><ChevronLeft size={28} /></div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">戻る</span>
+        </button>
+        <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-8 flex items-center gap-4">
+            <PlayCircle className="text-blue-600" size={32} /> 1分でわかるScriptShot
+        </h2>
+        <div className="relative w-full max-w-4xl aspect-video bg-black rounded-[2.5rem] overflow-hidden shadow-2xl border-[8px] border-white ring-1 ring-gray-200">
+            <video src="/videos/how-to-use.mp4" className="w-full h-full object-cover" controls autoPlay muted playsInline />
+        </div>
+    </motion.div>
+);
+
+// 3-2. 機能紹介セクション
+const FeatureCard = ({ icon: Icon, title, desc, colorClass, bgClass, borderHover }: any) => (
+    <div className={`p-6 rounded-2xl bg-white border border-gray-100 ${borderHover} transition-colors shadow-sm`}>
+        <div className={`w-12 h-12 ${bgClass} rounded-lg flex items-center justify-center ${colorClass} mb-4`}><Icon size={24} /></div>
+        <h3 className="text-xl font-bold mb-2 text-gray-900">{title}</h3>
+        <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+    </div>
+);
+
+const FeaturesSection = () => (
+    <div className="border-b border-gray-200 bg-[#F9FAFB]">
+        <div className="max-w-6xl mx-auto px-6 py-16">
+            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-10 text-center">このサイトの機能</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+                <FeatureCard icon={Zap} title="1. 選べるモード" desc="ガッツリ書きたい人は「テキストモード」、手軽に作りたい人「ブロックモード」を選択。" colorClass="text-blue-600" bgClass="bg-blue-50" borderHover="hover:border-blue-200" />
+                <FeatureCard icon={Layers} title="2. リアルタイムプレビュー" desc="自分が今書いているコードを、ブラウザ上で一画面ですぐに確認することができます。" colorClass="text-purple-600" bgClass="bg-purple-50" borderHover="hover:border-purple-200" />
+                <FeatureCard icon={Share2} title="3. ワンクリックで投稿" desc="完成して投稿すると、あなたの素敵な作品が世界中の人へシェアされます。" colorClass="text-orange-600" bgClass="bg-orange-50" borderHover="hover:border-orange-200" />
+            </div>
+        </div>
+    </div>
+);
+
+// 3-3. 投稿一覧セクション
+const HotPostsSection = ({ hotPosts }: { hotPosts: any[] }) => {
+    if (hotPosts.length === 0) return null;
+    return (
+        <div className="mb-16 bg-white p-8 rounded-3xl border border-red-100 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-red-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50 pointer-events-none"></div>
+            <div className="flex items-center gap-3 mb-8 relative z-10">
+                <div className="p-2 bg-red-100 text-red-600 rounded-xl"><Flame size={24} className="animate-pulse" /></div>
+                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">今、熱い投稿</h2>
+            </div>
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10'>
+                {hotPosts.map((post, index) => (
+                    <div key={`hot-${post.id}`} className="relative">
+                        <div className="absolute -top-3 -left-3 w-8 h-8 bg-gray-900 text-white flex items-center justify-center rounded-full font-bold text-sm z-20 shadow-md">{index + 1}</div>
+                        <PostCard post={post} /> 
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const LatestPostsSection = ({ posts }: { posts: any[] }) => (
+    <>
+        <div className="flex items-center gap-3 mb-10 mt-8">
+            <div className="w-1.5 h-8 bg-blue-600 rounded-full shadow-sm shadow-blue-200"></div>
+            <h2 className="text-2xl font-bold text-gray-900 tracking-tight">最新の投稿</h2>
+        </div>
+        {posts.length === 0 ? (
+            <div className="text-center py-32 bg-white rounded-3xl border border-dashed border-gray-200 text-gray-400">
+                <p className="text-lg">まだ投稿がありません。<br />あなたが最初のクリエイターになりましょう！</p>
+            </div>
+        ) : (
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
+                {posts.map(post => <PostCard key={`latest-${post.id}`} post={post} />)}
+            </div>
+        )}
+    </>
+);
+
+
+// 4. メインページコンポーネント
 export default function Home() {
     const { user } = useAuth();
-    
-    // データ管理用のState
-    const [posts, setPosts] = useState<any[]>([]);
-    const [hotPosts, setHotPosts] = useState<any[]>([]);
-    const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+    const { posts, hotPosts, isLoadingInitial } = useFetchPosts(); 
 
-    // UI管理用のState
     const [showHero, setShowHero] = useState(false);
     const [currentSlide, setCurrentSlide] = useState(0);
     const timelineRef = useRef<HTMLDivElement>(null);
 
-    // リアルタイムリスナー（onSnapshot）の設定
     useEffect(() => {
-        const isHidden = localStorage.getItem('hide_hero_section');
-        if (!isHidden) setShowHero(true);
-
-        // 1. 最新の投稿をリアルタイム監視
-        const latestQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(FETCH_LIMIT));
-        
-        const unsubscribeLatest = onSnapshot(latestQuery, (snapshot) => {
-            const fetchedLatest = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setPosts(fetchedLatest);
-            setIsLoadingInitial(false); 
-        }, (error) => {
-            console.error("最新投稿の監視エラー:", error);
-            setIsLoadingInitial(false);
-        });
-
-        // 2. 熱い投稿をリアルタイム監視
-        const hotQuery = query(collection(db, "posts"), orderBy("likes", "desc"), limit(HOT_LIMIT));
-        
-        const unsubscribeHot = onSnapshot(hotQuery, (snapshot) => {
-            const fetchedHot = snapshot.docs
-                .map(doc => ({ id: doc.id, ...doc.data() }))
-                .filter((post: any) => (post.likes || 0) > 0);
-            setHotPosts(fetchedHot);
-        }, (error) => {
-            console.error("熱い投稿の監視エラー:", error);
-        });
-
-        return () => {
-            unsubscribeLatest();
-            unsubscribeHot();
-        };
+        if (!localStorage.getItem('hide_hero_section')) setShowHero(true);
     }, []);
 
     const handleCloseHero = () => {
@@ -119,92 +231,32 @@ export default function Home() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const scrollToTimeline = () => {
-        timelineRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
+    const scrollToTimeline = () => timelineRef.current?.scrollIntoView({ behavior: 'smooth' });
 
+    // Render
     return (
-        <div className='flex min-h-screen bg-[#F9FAFB] text-[#111827] font-sans selection:bg-blue-500/20 overflow-x-hidden'>
+        <div className='flex min-h-screen bg-slate-50 text-[#111827] font-sans selection:bg-blue-500/20 overflow-x-hidden'>
             <Sidebar />
 
             <main className='flex-1 md:ml-64 relative'>
-                {/* ヒーローセクション */}
+                
+                {/* ヒーローエリア */}
                 <AnimatePresence>
                     {showHero && (
-                        <motion.div 
-                            initial={{ opacity: 1 }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.6, ease: "easeInOut" }}
-                        >
+                        <motion.div initial={{ opacity: 1 }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.6, ease: "easeInOut" }}>
                             <div className="relative w-full border-b border-gray-200 min-h-screen flex flex-col items-center justify-center bg-white overflow-hidden">
                                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:32px_32px] opacity-40"></div>
                                 
-                                <button onClick={handleCloseHero} className="absolute top-6 right-6 z-50 flex items-center gap-2 px-3 py-1.5 bg-white/50 hover:bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-500 hover:text-red-500 transition-all backdrop-blur-sm group shadow-sm">
-                                    <span>使い方ガイドを非表示</span>
-                                    <X size={14} />
+                                <button onClick={handleCloseHero} className="absolute top-6 right-6 z-50 flex items-center gap-2 px-3 py-1.5 bg-white/50 hover:bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-500 hover:text-red-500 transition-all backdrop-blur-sm shadow-sm">
+                                    <span>使い方ガイドを非表示</span><X size={14} />
                                 </button>
 
                                 <div className="relative w-full flex-1 flex items-center justify-center">
                                     <AnimatePresence mode="wait">
-                                        {currentSlide === 0 ? (
-                                            <motion.div 
-                                                key="slide1"
-                                                initial={{ x: 100, opacity: 0 }}
-                                                animate={{ x: 0, opacity: 1 }}
-                                                exit={{ x: -100, opacity: 0 }}
-                                                transition={{ duration: 0.5 }}
-                                                className="absolute inset-0 flex flex-col items-center justify-center text-center p-6"
-                                            >
-                                                <div className="absolute inset-0 overflow-hidden">
-                                                    {FLOATING_ITEMS.map((item, index) => <FloatingElement key={index} item={item} />)}
-                                                </div>
-                                                <div className="relative z-10">
-                                                    <h1 className="text-4xl md:text-7xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-700 to-gray-500 drop-shadow-sm leading-tight">
-                                                        コードを書いて、<br />世界に共有しよう。
-                                                    </h1>
-                                                    <p className="text-gray-500 text-lg md:text-xl max-w-2xl mx-auto mb-12">
-                                                        ScriptShotは、あなたのコードやアイデアを美しく共有するプラットフォームです。
-                                                    </p>
-                                                    <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl mx-auto justify-center">
-                                                        <a href="/create" className="group flex-1 p-6 rounded-3xl bg-white border border-gray-100 hover:border-blue-300 shadow-xl transition-all hover:-translate-y-1">
-                                                            <div className="p-4 rounded-2xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors mb-4 inline-block"><Code2 size={32} /></div>
-                                                            <div className="font-bold text-xl text-gray-900">コードを書く</div>
-                                                            <div className="text-sm text-gray-400">HTML/CSSを直接編集</div>
-                                                        </a>
-                                                        <a href="/create/block" className="group flex-1 p-6 rounded-3xl bg-white border-2 border-emerald-100 hover:border-emerald-400 shadow-xl transition-all hover:-translate-y-1 relative">
-                                                            <div className="absolute -top-3 -right-3 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg transform rotate-3">🔰おすすめ</div>
-                                                            <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors mb-4 inline-block"><MousePointerClick size={32} /></div>
-                                                            <div className="font-bold text-xl text-gray-900">ブロックで作る</div>
-                                                            <div className="text-sm text-emerald-600/70">手軽にドラッグ＆ドロップ</div>
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                                <button onClick={() => setCurrentSlide(1)} className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 group flex flex-col items-center gap-2 z-30">
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 group-hover:text-blue-600">操作説明動画</span>
-                                                    <div className="w-12 h-12 md:w-16 md:h-16 bg-white border border-gray-200 rounded-full shadow-lg flex items-center justify-center text-gray-400 group-hover:text-blue-600 group-hover:scale-110 transition-all"><ChevronRight size={28} /></div>
-                                                </button>
-                                            </motion.div>
-                                        ) : (
-                                            <motion.div 
-                                                key="slide2"
-                                                initial={{ x: 100, opacity: 0 }}
-                                                animate={{ x: 0, opacity: 1 }}
-                                                exit={{ x: -100, opacity: 0 }}
-                                                transition={{ duration: 0.5 }}
-                                                className="absolute inset-0 flex flex-col items-center justify-center text-center p-6"
-                                            >
-                                                <button onClick={() => setCurrentSlide(0)} className="absolute left-4 md:left-10 top-1/2 -translate-y-1/2 group flex flex-col items-center gap-2 z-30">
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">戻る</span>
-                                                    <div className="w-12 h-12 md:w-16 md:h-16 bg-white border border-gray-200 rounded-full shadow-lg flex items-center justify-center text-gray-400 group-hover:text-blue-600 group-hover:scale-110 transition-all"><ChevronLeft size={28} /></div>
-                                                </button>
-                                                <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-8 flex items-center gap-4">
-                                                    <PlayCircle className="text-blue-600" size={32} /> 1分でわかるScriptShot
-                                                </h2>
-                                                <div className="relative w-full max-w-4xl aspect-video bg-black rounded-[2.5rem] overflow-hidden shadow-2xl border-[8px] border-white ring-1 ring-gray-200">
-                                                    <video src="/videos/how-to-use.mp4" className="w-full h-full object-cover" controls autoPlay muted playsInline />
-                                                </div>
-                                            </motion.div>
-                                        )}
+                                        {currentSlide === 0 
+                                            ? <HeroSlideOne key="slide1" setCurrentSlide={setCurrentSlide} /> 
+                                            : <HeroSlideTwo key="slide2" setCurrentSlide={setCurrentSlide} />
+                                        }
                                     </AnimatePresence>
                                 </div>
 
@@ -214,92 +266,30 @@ export default function Home() {
                                 </div>
 
                                 <button onClick={scrollToTimeline} className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-gray-400 hover:text-blue-600 transition-all animate-bounce z-40">
-                                    <span className="text-[10px] font-bold uppercase tracking-widest">Scroll</span>
-                                    <ChevronDown size={20} />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest">Scroll</span><ChevronDown size={20} />
                                 </button>
                             </div>
 
-                            <div className="border-b border-gray-200 bg-[#F9FAFB]">
-                                <div className="max-w-6xl mx-auto px-6 py-16">
-                                    <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-10 text-center">このサイトの機能</h2>
-                                    <div className="grid md:grid-cols-3 gap-8">
-                                        <div className="p-6 rounded-2xl bg-white border border-gray-100 hover:border-blue-200 transition-colors shadow-sm">
-                                            <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 mb-4"><Zap size={24} /></div>
-                                            <h3 className="text-xl font-bold mb-2 text-gray-900">1. 選べるモード</h3>
-                                            <p className="text-gray-500 text-sm">ガッツリ書きたい人は「テキストモード」、<br />手軽に作りたい人「ブロックモード」を選択。</p>
-                                        </div>
-                                        <div className="p-6 rounded-2xl bg-white border border-gray-100 hover:border-purple-200 transition-colors shadow-sm">
-                                            <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600 mb-4"><Layers size={24} /></div>
-                                            <h3 className="text-xl font-bold mb-2 text-gray-900">2. リアルタイムプレビュー</h3>
-                                            <p className="text-gray-500 text-sm">自分が今書いているコードを<br />一画面で見ることができます。</p>
-                                        </div>
-                                        <div className="p-6 rounded-2xl bg-white border border-gray-100 hover:border-orange-200 transition-colors shadow-sm">
-                                            <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center text-orange-600 mb-4"><Share2 size={24} /></div>
-                                            <h3 className="text-xl font-bold mb-2 text-gray-900">3. ワンクリックで投稿</h3>
-                                            <p className="text-gray-500 text-sm">完成して投稿するとあなたの作品を<br />世界中の人が閲覧します。</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <FeaturesSection />
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                {/* タイムラインセクション */}
-                <div ref={timelineRef} className="max-w-7xl mx-auto px-6 py-16">
+                {/* タイムラインエリア */}
+                <div ref={timelineRef} className="max-w-7xl mx-auto px-6 py-12">
                     {!showHero && (
-                        <button onClick={handleShowHero} className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors group mb-6">
+                        <button onClick={handleShowHero} className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors group mb-8">
                             <RotateCcw size={14} className="group-hover:-rotate-180 transition-transform duration-500" />
                             <span>使い方ガイドを再表示</span>
                         </button>
                     )}
 
                     {isLoadingInitial ? (
-                        <div className="flex justify-center items-center py-32">
-                            <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                        </div>
+                        <div className="flex justify-center items-center py-32"><Loader2 className="w-8 h-8 text-blue-600 animate-spin" /></div>
                     ) : (
                         <>
-                            {/* 熱い投稿セクション */}
-                            {hotPosts.length > 0 && (
-                                <div className="mb-16 bg-white p-8 rounded-3xl border border-red-100 shadow-sm relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-64 h-64 bg-red-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50 pointer-events-none"></div>
-
-                                    <div className="flex items-center gap-3 mb-8 relative z-10">
-                                        <div className="p-2 bg-red-100 text-red-600 rounded-xl">
-                                            <Flame size={24} className="animate-pulse" />
-                                        </div>
-                                        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">今、熱い投稿</h2>
-                                    </div>
-
-                                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10'>
-                                        {hotPosts.map((post, index) => (
-                                            <div key={`hot-${post.id}`} className="relative">
-                                                <div className="absolute -top-3 -left-3 w-8 h-8 bg-gray-900 text-white flex items-center justify-center rounded-full font-bold text-sm z-20 shadow-md">
-                                                    {index + 1}
-                                                </div>
-                                                <PostCard post={post} /> 
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* 最新の投稿セクション */}
-                            <div className="flex items-center gap-3 mb-10 mt-8">
-                                <div className="w-1.5 h-8 bg-blue-600 rounded-full shadow-sm shadow-blue-200"></div>
-                                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">最新の投稿</h2>
-                            </div>
-
-                            {posts.length === 0 ? (
-                                <div className="text-center py-32 bg-white rounded-3xl border border-dashed border-gray-200 text-gray-400">
-                                    <p className="text-lg">まだ投稿がありません。<br />あなたが最初のクリエイターになりましょう！</p>
-                                </div>
-                            ) : (
-                                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-                                    {posts.map(post => <PostCard key={`latest-${post.id}`} post={post} />)}
-                                </div>
-                            )}
+                            <HotPostsSection hotPosts={hotPosts} />
+                            <LatestPostsSection posts={posts} />
                         </>
                     )}
                 </div>
