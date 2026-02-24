@@ -132,6 +132,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                     <div className="w-full h-full bg-emerald-50/50 flex flex-col items-center justify-center text-emerald-300">
                         <Layers size={48} className="mb-2 opacity-50 drop-shadow-sm" />
                         <span className="text-xs font-bold tracking-widest uppercase opacity-70">Block Mode</span>
+                        <p className='text-xs font-bold tracking-widest opacity-80'>セキュリティルール上、画面にサムネが表示されません</p>
                     </div>
                 )}
 
