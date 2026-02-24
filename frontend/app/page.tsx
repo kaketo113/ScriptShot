@@ -135,7 +135,7 @@ const HeroSlideTwo = ({ setCurrentSlide }: { setCurrentSlide: (v: number) => voi
             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">戻る</span>
         </button>
         <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-8 flex items-center gap-4">
-            <PlayCircle className="text-blue-600" size={32} /> 1分でわかるScriptShot
+            <PlayCircle className="text-blue-600" size={32} /> 1分でわかるScriptShotのブロックモード！
         </h2>
         <div className="relative w-full max-w-4xl aspect-video bg-black rounded-[2.5rem] overflow-hidden shadow-2xl border-[8px] border-white ring-1 ring-gray-200">
             <video src="/videos/how-to-use.mp4" className="w-full h-full object-cover" controls autoPlay muted playsInline />
