@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { Save, Code2, Loader2, Monitor, ArrowLeft, AlignLeft,LayoutTemplate, AlertTriangle, Maximize } from 'lucide-react';
+import { Save, Code2, Loader2, Monitor, ArrowLeft, AlignLeft, LayoutTemplate, AlertTriangle, Maximize } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toJpeg } from 'html-to-image';
 
@@ -14,11 +14,8 @@ import 'prismjs/components/prism-markup';
 import 'prismjs/components/prism-css';
 import 'prismjs/themes/prism-tomorrow.css';
 
-export default function CreatePage() {
-    const { user } = useAuth();
-    const router = useRouter();
-    
-    const [code, setCode] = useState(`<!DOCTYPE html>
+// 1. 定数・初期データ
+const INITIAL_CODE = `<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -65,18 +62,13 @@ export default function CreatePage() {
         transition: transform 0.1s;
     }
     .action-btn:active { transform: scale(0.95); }
-</style>`);
-    
+</style>`;
+
+// 2. カスタムフック
+
+// コードからプレビュー用のURLを生成するフック
+const usePreview = (code: string) => {
     const [previewUrl, setPreviewUrl] = useState('');
-    const [caption, setCaption] = useState('');
-    const [isSaving, setIsSaving] = useState(false);
-    const [isDirty, setIsDirty] = useState(false);
-
-    const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const [pendingPath, setPendingPath] = useState<string>('/');
-
-    const captureRef = useRef<HTMLDivElement>(null);
-    const iframeRef = useRef<HTMLIFrameElement>(null);
 
     useEffect(() => {
         const timeout = setTimeout(() => {
@@ -84,45 +76,79 @@ export default function CreatePage() {
             const url = URL.createObjectURL(blob);
             setPreviewUrl(url);
         }, 500);
-
         return () => clearTimeout(timeout);
     }, [code]);
 
-    // 画質とピクセル比を下げてファイルサイズを極小化する
-    const generateThumbnail = async () => {
-        if (!captureRef.current) return null;
-        try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            const dataUrl = await toJpeg(captureRef.current, { 
-                quality: 0.4,       // 画質を40%に落とす
-                pixelRatio: 1,      // Retina等で画像が巨大化するのを防ぐ
-                backgroundColor: '#ffffff',
-                cacheBust: true,
-                skipFonts: true,
-            });
-            return dataUrl;
-        } catch (err) { 
-            console.error("Thumbnail generation failed:", err);
-            return null; 
-        }
-    };
+    return previewUrl;
+};
 
+// Ctrl+R や F5 を検知してモーダルを出す
+const useKeyboardShortcuts = (isDirty: boolean, onReloadAttempt: () => void) => {
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r')) {
+                if (isDirty) {
+                    e.preventDefault(); // デフォルトのリロードをキャンセル
+                    onReloadAttempt();  // コールバックを実行
+                }
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isDirty, onReloadAttempt]);
+};
+
+// 3. メインページコンポーネント
+export default function CreatePage() {
+    const { user } = useAuth();
+    const router = useRouter();
+    
+    // State & Refs
+    const [code, setCode] = useState(INITIAL_CODE);
+    const [caption, setCaption] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+    const [isDirty, setIsDirty] = useState(false);
+    
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [pendingPath, setPendingPath] = useState<string>('/');
+
+    const captureRef = useRef<HTMLDivElement>(null);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+
+    // カスタムフックの使用
+    const previewUrl = usePreview(code);
+
+    // Ctrl+R対策:リロードされたらモーダルを出す
+    useKeyboardShortcuts(isDirty, () => {
+        setPendingPath('RELOAD');
+        setShowConfirmModal(true);
+    });
+
+    // ロジック関数
     const handleSave = async () => {
         if (!code.trim()) return;
         setIsSaving(true);
         try {
-            // 圧縮されたBase64文字列（軽量）を取得
-            const thumbnailBase64 = await generateThumbnail();
+            let thumbnailBase64 = null;
+            if (captureRef.current) {
+                try {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    thumbnailBase64 = await toJpeg(captureRef.current, { 
+                        quality: 0.4, pixelRatio: 1, backgroundColor: '#ffffff', cacheBust: true, skipFonts: true 
+                    });
+                } catch (imgError) {
+                    console.warn("サムネイル生成をスキップしました:", imgError);
+                }
+            }
 
-            // 直接Firestoreに保存する
             await addDoc(collection(db, "posts"), {
                 userId: user?.uid || "guest_user",
                 userName: user?.displayName || "Guest User",
                 userAvatar: user?.photoURL || "https://api.dicebear.com/7.x/avataaars/svg?seed=Guest",
                 type: 'text',
-                code: code,
-                caption: caption,
-                thumbnail: thumbnailBase64, // 圧縮した文字列を保存
+                code,
+                caption,
+                thumbnail: thumbnailBase64,
                 likes: 0,
                 comments: 0,
                 createdAt: serverTimestamp(),
@@ -147,25 +173,31 @@ export default function CreatePage() {
         }
     };
 
+    // モーダルで「破棄して移動」が押された時の処理
     const confirmNavigation = () => {
         setShowConfirmModal(false);
-        router.push(pendingPath);
+        if (pendingPath === 'RELOAD') {
+            window.location.reload(); // Ctrl+R由来なら画面をリロード
+        } else {
+            router.push(pendingPath); // リンククリック由来ならページ遷移
+        }
     };
 
     const toggleFullScreen = () => {
         if (iframeRef.current) {
             if (!document.fullscreenElement) {
-                iframeRef.current.requestFullscreen().catch(err => {
-                    console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-                });
+                iframeRef.current.requestFullscreen().catch(err => console.error(err));
             } else {
                 document.exitFullscreen();
             }
         }
     };
 
+    // Render (UI)
     return (
         <div className='h-screen w-full bg-[#F9FAFB] text-gray-900 flex flex-col font-sans overflow-hidden'>
+            
+            {/* ヘッダー */}
             <header className='h-16 px-6 flex items-center justify-between bg-white/80 backdrop-blur-sm z-50 shrink-0 border-b border-gray-100'>
                 <div className='flex items-center gap-4'>
                     <button onClick={() => handleNavigation('/')} className='text-gray-500 hover:text-gray-900 transition-colors p-2 hover:bg-gray-100 rounded-full'>
@@ -179,11 +211,10 @@ export default function CreatePage() {
 
                 <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'>
                     <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
-                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all bg-white text-blue-600 shadow-sm font-bold border border-gray-100'><Code2 className='w-4 h-4' /><span>コード</span></button>
-                        <button 
-                            onClick={() => handleNavigation('/create/block')}
-                            className='flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all text-gray-500 hover:text-gray-900 hover:bg-white/50 font-medium'
-                        >
+                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all bg-white text-blue-600 shadow-sm font-bold border border-gray-100'>
+                            <Code2 className='w-4 h-4' /><span>コード</span>
+                        </button>
+                        <button onClick={() => handleNavigation('/create/block')} className='flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all text-gray-500 hover:text-gray-900 hover:bg-white/50 font-medium'>
                             <LayoutTemplate className='w-4 h-4' /><span>ブロック</span>
                         </button>
                     </div>
@@ -195,6 +226,8 @@ export default function CreatePage() {
             </header>
 
             <div className='flex-1 flex overflow-hidden p-4 md:p-6 gap-4 md:gap-6'>
+                
+                {/* 左パネル: コードエディタ */}
                 <div className='w-1/2 flex flex-col bg-[#1e1e1e] rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden relative group transition-all hover:shadow-2xl'>
                     <div className='absolute top-4 right-6 z-10 text-[10px] font-bold text-gray-500 tracking-widest pointer-events-none bg-[#1e1e1e]/80 backdrop-blur px-2 py-1 rounded-full border border-white/5'>
                         HTML & CSS
@@ -221,7 +254,10 @@ export default function CreatePage() {
                     </div>
                 </div>
 
+                {/* 右パネル: プレビュー & 投稿フォーム */}
                 <div className='w-1/2 flex flex-col bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden transition-all hover:shadow-2xl'>
+                    
+                    {/* プレビューヘッダー */}
                     <div className='h-12 border-b border-gray-100 flex items-center px-6 justify-between bg-white'>
                         <div className='flex items-center gap-2 text-[10px] font-bold text-green-600 uppercase tracking-widest'>
                             <span className="relative flex h-2 w-2">
@@ -230,32 +266,22 @@ export default function CreatePage() {
                             </span>
                             プレビュー
                         </div>
-                        <button 
-                            onClick={toggleFullScreen}
-                            className='flex items-center gap-1.5 text-[10px] font-bold text-gray-400 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-blue-50'
-                            title="全画面表示"
-                        >
-                            <Maximize size={12} />
-                            <span>全画面</span>
+                        <button onClick={toggleFullScreen} className='flex items-center gap-1.5 text-[10px] font-bold text-gray-400 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-blue-50' title="全画面表示">
+                            <Maximize size={12} /><span>全画面</span>
                         </button>
                     </div>
                     
+                    {/* プレビューエリア */}
                     <div className="flex-1 bg-gray-50 relative">
                         {previewUrl && (
-                            <iframe
-                                ref={iframeRef}
-                                src={previewUrl}
-                                title="preview"
-                                className="w-full h-full border-none"
-                            />
+                            <iframe ref={iframeRef} src={previewUrl} title="preview" className="w-full h-full border-none" />
                         )}
                     </div>
 
+                    {/* キャプション・投稿ボタン */}
                     <div className='border-t border-gray-100 bg-white p-5 flex flex-col gap-4 shrink-0'>
                         <div className="relative">
-                            <div className="absolute top-3 left-3 text-gray-400">
-                                <AlignLeft size={16} />
-                            </div>
+                            <div className="absolute top-3 left-3 text-gray-400"><AlignLeft size={16} /></div>
                             <textarea
                                 value={caption}
                                 onChange={(e) => {
@@ -283,10 +309,7 @@ export default function CreatePage() {
 
             {/* サムネ撮影用（画面外） */}
             <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
-                <div 
-                    ref={captureRef} 
-                    style={{ width: '800px', height: '600px', background: '#ffffff', overflow: 'hidden' }}
-                >
+                <div ref={captureRef} style={{ width: '800px', height: '600px', background: '#ffffff', overflow: 'hidden' }}>
                     <div dangerouslySetInnerHTML={{ __html: code }} className="w-full h-full" />
                 </div>
             </div>
@@ -300,20 +323,12 @@ export default function CreatePage() {
                                 <AlertTriangle size={24} />
                             </div>
                             <h3 className="text-xl font-bold text-gray-900">このページを離れますか？</h3>
-                            <p className="text-sm text-gray-500">
-                                作成内容は破棄されます。<br />本当によろしいですか？
-                            </p>
+                            <p className="text-sm text-gray-500">作成内容は破棄されます。<br />本当によろしいですか？</p>
                             <div className="flex gap-3 w-full mt-4">
-                                <button 
-                                    onClick={() => setShowConfirmModal(false)}
-                                    className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
-                                >
+                                <button onClick={() => setShowConfirmModal(false)} className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors">
                                     キャンセル
                                 </button>
-                                <button 
-                                    onClick={confirmNavigation}
-                                    className="flex-1 py-2.5 px-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-red-500/30"
-                                >
+                                <button onClick={confirmNavigation} className="flex-1 py-2.5 px-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-red-500/30">
                                     破棄して移動
                                 </button>
                             </div>
