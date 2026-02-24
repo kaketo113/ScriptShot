@@ -12,7 +12,6 @@ import { db } from '../../../lib/firebase';
 import { collection, getDocs, query, orderBy, Timestamp } from 'firebase/firestore';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 // 1. 型定義 & 設定
@@ -43,8 +42,6 @@ const BLOCK_CONFIG: Record<string, any> = {
 };
 
 // 2. カスタムフック
-
-// タイピングアニメーションを制御するフック
 const useTypewriter = (text: string | undefined, isActive: boolean) => {
     const [displayedText, setDisplayedText] = useState('');
     const [isTyping, setIsTyping] = useState(false);
@@ -80,7 +77,6 @@ const useTypewriter = (text: string | undefined, isActive: boolean) => {
     return { displayedText, isTyping };
 };
 
-// 投稿データを取得するフック
 const useFetchPosts = () => {
     const [posts, setPosts] = useState<PostData[]>([]);
     const [loading, setLoading] = useState(true);
@@ -102,9 +98,7 @@ const useFetchPosts = () => {
     return { posts, loading };
 };
 
-// 3. UIコンポーネント (部品)
-
-// 左パネル用：ブロックの構成リスト
+// 3. UIコンポーネント
 const DetailBlock = ({ block }: { block: any }) => {
     const config = BLOCK_CONFIG[block.type] || BLOCK_CONFIG.default;
     const Icon = config.icon;
@@ -130,26 +124,25 @@ const DetailBlock = ({ block }: { block: any }) => {
     );
 };
 
-// 右パネル用：プレビューの実際の描画
 const BlockRenderer = ({ block }: { block: any }) => {
     switch (block.type) {
         case 'heading': return <h2 className="text-2xl font-bold mb-4 text-gray-900 pb-2 border-b-2 border-blue-500 inline-block">{block.content}</h2>;
         case 'text': return <p className="text-gray-700 mb-4 leading-relaxed whitespace-pre-wrap">{block.content}</p>;
         case 'button': return <button className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-bold shadow-md hover:bg-blue-700 transition-all mb-4">{block.content || 'ボタン'}</button>;
-        case 'image': return block.content ? <img src={block.content} alt="Preview" className="w-full mb-4 rounded-xl shadow-sm h-auto object-cover" crossOrigin="anonymous" /> : null;
+        case 'image': return block.content ? <img src={block.content} alt="Preview" className="w-full mb-4 rounded-xl shadow-sm h-auto object-cover" crossOrigin="anonymous" onError={(e) => { (e.target as HTMLImageElement).src = "https://placehold.co/600x400/f3f4f6/a1a1aa?text=Image+Error"; }} /> : null;
         case 'divider': return <hr className="my-6 border-t-2 border-dashed border-gray-300" />;
         case 'input': return <input type="text" placeholder={block.content} disabled className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-500 mb-4" />;
         case 'youtube': { 
             const match = block.content.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
             const vId = (match && match[2].length === 11) ? match[2] : null;
-            return vId ? <div className="w-full aspect-video bg-black rounded-xl overflow-hidden mb-4 shadow-lg"><iframe src={`https://www.youtube.com/embed/${vId}`} className="w-full h-full" allowFullScreen /></div> : null; 
+            return vId ? <div className="w-full aspect-video bg-black rounded-xl overflow-hidden mb-4 shadow-lg"><iframe src={`https://www.youtube.com/embed/${vId}`} className="w-full h-full allowFullScreen" /></div> : null; 
         }
         case 'card': {
             let d = { title: '', desc: '', btn: '', img: '' }; 
             try { d = JSON.parse(block.content); } catch {}
             return (
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6 border border-gray-200">
-                    {d.img && <img src={d.img} alt={d.title} className="w-full h-40 object-cover" crossOrigin="anonymous" />}
+                    {d.img && <img src={d.img} alt={d.title} className="w-full h-40 object-cover" crossOrigin="anonymous" onError={(e) => { (e.target as HTMLImageElement).src = "https://placehold.co/600x400/f3f4f6/a1a1aa?text=Image+Error"; }} />}
                     <div className="p-5">
                         <h3 className="font-bold text-lg mb-2 text-gray-900">{d.title}</h3>
                         <p className="text-gray-600 text-sm mb-4 leading-relaxed">{d.desc}</p>
@@ -162,7 +155,7 @@ const BlockRenderer = ({ block }: { block: any }) => {
     }
 };
 
-// 4. メインビューコンポーネント (左右パネル統合)
+// 4. メインビューコンポーネント
 const PostView = ({ post }: { post: PostData }) => {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isLiked, setIsLiked] = useState(false);
@@ -171,7 +164,6 @@ const PostView = ({ post }: { post: PostData }) => {
     const { displayedText, isTyping } = useTypewriter(post?.code, post.type === 'text');
     const codeEndRef = useRef<HTMLDivElement>(null);
 
-    // コードモード時のHTMLプレビュー生成
     useEffect(() => {
         if (!post || post.type !== 'text' || !post.code) return;
         const html = `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{margin:0;padding:2rem;font-family:sans-serif;background-color:#ffffff;display:flex;flex-direction:column;align-items:center;gap:1rem}h2{color:#333}p{color:#666;line-height:1.6}button{background:#2563eb;color:white;border:none;padding:0.5rem 1rem;border-radius:0.25rem;cursor:pointer}img{max-width:100%;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1)}</style></head><body>${post.code}</body></html>`;
@@ -181,7 +173,6 @@ const PostView = ({ post }: { post: PostData }) => {
         return () => URL.revokeObjectURL(url);
     }, [post]);
 
-    // オートスクロール
     useEffect(() => {
         if (isTyping && codeEndRef.current) {
             codeEndRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest' });
@@ -204,8 +195,6 @@ const PostView = ({ post }: { post: PostData }) => {
 
     return (
         <div className="h-full w-full flex flex-col lg:flex-row relative">
-            
-            {/* 左パネル: ソースコード / ブロック構成 */}
             <div className="w-full lg:w-1/2 bg-white flex flex-col border-r border-gray-200 relative z-10">
                 <div className="h-10 bg-gray-50 flex items-center justify-between px-4 border-b border-gray-200 shrink-0">
                     <div className="flex items-center gap-2 text-xs font-mono text-gray-500">
@@ -237,7 +226,6 @@ const PostView = ({ post }: { post: PostData }) => {
                 </div>
             </div>
 
-            {/* 右パネル: プレビュー + アクション */}
             <div className="w-full lg:w-1/2 bg-[#F9FAFB] flex flex-col relative overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] opacity-100 pointer-events-none" />
 
