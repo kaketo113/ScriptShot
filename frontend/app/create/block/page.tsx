@@ -97,7 +97,7 @@ const useBlockManager = () => {
 const ToolButton = ({ type, icon: Icon, label, colorClass, onClick }: any) => (
     <button 
         onClick={() => onClick(type)}
-        className={`flex-shrink-0 w-24 flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all duration-200 group snap-start relative ${colorClass} hover:scale-105 hover:z-50 active:scale-95 shadow-sm hover:shadow-md`}
+        className={`m-2 flex-shrink-0 w-24 flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all duration-200 group snap-start relative ${colorClass} hover:scale-105 hover:z-50 active:scale-95 shadow-sm hover:shadow-md`}
     >
         <div className="p-2 rounded-full bg-white/80 group-hover:bg-white transition-colors border border-black/5 shadow-sm"><Icon size={20} /></div>
         <span className="text-xs font-bold tracking-wide truncate w-full text-center">{label}</span>
@@ -378,10 +378,12 @@ export default function CreateBlockPage() {
                             </div>
                         </div>
 
-                        <div ref={toolboxRef} className="flex overflow-x-auto gap-3 pt-2 pb-3 px-1 scrollbar-hide snap-x scroll-smooth relative z-20" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                        <div ref={toolboxRef} className="flex overflow-x-auto p-2 scrollbar-hide snap-x scroll-smooth relative z-20" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                            <div className="flex-shrink-0 w-2 snap-start" />
                             {Object.entries(BLOCK_CONFIG).map(([type, config]) => (
                                 <ToolButton key={type} type={type} icon={config.icon} label={config.label} colorClass={`border-${config.color.split('-')[1]}-300 hover:border-${config.color.split('-')[1]}-400 text-${config.color.split('-')[1]}-700 bg-${config.color.split('-')[1]}-100`} onClick={addBlock} />
                             ))}
+                            <div className="flex-shrink-0 w-4" />
                         </div>
                         <div className="absolute right-0 top-12 bottom-0 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none md:hidden z-20"></div>
                     </div>
