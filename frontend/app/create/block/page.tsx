@@ -97,7 +97,7 @@ const useBlockManager = () => {
 const ToolButton = ({ type, icon: Icon, label, colorClass, onClick }: any) => (
     <button 
         onClick={() => onClick(type)}
-        className={`m-2 flex-shrink-0 w-24 flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all duration-200 group snap-start relative ${colorClass} hover:scale-105 hover:z-50 active:scale-95 shadow-sm hover:shadow-md`}
+        className={`flex-shrink-0 w-24 flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all duration-200 group snap-start relative ${colorClass} hover:scale-105 hover:z-50 active:scale-95 shadow-sm hover:shadow-md`}
     >
         <div className="p-2 rounded-full bg-white/80 group-hover:bg-white transition-colors border border-black/5 shadow-sm"><Icon size={20} /></div>
         <span className="text-xs font-bold tracking-wide truncate w-full text-center">{label}</span>
