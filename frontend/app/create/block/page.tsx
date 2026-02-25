@@ -48,9 +48,10 @@ const BLOCK_CONFIG: Record<BlockType, any> = {
 
 // 2. カスタムフック
 const useBlockManager = () => {
-    const [blocks, setBlocks] = useState<Block[]>(INITIAL_BLOCKS);
-    const [isDirty, setIsDirty] = useState(false);
+    const [blocks, setBlocks] = useState<Block[]>(INITIAL_BLOCKS);//初期値は見出しと本文
+    const [isDirty, setIsDirty] = useState(false);//isDirty: ブロックの内容が変更されたかどうかを管理する
 
+    //ブロック追加
     const addBlock = (type: BlockType) => {
         let initialContent = '';
         if (type === 'card') {
@@ -64,16 +65,19 @@ const useBlockManager = () => {
         setIsDirty(true);
     };
 
+    //ブロック削除
     const removeBlock = (id: string) => {
         setBlocks(prev => prev.filter(b => b.id !== id));
         setIsDirty(true);
     };
 
+    //ブロック内容更新
     const updateBlock = (id: string, content: string) => {
         setBlocks(prev => prev.map(b => b.id === id ? { ...b, content } : b));
         setIsDirty(true);
     };
 
+    //ドラッグアンドドロップでの入れ替え
     const handleDragEnd = (event: any) => {
         const { active, over } = event;
         if (over && active.id !== over.id) {
@@ -111,7 +115,7 @@ const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: 
     const updateCardData = (key: string, val: string) => { onChange(block.id, JSON.stringify({ ...parseCardData(block.content), [key]: val })); };
 
     return (
-        <div ref={setNodeRef} style={style} className="relative mb-4 pl-8 group">
+        <div ref={setNodeRef} style={style} className="relative mb-4 pl-8 group"> 
             <div className="absolute left-[19px] -top-6 bottom-0 w-0.5 bg-gray-300 group-last:bottom-auto group-last:h-1/2 -z-10"></div>
             
             <div {...attributes} {...listeners} className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-gray-200 rounded-full transition-colors z-10 text-gray-400 hover:text-gray-700" title="ドラッグして移動">
@@ -150,6 +154,7 @@ const SortableBlock = ({ block, onDelete, onChange }: { block: Block, onDelete: 
     );
 };
 
+// ブロックの内容をプレビュー表示する
 const BlockRenderer = ({ block }: { block: Block }) => {
     const getYouTubeId = (url: string) => {
         const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);

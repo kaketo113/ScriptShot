@@ -35,16 +35,17 @@ const FLOATING_ITEMS = [
 ];
 
 // 2. カスタムフック (データ取得ロジック)
+// 投稿データをリアルタイムで取得するカスタムフック
 const useFetchPosts = () => {
-    const [posts, setPosts] = useState<any[]>([]);
-    const [hotPosts, setHotPosts] = useState<any[]>([]);
-    const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+    const [posts, setPosts] = useState<any[]>([]);//posts:最新の投稿を格納
+    const [hotPosts, setHotPosts] = useState<any[]>([]);//hotPosts:いいね数が多い投稿を格納
+    const [isLoadingInitial, setIsLoadingInitial] = useState(true);//setIsLoadingInitial:そのデータの取得が最初かどうかを判断する
 
     useEffect(() => {
         const latestQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(FETCH_LIMIT));
         const unsubscribeLatest = onSnapshot(latestQuery, (snapshot) => {
             setPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            setIsLoadingInitial(false); 
+            setIsLoadingInitial(false); // 最初のデータが取得できたらローディング状態を解除
         });
 
         const hotQuery = query(collection(db, "posts"), orderBy("likes", "desc"), limit(HOT_LIMIT));
