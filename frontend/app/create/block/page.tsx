@@ -378,7 +378,7 @@ export default function CreateBlockPage() {
                             </div>
                         </div>
 
-                        <div ref={toolboxRef} className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide snap-x scroll-smooth relative z-20" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                        <div ref={toolboxRef} className="flex overflow-x-auto gap-3 pt-2 pb-3 px-1 scrollbar-hide snap-x scroll-smooth relative z-20" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                             {Object.entries(BLOCK_CONFIG).map(([type, config]) => (
                                 <ToolButton key={type} type={type} icon={config.icon} label={config.label} colorClass={`border-${config.color.split('-')[1]}-300 hover:border-${config.color.split('-')[1]}-400 text-${config.color.split('-')[1]}-700 bg-${config.color.split('-')[1]}-100`} onClick={addBlock} />
                             ))}
