@@ -6,10 +6,9 @@ import { Heart, MessageCircle, Code2, Layers, ArrowRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { db } from '../lib/firebase';
-import { doc, getDoc, setDoc, deleteDoc, updateDoc, increment } from 'firebase/firestore';
+import { doc, getDoc, writeBatch, increment } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 
-// 1. 型定義とテーマ設定
 interface PostCardProps {
     post: any;
 }
@@ -33,9 +32,7 @@ const THEME_STYLES = {
     }
 };
 
-// 2. カスタムフック (いいねロジック)
-const useLike = (postId: string, initialLikes: number, userId: string | undefined) => {
-    const [likeCount, setLikeCount] = useState<number>(initialLikes || 0);
+const useLike = (postId: string, userId: string | undefined) => {
     const [isLiked, setIsLiked] = useState<boolean>(false);
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
@@ -63,54 +60,57 @@ const useLike = (postId: string, initialLikes: number, userId: string | undefine
         if (isProcessing) return;
 
         const previousIsLiked = isLiked;
-        const previousCount = likeCount;
-        
-        setIsLiked(!previousIsLiked);
-        setLikeCount(previousIsLiked ? previousCount - 1 : previousCount + 1);
         setIsProcessing(true);
+        setIsLiked(!previousIsLiked); // アイコンの色だけ即座に変える
 
         try {
+            const batch = writeBatch(db);
             const postRef = doc(db, 'posts', postId);
-            const likeRef = doc(db, 'posts', postId, 'likes', userId);
+            const postLikeRef = doc(db, 'posts', postId, 'likes', userId);
+            const userLikedPostRef = doc(db, 'users', userId, 'likedPosts', postId);
 
             if (previousIsLiked) {
-                await deleteDoc(likeRef);
-                await updateDoc(postRef, { likes: increment(-1) });
+                batch.delete(postLikeRef);
+                batch.delete(userLikedPostRef);
+                batch.update(postRef, { likes: increment(-1) });
             } else {
-                await setDoc(likeRef, { createdAt: new Date() });
-                await updateDoc(postRef, { likes: increment(1) });
+                const now = new Date();
+                batch.set(postLikeRef, { createdAt: now });
+                batch.set(userLikedPostRef, { createdAt: now, postId: postId });
+                batch.update(postRef, { likes: increment(1) });
             }
+            
+            await batch.commit();
         } catch (error) {
             console.error('いいねの更新に失敗しました:', error);
             setIsLiked(previousIsLiked);
-            setLikeCount(previousCount);
         } finally {
             setIsProcessing(false);
         }
     };
 
-    return { likeCount, isLiked, isProcessing, toggleLike };
+    return { isLiked, isProcessing, toggleLike };
 };
 
-// 3. メインコンポーネント
 export const PostCard = ({ post }: PostCardProps) => {
     const { user } = useAuth();
-    const { likeCount, isLiked, isProcessing, toggleLike } = useLike(post.id, post.likes, user?.uid);
+    const { isLiked, isProcessing, toggleLike } = useLike(post.id, user?.uid);
 
     const date = post.createdAt?.toDate ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true, locale: ja }) : 'たった今';
     const displayCode = post.code || post.codeSnippet || '';
     const isText = post.type === 'text';
     const theme = isText ? THEME_STYLES.text : THEME_STYLES.block;
     const BadgeIcon = theme.IconComponent;
+    
+    // 表示にはFirebaseからリアルタイムで降ってくる post.likes を直接使う
+    const currentLikes = post.likes || 0;
 
     return (
         <div className={`group relative block h-[380px] bg-white rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${theme.card}`}>
             <Link href={`/post/${post.id}`} className="absolute inset-0 z-0" aria-label={`${post.userName}の投稿を見る`} />
 
-            {/* --- 上半分 (プレビューエリア) --- */}
             <div className="h-1/2 bg-gray-50 relative overflow-hidden border-b border-gray-100 pointer-events-none">
                 {post.thumbnail ? (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img 
                         src={post.thumbnail} 
                         alt="Preview" 
@@ -121,7 +121,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                         <iframe
                             srcDoc={displayCode}
                             title="preview"
-                            className="w-[200%] h-[200%] transform scale-50 origin-top-left border-none pointer-events-none select-none"
+                            className="absolute top-0 left-0 w-[200%] h-[200%] transform scale-50 origin-top-left border-none pointer-events-none select-none"
                             sandbox="allow-scripts"
                             scrolling="no"
                             tabIndex={-1}
@@ -132,7 +132,6 @@ export const PostCard = ({ post }: PostCardProps) => {
                     <div className="w-full h-full bg-emerald-50/50 flex flex-col items-center justify-center text-emerald-300">
                         <Layers size={48} className="mb-2 opacity-50 drop-shadow-sm" />
                         <span className="text-xs font-bold tracking-widest uppercase opacity-70">Block Mode</span>
-                        <p className='text-xs font-bold tracking-widest opacity-80'>セキュリティルール上、画面にサムネが表示されません</p>
                     </div>
                 )}
 
@@ -142,15 +141,13 @@ export const PostCard = ({ post }: PostCardProps) => {
                 </div>
             </div>
 
-            {/* --- 下半分 (情報エリア) --- */}
             <div className={`h-1/2 p-5 flex flex-col justify-between ${theme.footerBg} relative z-10 pointer-events-none`}>
                 <div>
                     <div className="flex items-center gap-3 mb-3 pointer-events-auto relative z-20">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
                             src={post.userAvatar} 
                             alt={post.userName} 
-                            className="w-8 h-8 rounded-full border border-gray-100 shadow-sm"
+                            className="w-8 h-8 rounded-full border border-gray-100 shadow-sm object-cover"
                             onError={(e) => { (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest'; }}
                         />
                         <div className="flex flex-col">
@@ -175,9 +172,9 @@ export const PostCard = ({ post }: PostCardProps) => {
                             }`}
                         >
                             <Heart size={16} fill={isLiked ? "currentColor" : "none"} className={isLiked ? "scale-110 transition-transform" : "transition-transform"} />
-                            <span className="font-medium">{likeCount}</span>
+                            <span className="font-medium">{currentLikes}</span>
                         </button>
-                        <div className="flex items-center gap-1.5 text-xs group-hover:text-blue-500 transition-colors p-1.5 rounded-lg">
+                        <div className="flex items-center gap-1.5 text-xs hover:text-blue-500 transition-colors p-1.5 rounded-lg">
                             <MessageCircle size={16} />
                             <span className="font-medium">{post.comments || 0}</span>
                         </div>
