@@ -323,15 +323,15 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         <div className="flex h-screen bg-[#F9FAFB] text-gray-900 font-sans overflow-hidden">
             <Sidebar />
 
-            <main className="flex-1 md:ml-64 relative h-full flex flex-col">
-                <header className="absolute top-0 left-0 right-0 h-16 px-6 flex items-center justify-between z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 pointer-events-none">
+            <main className="flex-1 md:ml-64 relative h-full flex flex-col pt-16 md:pt-0">
+                <header className="absolute top-16 md:top-0 left-0 right-0 h-16 px-6 flex items-center justify-between z-10 bg-white/80 backdrop-blur-md border-b border-gray-200 pointer-events-none">
                     <Link href="/" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors pointer-events-auto p-2 rounded-full hover:bg-gray-100">
                         <ArrowLeft className="w-5 h-5" />
                         <span className="text-sm font-bold tracking-tight">ホームに戻る</span>
                     </Link>
                 </header>
 
-                <div className="flex-1 relative pt-16 h-full overflow-hidden">
+                <div className="flex-1 relative pt-32 md:pt-16 h-full overflow-hidden">
                     <PostView post={currentPost} />
                     
                     {prevPostId && (

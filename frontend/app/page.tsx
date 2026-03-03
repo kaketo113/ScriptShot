@@ -239,7 +239,7 @@ export default function Home() {
         <div className='flex min-h-screen bg-slate-50 text-[#111827] font-sans selection:bg-blue-500/20 overflow-x-hidden'>
             <Sidebar />
 
-            <main className='flex-1 md:ml-64 relative'>
+            <main className='flex-1 md:ml-64 relative pt-16 md:pt-0'>
                 
                 {/* ヒーローエリア */}
                 <AnimatePresence>
@@ -248,7 +248,7 @@ export default function Home() {
                             <div className="relative w-full border-b border-gray-200 min-h-screen flex flex-col items-center justify-center bg-white overflow-hidden">
                                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:32px_32px] opacity-40"></div>
                                 
-                                <button onClick={handleCloseHero} className="absolute top-6 right-6 z-50 flex items-center gap-2 px-3 py-1.5 bg-white/50 hover:bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-500 hover:text-red-500 transition-all backdrop-blur-sm shadow-sm">
+                                <button onClick={handleCloseHero} className="absolute top-6 right-6 z-20 flex items-center gap-2 px-3 py-1.5 bg-white/50 hover:bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-500 hover:text-red-500 transition-all backdrop-blur-sm shadow-sm">
                                     <span>使い方ガイドを非表示</span><X size={14} />
                                 </button>
 

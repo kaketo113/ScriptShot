@@ -54,7 +54,7 @@ export default function SearchPage() {
         <div className='flex h-screen bg-[#F9FAFB] text-gray-900 font-sans overflow-hidden'>
             <Sidebar />
 
-            <main className='flex-1 md:ml-64 h-full relative'>
+            <main className='flex-1 md:ml-64 h-full relative pt-16 md:pt-0'>
                 {/* 背景装飾 */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-emerald-50 opacity-80 pointer-events-none"></div>
                 

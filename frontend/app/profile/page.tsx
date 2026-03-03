@@ -149,7 +149,7 @@ export default function ProfilePage() {
     return (
         <div className='flex h-screen bg-[#F9FAFB] text-gray-900 font-sans overflow-hidden relative'>
             <Sidebar />
-            <main className='flex-1 md:ml-64 h-full relative'>
+            <main className='flex-1 md:ml-64 h-full relative pt-16 md:pt-0'>
                 <div className="relative z-10 w-full h-full overflow-y-auto custom-scrollbar">
                     {/* ヘッダー背景 */}
                     <div className="h-48 w-full bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 border-b border-gray-200 relative">
