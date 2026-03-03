@@ -5,14 +5,17 @@ import {
     Heart, MessageCircle, Code2, Share2, ArrowLeft, Layers, 
     Layout, Type, Image as ImageIcon, MousePointerClick, Box, Loader2,
     Play, Copy, Check, AlignLeft, Minus, FileInput, CreditCard, Youtube,
-    ChevronLeft, ChevronRight
+    ChevronLeft, ChevronRight, Send
 } from 'lucide-react';
 import { Sidebar } from '../../../components/Sidebar';
 import { db } from '../../../lib/firebase';
-import { collection, getDocs, query, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, Timestamp, doc, getDoc, writeBatch, increment, onSnapshot } from 'firebase/firestore';
+import { useAuth } from '../../../context/AuthContext';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
 import Link from 'next/link';
+import { formatDistanceToNow } from 'date-fns';
+import { ja } from 'date-fns/locale';
 
 // 1. 型定義 & 設定
 interface PostData {
@@ -26,6 +29,15 @@ interface PostData {
     caption?: string;
     likes: number;
     comments: number;
+    createdAt: Timestamp;
+}
+
+interface CommentData {
+    id: string;
+    userId: string;
+    userName: string;
+    userAvatar: string;
+    content: string;
     createdAt: Timestamp;
 }
 
@@ -155,14 +167,162 @@ const BlockRenderer = ({ block }: { block: any }) => {
     }
 };
 
+const CommentSection = ({ post }: { post: PostData }) => {
+    const { user } = useAuth();
+    const [comments, setComments] = useState<CommentData[]>([]);
+    const [newComment, setNewComment] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        const q = query(collection(db, 'posts', post.id, 'comments'), orderBy('createdAt', 'desc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            setComments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CommentData)));
+        });
+        return () => unsubscribe();
+    }, [post.id]);
+
+    const handleAddComment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user) { alert('コメントするにはログインが必要です'); return; }
+        if (!newComment.trim() || isSubmitting) return;
+
+        setIsSubmitting(true);
+        try {
+            const batch = writeBatch(db);
+            const commentRef = doc(collection(db, 'posts', post.id, 'comments'));
+            batch.set(commentRef, {
+                userId: user.uid,
+                userName: user.displayName || 'Guest User',
+                userAvatar: user.photoURL || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest',
+                content: newComment.trim(),
+                createdAt: new Date()
+            });
+
+            const postRef = doc(db, 'posts', post.id);
+            batch.update(postRef, { comments: increment(1) });
+
+            await batch.commit();
+            setNewComment('');
+        } catch (error) {
+            console.error("コメント追加エラー:", error);
+            alert('コメントの送信に失敗しました。');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="bg-white flex flex-col h-full overflow-hidden">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6">
+                
+                {/* 作品の説明 */}
+                {post.caption && (
+                    <div className="flex gap-3 mb-4">
+                        <img src={post.userAvatar} alt="" className="w-8 h-8 rounded-full border border-blue-200 shadow-sm mt-1 shrink-0" onError={(e) => { (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest'; }} />
+                        <div className="flex-1">
+                            <div className="flex items-baseline justify-between mb-1">
+                                <span className="text-xs font-bold text-gray-900">
+                                    {post.userName}
+                                    <span className="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold tracking-wider">作者</span>
+                                </span>
+                                <span className="text-[10px] text-gray-400">
+                                    {post.createdAt?.toDate ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true, locale: ja }) : 'たった今'}
+                                </span>
+                            </div>
+                            <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{post.caption}</p>
+                        </div>
+                    </div>
+                )}
+
+                {post.caption && <hr className="border-t border-gray-100 mb-6" />}
+
+                {/* コメント入力エリア */}
+                <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2 shrink-0">
+                    <MessageCircle size={18} className="text-blue-500" />
+                    コメント ({comments.length})
+                </h3>
+
+                <form onSubmit={handleAddComment} className="mb-6 flex gap-3 shrink-0">
+                    <img src={user?.photoURL || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest'} alt="" className="w-8 h-8 rounded-full border border-gray-200 shrink-0" />
+                    <div className="flex-1 relative">
+                        <input 
+                            type="text" 
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            placeholder={user ? "素敵なコードですね！..." : "ログインしてコメントを追加..."}
+                            disabled={!user || isSubmitting}
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 pl-4 pr-12 text-sm focus:outline-none focus:border-blue-400 focus:bg-white transition-colors disabled:opacity-50"
+                        />
+                        <button type="submit" disabled={!newComment.trim() || !user || isSubmitting} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent transition-colors">
+                            {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                        </button>
+                    </div>
+                </form>
+
+                {/* 投稿されたコメント一覧 */}
+                <div className="space-y-4 pb-2">
+                    {comments.length === 0 ? (
+                        <p className="text-center text-sm text-gray-400 py-2">一番乗りでコメントしてみましょう！</p>
+                    ) : (
+                        comments.map(comment => (
+                            <div key={comment.id} className="flex gap-3">
+                                <img src={comment.userAvatar} alt="" className="w-8 h-8 rounded-full border border-gray-100 shadow-sm mt-1 shrink-0" onError={(e) => { (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest'; }} />
+                                <div className="flex-1 bg-gray-50 rounded-2xl rounded-tl-none p-3 border border-gray-100">
+                                    <div className="flex items-baseline justify-between mb-1">
+                                        <span className="text-xs font-bold text-gray-900">{comment.userName}</span>
+                                        <span className="text-[10px] text-gray-400">
+                                            {comment.createdAt?.toDate ? formatDistanceToNow(comment.createdAt.toDate(), { addSuffix: true, locale: ja }) : 'たった今'}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+            </div>
+        </div>
+    );
+};
+
 // 4. メインビューコンポーネント
 const PostView = ({ post }: { post: PostData }) => {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const [isLiked, setIsLiked] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
     
+    const { user } = useAuth();
     const { displayedText, isTyping } = useTypewriter(post?.code, post.type === 'text');
     const codeEndRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!user?.uid || !post.id) return;
+        const unsub = onSnapshot(doc(db, 'posts', post.id, 'likes', user.uid), (docSnap) => {
+            setIsLiked(docSnap.exists());
+        });
+        return () => unsub();
+    }, [user?.uid, post.id]);
+
+    const handleLike = async () => {
+        if (!user) { alert('ログインが必要です'); return; }
+        const postRef = doc(db, 'posts', post.id);
+        const likeRef = doc(db, 'posts', post.id, 'likes', user.uid);
+        const userLikedRef = doc(db, 'users', user.uid, 'likedPosts', post.id);
+        const batch = writeBatch(db);
+
+        if (isLiked) {
+            batch.delete(likeRef);
+            batch.delete(userLikedRef);
+            batch.update(postRef, { likes: (post.likes || 0) > 0 ? increment(-1) : 0 });
+        } else {
+            const now = new Date();
+            batch.set(likeRef, { createdAt: now });
+            batch.set(userLikedRef, { createdAt: now, postId: post.id });
+            batch.update(postRef, { likes: increment(1) });
+        }
+        await batch.commit();
+    };
 
     useEffect(() => {
         if (!post || post.type !== 'text' || !post.code) return;
@@ -194,8 +354,10 @@ const PostView = ({ post }: { post: PostData }) => {
     const date = post.createdAt?.toDate ? post.createdAt.toDate().toLocaleDateString() : 'たった今';
 
     return (
-        <div className="h-full w-full flex flex-col lg:flex-row relative">
-            <div className="w-full lg:w-1/2 bg-white flex flex-col border-r border-gray-200 relative z-10">
+        <div className="h-auto lg:h-full w-full flex flex-col lg:flex-row relative">
+            
+            {/* 左側：コード/ブロックエリア */}
+            <div className="w-full lg:w-1/2 bg-white flex flex-col border-r border-gray-200 relative z-10 h-[50vh] lg:h-full shrink-0">
                 <div className="h-10 bg-gray-50 flex items-center justify-between px-4 border-b border-gray-200 shrink-0">
                     <div className="flex items-center gap-2 text-xs font-mono text-gray-500">
                         {post.type === 'text' ? <Code2 size={14} className="text-blue-600" /> : <Layers size={14} className="text-emerald-600" />}
@@ -226,7 +388,8 @@ const PostView = ({ post }: { post: PostData }) => {
                 </div>
             </div>
 
-            <div className="w-full lg:w-1/2 bg-[#F9FAFB] flex flex-col relative overflow-hidden">
+            {/* 右側：プレビュー & コメントエリア */}
+            <div className="w-full lg:w-1/2 bg-[#F9FAFB] flex flex-col relative overflow-hidden h-[80vh] lg:h-full shrink-0">
                 <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] opacity-100 pointer-events-none" />
 
                 <div className="h-10 bg-white flex items-center justify-between px-4 border-b border-gray-200 relative z-10 shrink-0">
@@ -260,31 +423,25 @@ const PostView = ({ post }: { post: PostData }) => {
                     )}
                 </div>
 
-                <div className="bg-white border-t border-gray-200 flex flex-col z-20 relative shrink-0">
-                    {post.caption && (
-                        <div className="px-6 pt-5 pb-2">
-                            <div className="flex items-center gap-2 mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                <AlignLeft size={12} className="text-blue-500" />
-                                <span>説明</span>
-                            </div>
-                            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-sans">{post.caption}</p>
-                        </div>
-                    )}
-
-                    <div className="h-16 flex items-center justify-between px-6">
+                <div className="bg-white border-t border-gray-200 flex flex-col z-20 relative h-[360px] shrink-0">
+                    <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100">
                         <div className="flex items-center gap-4">
-                            <button onClick={() => setIsLiked(!isLiked)} className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${isLiked ? 'bg-pink-50 text-pink-600 border border-pink-200' : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100 hover:text-gray-900'}`}>
-                                <Heart size={18} className={isLiked ? 'fill-current' : ''} />
-                                <span className="text-sm font-medium">{post.likes + (isLiked ? 1 : 0)}</span>
+                            <button onClick={handleLike} className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all ${isLiked ? 'bg-pink-50 text-pink-600 border border-pink-200' : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100 hover:text-gray-900'}`}>
+                                <Heart size={16} className={isLiked ? 'fill-current' : ''} />
+                                <span className="text-sm font-medium">{post.likes || 0}</span>
                             </button>
-                            <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-all">
-                                <MessageCircle size={18} />
-                                <span className="text-sm font-medium">{post.comments}</span>
+                            <button className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-600 transition-all pointer-events-none">
+                                <MessageCircle size={16} />
+                                <span className="text-sm font-medium">{post.comments || 0}</span>
                             </button>
                         </div>
-                        <button className="p-2 rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors">
-                            <Share2 size={20} />
+                        <button className="p-1.5 rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                            <Share2 size={18} />
                         </button>
+                    </div>
+
+                    <div className="flex-1 overflow-hidden">
+                        <CommentSection post={post} />
                     </div>
                 </div>
             </div>
@@ -324,18 +481,18 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
             <Sidebar />
 
             <main className="flex-1 md:ml-64 relative h-full flex flex-col pt-16 md:pt-0">
-                <header className="absolute top-16 md:top-0 left-0 right-0 h-16 px-6 flex items-center justify-between z-10 bg-white/80 backdrop-blur-md border-b border-gray-200 pointer-events-none">
+                <header className="absolute top-16 md:top-0 left-0 right-0 h-16 px-6 flex items-center justify-between z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 pointer-events-none">
                     <Link href="/" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors pointer-events-auto p-2 rounded-full hover:bg-gray-100">
                         <ArrowLeft className="w-5 h-5" />
                         <span className="text-sm font-bold tracking-tight">ホームに戻る</span>
                     </Link>
                 </header>
 
-                <div className="flex-1 relative pt-32 md:pt-16 h-full overflow-hidden">
+                <div className="flex-1 relative pt-32 md:pt-16 h-full overflow-y-auto lg:overflow-hidden">
                     <PostView post={currentPost} />
                     
                     {prevPostId && (
-                        <div className="absolute top-0 left-0 bottom-0 w-24 z-50 flex items-center justify-start pl-6 group pointer-events-none">
+                        <div className="absolute top-0 left-0 bottom-0 w-24 z-50 flex items-center justify-start pl-6 group pointer-events-none hidden md:flex">
                             <Link href={`/post/${prevPostId}`} className="pointer-events-auto p-4 bg-white border border-gray-200 rounded-full shadow-xl text-gray-500 hover:text-blue-600 transition-all transform scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100">
                                 <ChevronLeft size={28} />
                             </Link>
@@ -343,7 +500,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                     )}
 
                     {nextPostId && (
-                        <div className="absolute top-0 right-0 bottom-0 w-24 z-50 flex items-center justify-end pr-6 group pointer-events-none">
+                        <div className="absolute top-0 right-0 bottom-0 w-24 z-50 flex items-center justify-end pr-6 group pointer-events-none hidden md:flex">
                             <Link href={`/post/${nextPostId}`} className="pointer-events-auto p-4 bg-white border border-gray-200 rounded-full shadow-xl text-gray-500 hover:text-blue-600 transition-all transform scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100">
                                 <ChevronRight size={28} />
                             </Link>
