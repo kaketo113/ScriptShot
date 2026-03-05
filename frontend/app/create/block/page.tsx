@@ -48,10 +48,9 @@ const BLOCK_CONFIG: Record<BlockType, any> = {
 
 // 2. カスタムフック
 const useBlockManager = () => {
-    const [blocks, setBlocks] = useState<Block[]>(INITIAL_BLOCKS);//初期値は見出しと本文
-    const [isDirty, setIsDirty] = useState(false);//isDirty: ブロックの内容が変更されたかどうかを管理する
+    const [blocks, setBlocks] = useState<Block[]>(INITIAL_BLOCKS);
+    const [isDirty, setIsDirty] = useState(false);
 
-    //ブロック追加
     const addBlock = (type: BlockType) => {
         let initialContent = '';
         if (type === 'card') {
@@ -65,19 +64,16 @@ const useBlockManager = () => {
         setIsDirty(true);
     };
 
-    //ブロック削除
     const removeBlock = (id: string) => {
         setBlocks(prev => prev.filter(b => b.id !== id));
         setIsDirty(true);
     };
 
-    //ブロック内容更新
     const updateBlock = (id: string, content: string) => {
         setBlocks(prev => prev.map(b => b.id === id ? { ...b, content } : b));
         setIsDirty(true);
     };
 
-    //ドラッグアンドドロップでの入れ替え
     const handleDragEnd = (event: any) => {
         const { active, over } = event;
         if (over && active.id !== over.id) {
@@ -238,14 +234,13 @@ export default function CreateBlockPage() {
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
-    // Ctrl+R や F5 を検知してモーダルを出す
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r')) {
                 if (isDirty) {
-                    e.preventDefault(); // デフォルトのリロードをキャンセル
+                    e.preventDefault(); 
                     setPendingPath('RELOAD');
-                    setShowConfirmModal(true); // 自作のモーダルを表示
+                    setShowConfirmModal(true); 
                 }
             }
         };
@@ -253,7 +248,6 @@ export default function CreateBlockPage() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isDirty]);
 
-    // ブロック追加時の自動スクロール
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
         previewBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -271,7 +265,6 @@ export default function CreateBlockPage() {
         }
     };
 
-    // ナビゲーション制御
     const handleNavigation = (path: string) => {
         if (isDirty) { 
             setPendingPath(path); 
@@ -281,17 +274,15 @@ export default function CreateBlockPage() {
         }
     };
 
-    // モーダルで「破棄して移動」を押した時の処理
     const confirmNavigation = () => {
         setShowConfirmModal(false);
         if (pendingPath === 'RELOAD') {
-            window.location.reload(); // Ctrl+R由来なら画面をリロード
+            window.location.reload(); 
         } else {
-            router.push(pendingPath); // リンククリック由来ならページ遷移
+            router.push(pendingPath); 
         }
     };
 
-    // 投稿・保存処理
     const handlePost = async () => {
         if (blocks.length === 0) return;
         setIsSaving(true);
@@ -330,7 +321,6 @@ export default function CreateBlockPage() {
         }
     };
 
-    // Render (UI)
     return (
         <div className='h-screen w-full bg-[#F9FAFB] text-gray-900 flex flex-col font-sans overflow-hidden'>
             
@@ -342,37 +332,37 @@ export default function CreateBlockPage() {
                     </button>
                     <div className='flex items-center gap-2'>
                         <LayoutTemplate size={20} className="text-emerald-600" />
-                        <span className='font-bold text-lg tracking-tight'>ブロックエディタ</span>
+                        <span className='font-bold text-lg tracking-tight hidden sm:block'>ブロックエディタ</span>
                     </div>
                 </div>
 
                 <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'>
                     <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
-                        <button onClick={() => handleNavigation('/create')} className='flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all text-gray-500 hover:text-gray-900 hover:bg-white/50 font-medium'>
+                        <button onClick={() => handleNavigation('/create')} className='flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all text-gray-500 hover:text-gray-900 hover:bg-white/50 font-medium'>
                             <Code2 className='w-4 h-4' /><span>コード</span>
                         </button>
-                        <button className='flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all bg-white text-emerald-600 shadow-sm font-bold border border-gray-100'>
+                        <button className='flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all bg-white text-emerald-600 shadow-sm font-bold border border-gray-100'>
                             <LayoutTemplate className='w-4 h-4' /><span>ブロック</span>
                         </button>
                     </div>
                 </div>
                 
                 <div className='flex items-center gap-3'>
-                    <div className='text-xs text-gray-400 font-medium'>{user ? '自動保存なし' : 'ゲストモード'}</div>
+                    <div className='text-xs text-gray-400 font-medium hidden sm:block'>{user ? '自動保存なし' : 'ゲストモード'}</div>
                 </div>
             </header>
 
-            <div className='flex-1 flex overflow-hidden p-4 md:p-6 gap-4 md:gap-6'>
+            <div className='flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden p-4 md:p-6 gap-4 md:gap-6 custom-scrollbar'>
 
-                {/* ブロック選択 */}
-                <div className='w-1/2 flex flex-col bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden relative z-10'>
+                {/* 左側：ブロック選択＆エディタ領域 (スマホ時は上) */}
+                <div className='w-full lg:w-1/2 flex flex-col bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden relative z-10 shrink-0 h-[60vh] lg:h-full'>
                     
-                    <div className="py-6 px-4 border-b border-gray-100 bg-white relative group/toolbox z-20">
-                        <div className="flex items-center justify-between mb-6 px-2">
+                    <div className="py-6 px-4 border-b border-gray-100 bg-white relative group/toolbox z-20 shrink-0">
+                        <div className="flex items-center justify-between mb-4 px-2">
                             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                                 <PlusCircle size={14} /> 追加したいブロックを選択
                             </h3>
-                            <div className="flex gap-1">
+                            <div className="flex gap-1 hidden sm:flex">
                                 <button onClick={() => scrollToolbox('left')} className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-colors"><ChevronLeft size={16} /></button>
                                 <button onClick={() => scrollToolbox('right')} className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-colors"><ChevronRight size={16} /></button>
                             </div>
@@ -388,9 +378,9 @@ export default function CreateBlockPage() {
                         <div className="absolute right-0 top-12 bottom-0 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none md:hidden z-20"></div>
                     </div>
 
-                    {/* ブロックのエリア */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-white relative z-10">
-                        <div className="max-w-xl mx-auto pb-20">
+                    {/* ブロック並べ替えエリア */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 bg-white relative z-10">
+                        <div className="max-w-xl mx-auto pb-10">
                             {blocks.length === 0 ? (
                                 <div className="text-center py-20 opacity-50 border-2 border-dashed border-gray-200 rounded-2xl">
                                     <p className="text-gray-400 mb-2">まだブロックがありません</p>
@@ -410,10 +400,10 @@ export default function CreateBlockPage() {
                     </div>
                 </div>
 
-                {/* プレビュー表示領域 */}
-                <div className='w-1/2 flex flex-col bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden'>
+                {/* 右側：プレビュー表示＆投稿領域 (スマホ時は下) */}
+                <div className='w-full lg:w-1/2 flex flex-col bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden shrink-0 h-[80vh] lg:h-full'>
                     
-                    <div className='h-12 border-b border-gray-100 flex items-center justify-between px-6 bg-white'>
+                    <div className='h-12 border-b border-gray-100 flex items-center justify-between px-6 bg-white shrink-0'>
                         <div className='flex items-center gap-2 text-[10px] font-bold text-emerald-600 uppercase tracking-widest'>
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                             プレビュー
@@ -425,27 +415,27 @@ export default function CreateBlockPage() {
                             </div>
                             <div className="w-px h-4 bg-gray-200 mx-1"></div>
                             <button onClick={toggleFullScreen} className='flex items-center gap-1.5 text-[10px] font-bold text-gray-400 hover:text-emerald-600 transition-colors px-2 py-1 rounded hover:bg-emerald-50' title="全画面表示">
-                                <Maximize size={12} /><span>全画面</span>
+                                <Maximize size={12} /><span className="hidden sm:inline">全画面</span>
                             </button>
                         </div>
                     </div>
 
-                    <div ref={previewWrapperRef} className='flex-1 flex items-center justify-center relative bg-[#F3F4F6] p-8 overflow-hidden'>
-                        <div className={`bg-white shadow-xl overflow-y-auto relative border border-gray-100 transition-all duration-300 ease-in-out ${viewMode === 'mobile' ? 'w-full h-full max-w-[480px] max-h-[700px] rounded-3xl ring-4 ring-gray-200' : 'w-full h-full rounded-xl'}`}>
+                    <div ref={previewWrapperRef} className='flex-1 flex items-center justify-center relative bg-[#F3F4F6] p-4 sm:p-8 overflow-hidden'>
+                        <div className={`bg-white shadow-xl overflow-y-auto custom-scrollbar relative border border-gray-100 transition-all duration-300 ease-in-out ${viewMode === 'mobile' ? 'w-full h-full max-w-[480px] max-h-[700px] rounded-3xl ring-4 ring-gray-200' : 'w-full h-full rounded-xl'}`}>
                             {viewMode === 'mobile' && (
                                 <div className="sticky top-0 left-0 right-0 h-8 bg-gray-50 border-b border-gray-100 flex items-center justify-center z-10">
                                     <div className="w-16 h-1 bg-gray-300 rounded-full"></div>
                                 </div>
                             )}
-                            <div className="p-8 min-h-full">
+                            <div className="p-4 sm:p-8 min-h-full">
                                 {blocks.map(block => <BlockRenderer key={`preview-${block.id}`} block={block} />)}
                                 <div ref={previewBottomRef}></div>
                             </div>
                         </div>
                     </div>
 
-                    {/* 作品の説明入力欄 */}
-                    <div className='border-t border-gray-100 bg-white p-5 flex flex-col gap-4 shrink-0'>
+                    {/* 作品の説明入力欄 & 投稿ボタン */}
+                    <div className='border-t border-gray-100 bg-white p-4 sm:p-5 flex flex-col gap-4 shrink-0'>
                         <div className="relative">
                             <div className="absolute top-3 left-3 text-gray-400"><AlignLeft size={16} /></div>
                             <textarea
@@ -455,7 +445,7 @@ export default function CreateBlockPage() {
                             />
                         </div>
                         <div className="flex justify-end">
-                            <button onClick={handlePost} disabled={isSaving} className='flex items-center gap-2 px-8 py-3 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/30 active:scale-95 hover:shadow-emerald-500/40'>
+                            <button onClick={handlePost} disabled={isSaving} className='flex items-center gap-2 px-6 sm:px-8 py-2.5 sm:py-3 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/30 active:scale-95 hover:shadow-emerald-500/40 w-full sm:w-auto justify-center'>
                                 {isSaving ? <Loader2 className='w-4 h-4 animate-spin' /> : <Save size={20} />}
                                 <span>{isSaving ? '保存中...' : '投稿する'}</span>
                             </button>
