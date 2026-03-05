@@ -15,7 +15,6 @@ const NAV_LINKS = [
     { href: '/profile', icon: User, label: 'プロフィール' },
 ];
 
-// --- サブコンポーネント群 ---
 const Logo = () => (
     <div className='h-16 flex items-center px-6 shrink-0'>
         <div className='flex items-center gap-2 font-bold text-xl tracking-tighter text-gray-900'>
@@ -73,7 +72,7 @@ const CreateMenu = ({ isActive, currentPath }: { isActive: boolean, currentPath:
 );
 
 const UserArea = ({ user, login, logout }: any) => (
-    <div className='p-4 mt-auto bg-[#e3f0fc] rounded-br-3xl shrink-0'>
+    <div className='p-4 pb-10 md:pb-4 mt-auto bg-[#e3f0fc] rounded-br-3xl shrink-0'>
         {user ? (
             <div className='flex items-center gap-3 p-2 rounded-2xl border border-gray-500 shadow-sm bg-white/50'>
                 <img src={user.photoURL || "https://api.dicebear.com/7.x/avataaars/svg?seed=Guest"} alt="" className="w-10 h-10 rounded-full border border-gray-200 object-cover shrink-0" />
@@ -91,20 +90,16 @@ const UserArea = ({ user, login, logout }: any) => (
     </div>
 );
 
-// --- メインコンポーネント ---
 export const Sidebar = () => {
     const pathname = usePathname();
     const { user, login, logout } = useAuth();
     
-    // ハンバーガーメニューの開閉状態
     const [isOpen, setIsOpen] = useState(false);
 
-    // 画面遷移した時にメニューを自動で閉じる
     useEffect(() => {
         setIsOpen(false);
     }, [pathname]);
 
-    // メニューが開いているときは背景のスクロールを無効化するUX改善
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
@@ -116,7 +111,7 @@ export const Sidebar = () => {
 
     return (
         <>
-            {/* モバイル用ヘッダー（767px以下で上部に固定表示） */}
+            {/* モバイル用ヘッダー */}
             <div className="md:hidden fixed top-0 left-0 w-full h-16 bg-[#e3f0fc]/90 backdrop-blur-md z-40 flex items-center justify-between px-4 shadow-sm border-b border-blue-100">
                 <div className='flex items-center gap-2 font-bold text-xl tracking-tighter text-gray-900'>
                     <div className='w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-sm'>
@@ -132,7 +127,7 @@ export const Sidebar = () => {
                 </button>
             </div>
 
-            {/* モバイル用背景オーバーレイ（メニューが開いている時のみ暗くする） */}
+            {/* モバイル用背景オーバーレイ */}
             {isOpen && (
                 <div 
                     className="md:hidden fixed inset-0 bg-gray-900/40 z-40 backdrop-blur-sm transition-opacity"
@@ -140,9 +135,8 @@ export const Sidebar = () => {
                 />
             )}
 
-            {/* サイドバー本体（スマホでは横からスライド、PCでは常に固定） */}
             <aside className={`
-                fixed left-0 top-0 z-50 h-screen w-64 bg-[#e3f0fc] flex flex-col shadow-2xl rounded-r-3xl transition-transform duration-300 ease-in-out
+                fixed left-0 top-0 z-50 h-[100dvh] w-64 bg-[#e3f0fc] flex flex-col shadow-2xl rounded-r-3xl transition-transform duration-300 ease-in-out
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
                 md:translate-x-0 md:flex
             `}>

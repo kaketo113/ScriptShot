@@ -50,7 +50,7 @@ const BLOCK_CONFIG: Record<BlockType, any> = {
 const useBlockManager = () => {
     const [blocks, setBlocks] = useState<Block[]>(INITIAL_BLOCKS);
     const [isDirty, setIsDirty] = useState(false);
-
+    //ブロック追加
     const addBlock = (type: BlockType) => {
         let initialContent = '';
         if (type === 'card') {
@@ -63,17 +63,17 @@ const useBlockManager = () => {
         setBlocks(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), type, content: initialContent }]);
         setIsDirty(true);
     };
-
+    //ブロック削除
     const removeBlock = (id: string) => {
         setBlocks(prev => prev.filter(b => b.id !== id));
         setIsDirty(true);
     };
-
+    //ブロック内容更新
     const updateBlock = (id: string, content: string) => {
         setBlocks(prev => prev.map(b => b.id === id ? { ...b, content } : b));
         setIsDirty(true);
     };
-
+    //ドラッグアンドドロップでの入れ替え
     const handleDragEnd = (event: any) => {
         const { active, over } = event;
         if (over && active.id !== over.id) {
@@ -233,7 +233,7 @@ export default function CreateBlockPage() {
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
-
+    // Ctrl+R や F5 を検知してモーダルを出す
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r')) {
@@ -264,7 +264,7 @@ export default function CreateBlockPage() {
             document.exitFullscreen();
         }
     };
-
+    // ナビゲーション制御
     const handleNavigation = (path: string) => {
         if (isDirty) { 
             setPendingPath(path); 
@@ -273,7 +273,7 @@ export default function CreateBlockPage() {
             router.push(path);
         }
     };
-
+    // モーダルで「破棄して移動」を押した時の処理
     const confirmNavigation = () => {
         setShowConfirmModal(false);
         if (pendingPath === 'RELOAD') {
@@ -282,7 +282,7 @@ export default function CreateBlockPage() {
             router.push(pendingPath); 
         }
     };
-
+    // 投稿・保存処理
     const handlePost = async () => {
         if (blocks.length === 0) return;
         setIsSaving(true);
