@@ -40,36 +40,44 @@ const NavItem = ({ href, icon: Icon, label, isActive }: any) => (
     </Link>
 );
 
-const CreateMenu = ({ isActive, currentPath }: { isActive: boolean, currentPath: string }) => (
-    <div className="group flex flex-col">
-        <button className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all ${
-            isActive ? 'bg-blue-50 text-blue-700 font-bold shadow-sm' : 'text-gray-500 group-hover:bg-blue-50 group-hover:text-gray-900'
-        }`}>
-            <div className="flex items-center gap-3">
-                <div className={`p-1 rounded-lg transition-colors ${isActive ? 'bg-blue-600 text-white shadow-sm' : 'bg-white-200 text-gray-500 group-hover:bg-gray-200'}`}>
-                    <Plus size={16} />
-                </div>
-                <span>作成</span>
-            </div>
-            <ChevronDown size={14} className="transition-transform duration-300 group-hover:rotate-180 opacity-50 group-hover:opacity-100" />
-        </button>
+const CreateMenu = ({ isActive, currentPath }: { isActive: boolean, currentPath: string }) => {
+    // 自分が選択されている時（すでに作成画面にいる時）は、最初から開いておく
+    const [isOpen, setIsOpen] = useState(isActive);
 
-        <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-out">
-            <div className="overflow-hidden">
-                <div className="flex flex-col gap-1 pt-1 pb-2 pl-4">
-                    <Link href="/create" className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ml-2 ${currentPath === '/create' ? 'bg-blue-100 text-blue-700 font-bold shadow-sm' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-200'}`}>
-                        <Code2 size={16} className={currentPath === '/create' ? 'text-blue-600' : ''} />
-                        <span className="text-sm">コードモード</span>
-                    </Link>
-                    <Link href="/create/block" className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ml-2 ${currentPath === '/create/block' ? 'bg-emerald-100 text-emerald-700 font-bold shadow-sm' : 'text-gray-500 hover:text-emerald-600 hover:bg-emerald-50'}`}>
-                        <Box size={16} className={currentPath === '/create/block' ? 'text-emerald-600' : ''} />
-                        <span className="text-sm">ブロックモード</span>
-                    </Link>
+    return (
+        <div className="flex flex-col">
+            <button 
+                onClick={() => setIsOpen(!isOpen)} // タップするたびに開閉を切り替える
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all ${
+                isActive ? 'bg-blue-50 text-blue-700 font-bold shadow-sm' : 'text-gray-500 hover:bg-blue-50 hover:text-gray-900'
+            }`}>
+                <div className="flex items-center gap-3">
+                    <div className={`p-1 rounded-lg transition-colors ${isActive ? 'bg-blue-600 text-white shadow-sm' : 'bg-white-200 text-gray-500 hover:bg-gray-200'}`}>
+                        <Plus size={16} />
+                    </div>
+                    <span>作成</span>
+                </div>
+                <ChevronDown size={14} className={`transition-transform duration-300 opacity-50 ${isOpen ? 'rotate-180 opacity-100' : ''}`} />
+            </button>
+
+            {/* isOpen が true の時だけ高さを広げる */}
+            <div className={`grid transition-[grid-template-rows] duration-300 ease-out ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                <div className="overflow-hidden">
+                    <div className="flex flex-col gap-1 pt-1 pb-2 pl-4">
+                        <Link href="/create" className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ml-2 ${currentPath === '/create' ? 'bg-blue-100 text-blue-700 font-bold shadow-sm' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-200'}`}>
+                            <Code2 size={16} className={currentPath === '/create' ? 'text-blue-600' : ''} />
+                            <span className="text-sm">コードモード</span>
+                        </Link>
+                        <Link href="/create/block" className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ml-2 ${currentPath === '/create/block' ? 'bg-emerald-100 text-emerald-700 font-bold shadow-sm' : 'text-gray-500 hover:text-emerald-600 hover:bg-emerald-50'}`}>
+                            <Box size={16} className={currentPath === '/create/block' ? 'text-emerald-600' : ''} />
+                            <span className="text-sm">ブロックモード</span>
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 const UserArea = ({ user, login, logout }: any) => (
     <div className='p-4 pb-10 md:pb-4 mt-auto bg-[#e3f0fc] rounded-br-3xl shrink-0'>
