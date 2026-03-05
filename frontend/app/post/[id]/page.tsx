@@ -389,7 +389,7 @@ const PostView = ({ post }: { post: PostData }) => {
             </div>
 
             {/* 右側：プレビュー & コメントエリア */}
-            <div className="w-full lg:w-1/2 bg-[#F9FAFB] flex flex-col relative overflow-hidden h-[80vh] lg:h-full shrink-0">
+            <div className="w-full lg:w-1/2 bg-[#F9FAFB] flex flex-col relative overflow-hidden h-auto lg:h-full shrink-0">
                 <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] opacity-100 pointer-events-none" />
 
                 <div className="h-10 bg-white flex items-center justify-between px-4 border-b border-gray-200 relative z-10 shrink-0">
@@ -404,7 +404,7 @@ const PostView = ({ post }: { post: PostData }) => {
                     </div>
                 </div>
 
-                <div className="flex-1 relative p-8 flex flex-col z-10 items-center overflow-y-auto custom-scrollbar">
+                <div className="flex-1 relative p-4 lg:p-8 flex flex-col z-10 items-center overflow-y-auto custom-scrollbar min-h-[55vh] lg:min-h-0">
                     {post.type === 'text' ? (
                         previewUrl ? (
                             <div className="w-full aspect-video bg-white rounded-lg shadow-xl overflow-hidden ring-1 ring-gray-200 relative shrink-0">
@@ -416,7 +416,7 @@ const PostView = ({ post }: { post: PostData }) => {
                             <div className="sticky top-0 left-0 right-0 h-8 bg-gray-50 border-b border-gray-100 flex items-center justify-center z-10">
                                 <div className="w-16 h-1 bg-gray-300 rounded-full"></div>
                             </div>
-                            <div className="p-8 min-h-full">
+                            <div className="p-4 lg:p-8 min-h-full">
                                 {post.blocks?.map((block: any, i: number) => <BlockRenderer key={i} block={block} />)}
                             </div>
                         </div>
