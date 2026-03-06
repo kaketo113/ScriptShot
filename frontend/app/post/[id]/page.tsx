@@ -357,7 +357,7 @@ const PostView = ({ post }: { post: PostData }) => {
         <div className="h-auto lg:h-full w-full flex flex-col lg:flex-row relative">
             
             {/* 左側：コード/ブロックエリア */}
-            <div className="w-full lg:w-1/2 bg-white flex flex-col border-r border-gray-200 relative z-10 h-[50vh] lg:h-full shrink-0">
+            <div className="w-full lg:w-[40%] bg-white flex flex-col border-r border-gray-200 relative z-10 h-[50vh] lg:h-full shrink-0">
                 <div className="h-10 bg-gray-50 flex items-center justify-between px-4 border-b border-gray-200 shrink-0">
                     <div className="flex items-center gap-2 text-xs font-mono text-gray-500">
                         {post.type === 'text' ? <Code2 size={14} className="text-blue-600" /> : <Layers size={14} className="text-emerald-600" />}
@@ -389,7 +389,7 @@ const PostView = ({ post }: { post: PostData }) => {
             </div>
 
             {/* 右側：プレビュー & コメントエリア */}
-            <div className="w-full lg:w-1/2 bg-[#F9FAFB] flex flex-col relative overflow-hidden h-auto lg:h-full shrink-0">
+            <div className="w-full lg:w-[60%] bg-[#F9FAFB] flex flex-col relative overflow-hidden h-auto lg:h-full shrink-0">
                 <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] opacity-100 pointer-events-none" />
 
                 <div className="h-10 bg-white flex items-center justify-between px-4 border-b border-gray-200 relative z-10 shrink-0">
@@ -404,15 +404,15 @@ const PostView = ({ post }: { post: PostData }) => {
                     </div>
                 </div>
 
-                <div className="flex-1 relative p-4 lg:p-8 flex flex-col z-10 items-center overflow-y-auto custom-scrollbar min-h-[55vh] lg:min-h-0">
+                <div className="flex-1 relative p-4 flex flex-col z-10 items-center justify-center overflow-y-auto custom-scrollbar min-h-[60vh] lg:min-h-0">
                     {post.type === 'text' ? (
                         previewUrl ? (
-                            <div className="w-full aspect-video bg-white rounded-lg shadow-xl overflow-hidden ring-1 ring-gray-200 relative shrink-0">
+                            <div className="w-full h-[300px] lg:h-full bg-white rounded-lg shadow-xl overflow-hidden ring-1 ring-gray-200 relative shrink-0">
                                 <iframe src={previewUrl} className="w-full h-full border-none" sandbox="allow-scripts allow-modals" />
                             </div>
                         ) : <div className="flex items-center justify-center h-64 text-gray-400">読み込み中...</div>
                     ) : (
-                        <div className="w-full h-full max-w-[480px] max-h-[700px] bg-white rounded-3xl shadow-xl overflow-y-auto relative ring-4 ring-gray-200 border border-gray-100 shrink-0">
+                        <div className="w-full h-full lg:w-[95%] lg:max-w-[900px] max-h-[800px] bg-white rounded-3xl shadow-xl overflow-y-auto relative ring-4 ring-gray-200 border border-gray-100 shrink-0">
                             <div className="sticky top-0 left-0 right-0 h-8 bg-gray-50 border-b border-gray-100 flex items-center justify-center z-10">
                                 <div className="w-16 h-1 bg-gray-300 rounded-full"></div>
                             </div>
@@ -423,7 +423,7 @@ const PostView = ({ post }: { post: PostData }) => {
                     )}
                 </div>
 
-                <div className="bg-white border-t border-gray-200 flex flex-col z-20 relative h-[360px] shrink-0">
+                <div className="bg-white border-t border-gray-200 flex flex-col z-20 relative h-[320px] lg:h-[260px] shrink-0">
                     <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100">
                         <div className="flex items-center gap-4">
                             <button onClick={handleLike} className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all ${isLiked ? 'bg-pink-50 text-pink-600 border border-pink-200' : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100 hover:text-gray-900'}`}>
